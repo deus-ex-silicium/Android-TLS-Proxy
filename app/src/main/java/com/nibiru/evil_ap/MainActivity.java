@@ -4,24 +4,23 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.wifi.WifiManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import static android.net.ConnectivityManager.EXTRA_NETWORK_TYPE;
-import static android.net.ConnectivityManager.TYPE_WIFI;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     //CLASS FIELDS
     final static String TAG = "MainActivity";
-    WifiManager wifiManager;
-    boolean wifiON;
+    ApManager ApMan;
     Button bAP;
     /*************************************************************/
 
@@ -37,21 +36,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bAP = (Button)findViewById(R.id.bAP);
         bAP.setOnClickListener(this);
 
-        //Find the current state of WiFi
-        //http://stackoverflow.com/questions/8863509/how-to-programmatically-turn-off-wifi-on-android-device
-        wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-        wifiON = wifiManager.isWifiEnabled();
-        setBtnUI(wifiON);
+        // only for marshmallow and newer versions, we need user to explicitly grant us WRITE_SETTINGS
+        // permissions to be able to change hotspot configuration
+        //TODO: what about other versions ?
+        //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
+        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + this.getPackageName()));
+            startActivity(intent);
+        }
+        //Find the current state of AP
+        ApMan = new ApManager(this);
+        setBtnUI(ApMan.isApOn());
 
         //Register BroadcastReceiver, filer specific intents
-        registerReceiver(new WiFiBroadcastReceiver(), new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        registerReceiver(new ApBroadcastReceiver(), new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
     }
 
     private void setBtnUI(boolean wifiON) {
         if (wifiON)
-            bAP.setText("Stop WiFI");
+            bAP.setText("Stop AP");
         else
-            bAP.setText("Start WiFi");
+            bAP.setText("Start AP");
     }
 
     /**
@@ -70,24 +76,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.bAP:
                 Log.d(TAG, "AP button pressed");
                 //if AP button was pressed turn on/off hotspot && proxy service
-                wifiON = !wifiON;
-                setBtnUI(wifiON);
-                wifiManager.setWifiEnabled(wifiON);
+                //TODO: PROXY SERVICE
+                ApMan.configApState();
+                setBtnUI(ApMan.isApOn());
                 break;
         }
     }
 
-    private class WiFiBroadcastReceiver extends BroadcastReceiver {
+    private class ApBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //check if network change is for WiFi
-            //TODO: make sure intent really means interface went ON/OFF
-            //TODO: or just read the WiFi state and update perhaps to the same value!
-            if (intent.getIntExtra(EXTRA_NETWORK_TYPE, 0) == TYPE_WIFI){
-                wifiON = wifiManager.isWifiEnabled();
-                setBtnUI(wifiON);
-            }
+            //something about AP changed so update the UI button
+            setBtnUI(ApMan.isApOn());
         }
+    }
+
+    //function for debugging etc. (shows toast with msg text)
+    public void toastMessage(String msg){
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, msg, duration);
+        toast.show();
     }
 
 }
