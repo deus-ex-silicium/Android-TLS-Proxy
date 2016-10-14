@@ -17,12 +17,15 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nibiru.evil_ap.fragments.ACFragment;
+import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 public class MainActivity extends AppCompatActivity implements MainFragment
+        .OnFragmentInteractionListener,ClientsFragment
+        .OnFragmentInteractionListener,ACFragment
         .OnFragmentInteractionListener {
-    private static final int CONTENT_VIEW_ID = 10101010;
     //CLASS FIELDS
     final static String TAG = "MainActivity";
     Fragment MainFragment = new MainFragment();
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         boolean isApOn = ManagerAp.isApOn(this);
         if(!isApOn){
             ManagerAp.turnOnAp(findViewById(R.id.editText).toString(), findViewById(R.id
-                    .editText2), this);
+                    .editText2).toString(), this);
             startService(new Intent(this, ProxyService.class));
             if (!RootMan.isHttpRedirected()){
                 RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 -j " +
