@@ -11,14 +11,14 @@ import java.lang.reflect.Method;
  * it can also toggle the hotspot on and off
  */
 
-class ApManager {
+public class ApManager {
 
     //CLASS FIELDS
     final static String TAG = "ApManager";
     WifiManager wifiManager;
     /*************************************************************/
 
-    ApManager(Context ctx){
+    public ApManager(Context ctx){
         wifiManager = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
     }
 
