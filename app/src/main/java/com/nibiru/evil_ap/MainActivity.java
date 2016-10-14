@@ -14,15 +14,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nibiru.evil_ap.Proxy.ProxyService;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     //CLASS FIELDS
     final static String TAG = "MainActivity";
-    ApManager ApMan;
-    RootManager RootMan;
+    ManagerAp ApMan;
+    ManagerRoot RootMan;
     Button bAP;
-    /*************************************************************/
+    /*********************************************************************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +50,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         //check if device is rooted
-        RootMan = new RootManager();
+        RootMan = new ManagerRoot();
         if (!RootMan.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
                     "permissions");
         }
 
         //Find the current state of AP
-        ApMan = new ApManager(this);
+        ApMan = new ManagerAp(this);
         setBtnUI(ApMan.isApOn());
 
         //Register BroadcastReceiver, filer specific intents
@@ -74,25 +76,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.bAP:
                 //if AP button was pressed turn on/off hotspot && proxy service
-                //TODO: PROXY SERVICE
                 boolean isApOn = ApMan.isApOn();
-                ApMan.configApState("AP2", "pa$$word");
-                isApOn = ApMan.isApOn();
-                setBtnUI(isApOn);
-                /*if (isApOn) {
-                    //add iptables rule
+                if (!isApOn){
+                    ApMan.turnOnAp("AP", "pa$$word");
+                    startService(new Intent(this, ProxyService.class));
                     if (!RootMan.isHttpRedirected()){
-                        RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 " +
-                                "-j REDIRECT --to-port 1337");
+                        RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp" +
+                                " --dport 80 -j REDIRECT --to-port 1337");
                     }
                 }
                 else{
-                    //remove iptables rules
+                    ApMan.turnOffAp();
+                    stopService(new Intent(this, ProxyService.class));
                     if (RootMan.isHttpRedirected()){
-                        RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 " +
-                                "-j REDIRECT --to-port 1337");
+                        RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp " +
+                                "--dport 80 -j REDIRECT --to-port 1337");
                     }
-                }*/
+                }
+                setBtnUI(isApOn);
                 break;
         }
     }

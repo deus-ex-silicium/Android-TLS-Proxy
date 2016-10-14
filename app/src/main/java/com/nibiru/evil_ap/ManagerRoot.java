@@ -8,14 +8,14 @@ import java.io.InputStreamReader;
 
 /**
  * Created by Nibiru on 2016-10-14.
- * RootManager class takes care of running root commands and checking exit status codes
+ * ManagerRoot class takes care of running root commands and checking exit status codes
  * also proves a static method for checking if device is rooted
  */
 
-public class RootManager {
-    final static String TAG = "RootManager";
-
-    public RootManager(){}
+public class ManagerRoot {
+    final static String TAG = "ManagerRoot";
+    /*********************************************************************************************/
+    public ManagerRoot(){}
 
     public boolean RunAsRoot(String command){
         Process p;
