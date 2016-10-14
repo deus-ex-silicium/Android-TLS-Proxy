@@ -8,7 +8,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
-import com.nibiru.evil_ap.Fragments.MainFragment;
+import com.nibiru.evil_ap.fragments.ACFragment;
+import com.nibiru.evil_ap.fragments.ClientsFragment;
+import com.nibiru.evil_ap.fragments.MainFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     int mNumOfTabs;
@@ -26,10 +28,10 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
                 MainFragment tab1 = new MainFragment();
                 return tab1;
             case 1:
-                MainFragment tab2 = new MainFragment();
+                ClientsFragment tab2 = new ClientsFragment();
                 return tab2;
             case 2:
-                MainFragment tab3 = new MainFragment();
+                ACFragment tab3 = new ACFragment();
                 return tab3;
             default:
                 return null;
