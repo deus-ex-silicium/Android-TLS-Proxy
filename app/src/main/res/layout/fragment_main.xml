@@ -2,7 +2,7 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="com.nibiru.evil_ap.Fragments.MainFragment"
+             tools:context="com.nibiru.evil_ap.fragments.MainFragment"
             android:id = "@+id/fragment_main">
 
     <!-- TODO: Update blank fragment layout -->

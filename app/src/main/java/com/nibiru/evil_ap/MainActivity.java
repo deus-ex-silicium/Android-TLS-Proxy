@@ -2,6 +2,8 @@ package com.nibiru.evil_ap;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -11,11 +13,12 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.nibiru.evil_ap.Fragments.MainFragment;
-
+import com.nibiru.evil_ap.fragments.MainFragment;
+import com.nibiru.evil_ap.proxy.ProxyService;
 
 public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener {
@@ -23,8 +26,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment
     //CLASS FIELDS
     final static String TAG = "MainActivity";
     Fragment MainFragment = new MainFragment();
-    ApManager ApMan;
-    /*************************************************************/
+    ManagerRoot RootMan;
+    /*********************************************************************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,24 +63,38 @@ public class MainActivity extends AppCompatActivity implements MainFragment
 
             }
         });
-        ApMan = new ApManager(this);
-
+        //check if device is rooted
+        RootMan = new ManagerRoot();
+        if (!RootMan.isDeviceRooted()){
+            toastMessage("Application will only function properly on rooted phones with root " +
+                    "permissions");
+        }
     }
 
     public void onPowerBtnPressed(View v) {
         //if AP button was pressed turn on/off hotspot && proxy service
-        //TODO: PROXY SERVICE
-        boolean isApOn = ApMan.isApOn();
-        ApMan.configApState(findViewById(R.id.editText).toString(), findViewById(R.id.editText2)
-                .toString());
-        toastMessage("btn clicked");
+        boolean isApOn = ManagerAp.isApOn(this);
+        if(!isApOn){
+            ManagerAp.turnOnAp(findViewById(R.id.editText).toString(), findViewById(R.id
+                    .editText2), this);
+            startService(new Intent(this, ProxyService.class));
+            if (!RootMan.isHttpRedirected()){
+                RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 -j " +
+                        "REDIRECT --to-port 1337");
+            }
+        }
+        else {
+            ManagerAp.turnOffAp(this);
+            stopService(new Intent(this, ProxyService.class));
+            if (RootMan.isHttpRedirected()){
+                RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j " +
+                        "REDIRECT --to-port 1337");
+            }
+        }
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
-
-    }
+    public void onFragmentInteraction(Uri uri) {}
 
     //function for debugging etc. (shows toast with msg text)
     public void toastMessage(String msg){
