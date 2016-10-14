@@ -3,8 +3,6 @@ package com.nibiru.evil_ap;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -13,29 +11,28 @@ import java.lang.reflect.Method;
  * it can also toggle the hotspot on and off
  */
 
-class ManagerAp {
+public class ManagerAp {
 
     //CLASS FIELDS
     final static String TAG = "ManagerAp";
-    WifiManager wifiManager;
     /*********************************************************************************************/
-    ManagerAp(Context ctx){
-        wifiManager = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
-    }
+    public ManagerAp(){}
 
     //check whether WiFI hotspot is on or off
-    public boolean isApOn() {
+    public static boolean isApOn(Context ctx) {
         try {
-            Method method = wifiManager.getClass().getDeclaredMethod("isWifiApEnabled");
+            WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
+            Method method = wifiMan.getClass().getDeclaredMethod("isWifiApEnabled");
             method.setAccessible(true);
-            return (Boolean) method.invoke(wifiManager);
+            return (Boolean) method.invoke(wifiMan);
         }
         catch (Throwable ignored) {}
         return false;
     }
 
     // toggle WiFi hotspot on
-    public boolean turnOnAp(String SSID, String PSK ) {
+    static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
+        WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = "AP";
         //network will be open if password not given
@@ -50,12 +47,12 @@ class ManagerAp {
         }
         try {
             // if WiFi is on, turn it off
-            if(wifiManager.isWifiEnabled()) {
-                wifiManager.setWifiEnabled(false);
+            if(wifiMan.isWifiEnabled()) {
+                wifiMan.setWifiEnabled(false);
             }
-            Method method = wifiManager.getClass()
+            Method method = wifiMan.getClass()
                     .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, wifiConfig, true);
+            method.invoke(wifiMan, wifiConfig, true);
             return true;
         }
         catch (Exception e) {
@@ -65,12 +62,13 @@ class ManagerAp {
     }
 
     // toggle WiFi hotspot off
-    public boolean turnOffAp() {
+    static boolean turnOffAp(Context ctx) {
+        WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
         Method method = null;
         try {
-            method = wifiManager.getClass()
+            method = wifiMan.getClass()
                     .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, null, false);
+            method.invoke(wifiMan, null, false);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap.Proxy;
+package com.nibiru.evil_ap.proxy;
 
 import android.util.Log;
 

@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap.Proxy;
+package com.nibiru.evil_ap.proxy;
 
 import android.util.Log;
 import java.io.BufferedReader;
@@ -38,11 +38,13 @@ public class ProxyRunnable implements Runnable {
             }
             Log.d(TAG, "<==================Sending response==================>");
             out.write(request);
+            Log.d(TAG, "<==================Closing connection==================>");
+            out.close();
+            in.close();
+            client.close();
         } catch (IOException e) {
             Log.d(TAG, "<================ SHIT FUCK, EXCEPTION !!! ================>");
             e.printStackTrace();
         }
     }
-
-
 }
