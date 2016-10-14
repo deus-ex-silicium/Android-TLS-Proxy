@@ -23,27 +23,6 @@
         android:text="pswrd"
         android:textColor="@android:color/white"/>
 
-    <Button
-        android:text="Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="37dp"
-        android:id="@+id/button2"/>
-
-    <CheckBox
-        android:text="CheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editText2"
-        android:layout_alignStart="@+id/editText2"
-        android:layout_marginTop="16dp"
-        android:id="@+id/checkBox"
-        android:textColor="@android:color/background_light"
-        android:background="@android:color/darker_gray"
-        android:layout_alignEnd="@+id/button2"/>
-
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -64,10 +43,9 @@
         android:id="@+id/button"
         android:src="@drawable/onoff"
         android:background = "@drawable/onoff"
-        android:layout_marginTop="32dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73dp"
         android:onClick="onPowerBtnPressed"
-        />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>

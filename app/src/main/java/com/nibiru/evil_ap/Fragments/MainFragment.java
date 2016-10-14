@@ -1,6 +1,6 @@
 package com.nibiru.evil_ap.Fragments;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -45,7 +45,6 @@ public class MainFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ctx = getActivity().getApplicationContext();
-
         // only for marshmallow and newer versions, we need user to explicitly grant us WRITE_SETTINGS
         // permissions to be able to change hotspot configuration
         //TODO: what about other versions ? FIX NEEDED
