@@ -1,5 +1,7 @@
 package com.nibiru.evil_ap;
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +9,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,14 +17,16 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nibiru.evil_ap.Fragments.MainFragment;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+public class MainActivity extends AppCompatActivity implements MainFragment
+        .OnFragmentInteractionListener {
+    private static final int CONTENT_VIEW_ID = 10101010;
     //CLASS FIELDS
     final static String TAG = "MainActivity";
+    Fragment MainFragment = new MainFragment();
     ApManager ApMan;
-    RootManager RootMan;
-    Button bAP;
     /*************************************************************/
 
     @Override
@@ -31,79 +36,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         TextView tv = (TextView) findViewById(R.id.sample_text);
         tv.setText("Welcome to Evil-AP");
-
-        //Set on click listeners
-        bAP = (Button)findViewById(R.id.bAP);
-        bAP.setOnClickListener(this);
-
-        // only for marshmallow and newer versions, we need user to explicitly grant us WRITE_SETTINGS
-        // permissions to be able to change hotspot configuration
-        //TODO: what about other versions ?
-        //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
-        if ( !Settings.System.canWrite(this) &&
-                Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-            intent.setData(Uri.parse("package:" + this.getPackageName()));
-            startActivity(intent);
-        }
-
-        //check if device is rooted
-        RootMan = new RootManager();
-        if (!RootMan.isDeviceRooted()){
-            toastMessage("Application will only function properly on rooted phones with root " +
-                    "permissions");
-        }
-
-        //Find the current state of AP
+        android.app.FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.activity_main, MainFragment).addToBackStack(null)
+                    .commit();
         ApMan = new ApManager(this);
-        setBtnUI(ApMan.isApOn());
-
-        //Register BroadcastReceiver, filer specific intents
-        registerReceiver(new ApBroadcastReceiver(), new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
     }
 
-    private void setBtnUI(boolean ApOn) {
-        if (ApOn)
-            bAP.setText("Stop AP");
-        else
-            bAP.setText("Start AP");
+    public void onPowerBtnPressed(View v) {
+        //if AP button was pressed turn on/off hotspot && proxy service
+        //TODO: PROXY SERVICE
+        boolean isApOn = ApMan.isApOn();
+        ApMan.configApState("AP2", "pa$$word");
+        toastMessage("btn clicked");
     }
 
-    public void onClick(View v) {
-        // default method for handling onClick Events for our MainActivity
-        switch (v.getId()) {
-            case R.id.bAP:
-                //if AP button was pressed turn on/off hotspot && proxy service
-                //TODO: PROXY SERVICE
-                boolean isApOn = ApMan.isApOn();
-                ApMan.configApState("AP2", "pa$$word");
-                isApOn = ApMan.isApOn();
-                setBtnUI(isApOn);
-                /*if (isApOn) {
-                    //add iptables rule
-                    if (!RootMan.isHttpRedirected()){
-                        RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 " +
-                                "-j REDIRECT --to-port 1337");
-                    }
-                }
-                else{
-                    //remove iptables rules
-                    if (RootMan.isHttpRedirected()){
-                        RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 " +
-                                "-j REDIRECT --to-port 1337");
-                    }
-                }*/
-                break;
-        }
-    }
+    @Override
+    public void onFragmentInteraction(Uri uri) {
 
-    private class ApBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //something about AP changed so update the UI button
-            boolean isApOn = ApMan.isApOn();
-            setBtnUI(isApOn);
-        }
+
     }
 
     //function for debugging etc. (shows toast with msg text)

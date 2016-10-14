@@ -1,0 +1,73 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context="com.nibiru.evil_ap.Fragments.MainFragment"
+            android:id = "@+id/fragment_main">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/background_dark"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:ems="10"
+        android:layout_below="@+id/editText"
+        android:layout_alignStart="@+id/editText"
+        android:layout_marginTop="15dp"
+        android:id="@+id/editText2"
+        android:text="pswrd"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:text="Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="37dp"
+        android:id="@+id/button2"/>
+
+    <CheckBox
+        android:text="CheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editText2"
+        android:layout_alignStart="@+id/editText2"
+        android:layout_marginTop="16dp"
+        android:id="@+id/checkBox"
+        android:textColor="@android:color/background_light"
+        android:background="@android:color/darker_gray"
+        android:layout_alignEnd="@+id/button2"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="10"
+        android:id="@+id/editText"
+        android:layout_marginTop="33dp"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="22dp"
+        android:layout_below="@+id/button"
+        android:layout_alignStart="@+id/button"/>
+
+    <Button
+        android:text=""
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:id="@+id/button"
+        android:src="@drawable/onoff"
+        android:background = "@drawable/onoff"
+        android:layout_marginTop="32dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="onPowerBtnPressed"
+        />
+
+</RelativeLayout>
