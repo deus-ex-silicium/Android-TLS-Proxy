@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap.Fragments;
+package com.nibiru.evil_ap.fragments;
 
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
@@ -15,10 +15,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.nibiru.evil_ap.ApManager;
-import com.nibiru.evil_ap.MainActivity;
+import com.nibiru.evil_ap.ManagerAp;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.RootManager;
 
 
 /**
@@ -31,9 +29,8 @@ import com.nibiru.evil_ap.RootManager;
  */
 public class MainFragment extends Fragment {
 
-    Context ctx;
-    ApManager ApMan;
-    RootManager RootMan;
+    private Context ctx;
+    private ManagerAp ApMan;
     private OnFragmentInteractionListener mListener;
 
 
@@ -56,31 +53,18 @@ public class MainFragment extends Fragment {
             intent.setData(Uri.parse("package:" + ctx.getPackageName()));
             startActivity(intent);
         }
-
-        //check if device is rooted
-        RootMan = new RootManager();
-        if (!RootMan.isDeviceRooted()){
-            toastMessage("Application will only function properly on rooted phones with root " +
-                    "permissions");
-        }
-        ApMan = new ApManager(ctx);
-        //setBtnUI(ApMan.isApOn());
+        //setBtnUI(ManagerAp.isApOn(ctx));
 
         //Register BroadcastReceiver, filer specific intents
-
-            ctx.registerReceiver(new ApBroadcastReceiver(), new
-                    IntentFilter("android" +
-                    ".net.wifi.WIFI_AP_STATE_CHANGED"));
-
+        ctx.registerReceiver(new ApBroadcastReceiver(),
+                new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
         return inflater.inflate(R.layout.fragment_main, container, false);
-
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -129,18 +113,18 @@ public class MainFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public void toastMessage(String msg){
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(ctx, msg, duration);
-        toast.show();
-    }
-
     private class ApBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             //something about AP changed so update the UI button
-            boolean isApOn = ApMan.isApOn();
+            boolean isApOn = ApMan.isApOn(ctx);
             setBtnUI(isApOn);
         }
+    }
+
+    public void toastMessage(String msg){
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(ctx, msg, duration);
+        toast.show();
     }
 }

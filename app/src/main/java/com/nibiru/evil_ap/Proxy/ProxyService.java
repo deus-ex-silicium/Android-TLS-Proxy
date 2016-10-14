@@ -1,9 +1,8 @@
-package com.nibiru.evil_ap.Proxy;
+package com.nibiru.evil_ap.proxy;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 
 /**
  * Created by Nibiru on 2016-10-14.
