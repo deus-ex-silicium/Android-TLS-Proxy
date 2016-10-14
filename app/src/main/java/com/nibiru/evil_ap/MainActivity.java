@@ -9,7 +9,6 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,6 +20,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //CLASS FIELDS
     final static String TAG = "MainActivity";
     ApManager ApMan;
+    RootManager RootMan;
     Button bAP;
     /*************************************************************/
 
@@ -40,11 +40,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // permissions to be able to change hotspot configuration
         //TODO: what about other versions ?
         //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
-        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if ( !Settings.System.canWrite(this) &&
+                Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
             intent.setData(Uri.parse("package:" + this.getPackageName()));
             startActivity(intent);
         }
+
+        //check if device is rooted
+        RootMan = new RootManager();
+        if (!RootMan.isDeviceRooted()){
+            toastMessage("Application will only function properly on rooted phones with root " +
+                    "permissions");
+        }
+
         //Find the current state of AP
         ApMan = new ApManager(this);
         setBtnUI(ApMan.isApOn());
@@ -53,32 +62,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         registerReceiver(new ApBroadcastReceiver(), new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
     }
 
-    private void setBtnUI(boolean wifiON) {
-        if (wifiON)
+    private void setBtnUI(boolean ApOn) {
+        if (ApOn)
             bAP.setText("Stop AP");
         else
             bAP.setText("Start AP");
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-
-    public native String stringFromJNI();
-
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }*/
     public void onClick(View v) {
         // default method for handling onClick Events for our MainActivity
         switch (v.getId()) {
             case R.id.bAP:
-                Log.d(TAG, "AP button pressed");
                 //if AP button was pressed turn on/off hotspot && proxy service
                 //TODO: PROXY SERVICE
-                ApMan.configApState();
-                setBtnUI(ApMan.isApOn());
+                boolean isApOn = ApMan.isApOn();
+                ApMan.configApState("AP2", "pa$$word");
+                isApOn = ApMan.isApOn();
+                setBtnUI(isApOn);
+                /*if (isApOn) {
+                    //add iptables rule
+                    if (!RootMan.isHttpRedirected()){
+                        RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 " +
+                                "-j REDIRECT --to-port 1337");
+                    }
+                }
+                else{
+                    //remove iptables rules
+                    if (RootMan.isHttpRedirected()){
+                        RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 " +
+                                "-j REDIRECT --to-port 1337");
+                    }
+                }*/
                 break;
         }
     }
@@ -87,7 +101,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onReceive(Context context, Intent intent) {
             //something about AP changed so update the UI button
-            setBtnUI(ApMan.isApOn());
+            boolean isApOn = ApMan.isApOn();
+            setBtnUI(isApOn);
         }
     }
 
