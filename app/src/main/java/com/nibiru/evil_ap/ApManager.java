@@ -3,7 +3,6 @@ package com.nibiru.evil_ap;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-
 import java.lang.reflect.Method;
 
 /**
@@ -35,15 +34,25 @@ class ApManager {
     }
 
     // toggle WiFi hotspot on or off
-    public boolean configApState() {
-        WifiConfiguration wificonfiguration = null;
+    public boolean configApState(String SSID, String PSK ) {
+        WifiConfiguration wifiConfig = new WifiConfiguration();
+        wifiConfig.SSID = "MyAP";
+        wifiConfig.preSharedKey = PSK;
+        wifiConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+        wifiConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wifiConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         try {
             // if WiFi is on, turn it off
             if(wifiManager.isWifiEnabled()) {
                 wifiManager.setWifiEnabled(false);
             }
-            Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, wificonfiguration, !isApOn());
+
+            Method method = wifiManager.getClass()
+                    .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
+            method.invoke(wifiManager, wifiConfig, !isApOn());
+            Method setConfigMethod = wifiManager.getClass().getMethod("setWifiApConfiguration", WifiConfiguration.class);
+            setConfigMethod.invoke(wifiManager, wifiConfig);
             return true;
         }
         catch (Exception e) {
