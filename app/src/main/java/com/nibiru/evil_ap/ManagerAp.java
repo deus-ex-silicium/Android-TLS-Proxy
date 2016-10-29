@@ -34,7 +34,7 @@ public class ManagerAp {
     static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
-        wifiConfig.SSID = "AP";
+        wifiConfig.SSID = SSID;
         //network will be open if password not given
         if (!PSK.isEmpty()) {
             wifiConfig.preSharedKey = PSK;

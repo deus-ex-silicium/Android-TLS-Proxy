@@ -40,8 +40,9 @@ public class ManagerRoot {
             return false;
     }
 
-    public boolean isHttpRedirected(){
-        return RunAsRoot("iptables -t nat -L | grep \"www redir ports 1337\"");
+    public boolean isPortRedirected(int port){
+        return RunAsRoot("iptables -t nat -L | grep \"redir ports "
+                + Integer.toString(port) + "\"" );
     }
 
     public static boolean isDeviceRooted() {

@@ -1,6 +1,7 @@
 package com.nibiru.evil_ap.proxy;
 
 import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -12,14 +13,13 @@ import java.net.Socket;
  * Created by Nibiru on 2016-10-14.
  */
 
-public class ProxyRunnable implements Runnable {
-    final static String TAG = "ProxyRunnable";
+public class ClientRevEcho implements Runnable {
+    final static String TAG = "ClientRevEcho";
     private Socket client = null;
     /*********************************************************************************************/
-    public ProxyRunnable(Socket socket) {
+    public ClientRevEcho(Socket socket) {
         super();
         this.client = socket;
-        Log.d(TAG, "<==================Accepted client==================>");
     }
 
     public void run() {
@@ -30,7 +30,7 @@ public class ProxyRunnable implements Runnable {
             String request = "";
             String line;
             while ((line = in.readLine()) != null) {
-                Log.d(TAG+"[IN]", line );
+                Log.d(TAG + "[IN]", line );
                 request += line + '\n';
                 if (line.isEmpty()) {
                     break;

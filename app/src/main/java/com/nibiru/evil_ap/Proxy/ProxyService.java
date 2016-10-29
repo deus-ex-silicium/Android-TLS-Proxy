@@ -4,6 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.nibiru.evil_ap.R;
+
 /**
  * Created by Nibiru on 2016-10-14.
  */
@@ -15,8 +17,15 @@ public class ProxyService extends Service{
     public void onCreate() {
         // Start up the thread running the service.  Note that we create a separate thread because
         // the service normally runs in the process's main thread, which we don't want to block.
-        Thread proxy = new Thread(new ProxyMainLoop());
-        proxy.start();
+
+        //start the HTTP proxy socket thread
+        Thread proxyHTTP = new Thread(new ProxyHTTPMainLoop());
+        proxyHTTP.start();
+        //start the HTTPS proxy
+
+        Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
+                getResources().openRawResource(R.raw.evil_ap)));
+        proxyHTTPS.start();
     }
 
 
