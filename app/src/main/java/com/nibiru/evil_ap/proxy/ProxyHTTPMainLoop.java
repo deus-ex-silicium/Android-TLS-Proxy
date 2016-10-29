@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Nibiru on 2016-10-14.
  */
 
-public class ProxyHTTPMainLoop implements Runnable{
+class ProxyHTTPMainLoop implements Runnable{
     final static String TAG = "ProxyHTTPMainLoop";
     private ServerSocket serverSocket;
     private static final int SERVERPORT = 1337;
