@@ -25,7 +25,7 @@ class ProxyHTTPSMainLoop implements Runnable {
     private String keyStorePath;
     private InputStream keyStore;
     /*********************************************************************************************/
-    ProxyHTTPSMainLoop(InputStream file){
+    public ProxyHTTPSMainLoop(InputStream file){
         keyStore = file;
     }
     //http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions

@@ -13,11 +13,11 @@ import java.net.Socket;
  * Created by Nibiru on 2016-10-14.
  */
 
-public class ClientRevEcho implements Runnable {
+class ClientRevEcho implements Runnable {
     final static String TAG = "ClientRevEcho";
     private Socket client = null;
     /*********************************************************************************************/
-    public ClientRevEcho(Socket socket) {
+    ClientRevEcho(Socket socket) {
         super();
         this.client = socket;
     }
