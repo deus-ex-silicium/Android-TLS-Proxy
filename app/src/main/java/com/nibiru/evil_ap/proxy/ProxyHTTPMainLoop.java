@@ -12,11 +12,11 @@ import java.util.concurrent.TimeUnit;
  * Created by Nibiru on 2016-10-14.
  */
 
-public class ProxyMainLoop implements Runnable{
-    final static String TAG = "ProxyMainLoop";
+public class ProxyHTTPMainLoop implements Runnable{
+    final static String TAG = "ProxyHTTPMainLoop";
     private ServerSocket serverSocket;
-    public static final int SERVERPORT = 1337;
-    protected Boolean work = true;
+    private static final int SERVERPORT = 1337;
+    private Boolean work = true;
     /*********************************************************************************************/
     @Override
     public void run() {
@@ -31,11 +31,12 @@ public class ProxyMainLoop implements Runnable{
         );
 
         try {
+            // listen for incoming clients
+            Log.d(TAG, "Listening on port: " + SERVERPORT);
             serverSocket = new ServerSocket(SERVERPORT);
             while (work) {
-                // listen for incoming clients
-                Log.d(TAG, "Listening on port: " + SERVERPORT);
-                executor.execute(new ProxyRunnable(serverSocket.accept()));
+                executor.execute(new ClientRevEcho(serverSocket.accept()));
+                Log.d(TAG, "Accepted HTTP client");
             }
         } catch (IOException e) {
             Log.d(TAG, "Error!");
