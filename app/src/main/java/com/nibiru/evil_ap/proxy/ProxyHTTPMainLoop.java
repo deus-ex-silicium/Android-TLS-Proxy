@@ -41,6 +41,8 @@ class ProxyHTTPMainLoop implements Runnable{
         } catch (IOException e) {
             Log.d(TAG, "Error!");
             e.printStackTrace();
+        } finally {
+            //TODO: clean shit up?
         }
     }
 }

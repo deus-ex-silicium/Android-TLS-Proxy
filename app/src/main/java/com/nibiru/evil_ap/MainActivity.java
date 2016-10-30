@@ -83,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements MainFragment
                 RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 443 -j " +
                         "REDIRECT --to-port 1338");
             }
+            /*if (!RootMan.isPortRedirected(1339)){
+                RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p udp --dport 53 -j " +
+                        "REDIRECT --to-port 1339");
+            }*/
         }
         else {
             ManagerAp.turnOffAp(this);
@@ -94,6 +98,10 @@ public class MainActivity extends AppCompatActivity implements MainFragment
             if (RootMan.isPortRedirected(1338)){
                 RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 443 -j " +
                         "REDIRECT --to-port 1338");
+            }
+            if (RootMan.isPortRedirected(1339)){
+                RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p udp --dport 53 -j " +
+                        "REDIRECT --to-port 1339");
             }
         }
     }
