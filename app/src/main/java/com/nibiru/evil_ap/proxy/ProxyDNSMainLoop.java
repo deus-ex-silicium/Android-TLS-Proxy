@@ -31,8 +31,6 @@ public class ProxyDNSMainLoop implements Runnable{
                 Log.d(TAG, sentence);
                 //forward to real DNS server
                 DatagramSocket clientSocket = new DatagramSocket();
-                byte[] bAddr = {(byte)8,(byte)8,(byte)8,(byte)8};
-                //InetAddress dnsAddr = InetAddress.getByAddress(bAddr);
                 InetAddress dnsAddr = InetAddress.getByName("8.8.8.8");
                 DatagramPacket dnsQuery = new DatagramPacket(receivePacket.getData(),
                         receivePacket.getLength(), dnsAddr, 53);
