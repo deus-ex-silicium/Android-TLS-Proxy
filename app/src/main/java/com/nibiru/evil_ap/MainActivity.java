@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -17,6 +18,13 @@ import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener,ClientsFragment
         .OnFragmentInteractionListener,ACFragment
@@ -24,7 +32,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment
     //CLASS FIELDS
     final static String TAG = "MainActivity";
     Fragment MainFragment = new MainFragment();
-    ManagerRoot RootMan;
+    ManagerRoot rootMan;
+    ManagerRouting routingMan;
     /*********************************************************************************************/
 
     @Override
@@ -62,11 +71,12 @@ public class MainActivity extends AppCompatActivity implements MainFragment
             }
         });
         //check if device is rooted
-        RootMan = new ManagerRoot();
-        if (!RootMan.isDeviceRooted()){
+        rootMan = new ManagerRoot();
+        if (!rootMan.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
                     "permissions");
         }
+        routingMan = new ManagerRouting();
     }
 
     public void onPowerBtnPressed(View v) {
@@ -75,34 +85,42 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         if(!isApOn){
             ManagerAp.turnOnAp("AP", "pa$$word", this);
             startService(new Intent(this, ProxyService.class));
-            if (!RootMan.isPortRedirected(1337)){
-                RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 -j " +
-                        "REDIRECT --to-port 1337");
-            }
-            if (!RootMan.isPortRedirected(1338)){
-                RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 443 -j " +
-                        "REDIRECT --to-port 1338");
-            }
-            /*if (!RootMan.isPortRedirected(1339)){
-                RootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p udp --dport 53 -j " +
-                        "REDIRECT --to-port 1339");
-            }*/
+            routingMan.redirectHTTP(rootMan, true);
+            routingMan.redirectHTTPS(rootMan, true);
+            //routingMan.redirectDNS(rootMan, true);
         }
         else {
             ManagerAp.turnOffAp(this);
             stopService(new Intent(this, ProxyService.class));
-            if (RootMan.isPortRedirected(1337)){
-                RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j " +
-                        "REDIRECT --to-port 1337");
+            routingMan.redirectHTTP(rootMan, false);
+            routingMan.redirectHTTPS(rootMan, false);
+            //routingMan.redirectDNS(rootMan, false);
+        }
+    }
+
+    public void checkClientsPressed(View v){
+        //refresh /proc/net/arp
+        rootMan.RunAsRoot("ip neigh flush all");
+        //read /proc/net/arp
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("/proc/net/arp"));
+            List<String> ips = new ArrayList<>(10);
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] splitted = line.split(" +");
+                if (splitted.length > 0 ) {
+                    //IP idx = 0 , MAC idx = 3
+                    String ip = splitted[0];
+                    ips.add(ip);
+                }
             }
-            if (RootMan.isPortRedirected(1338)){
-                RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 443 -j " +
-                        "REDIRECT --to-port 1338");
+            //skip first line (names of columns)
+            for(int i = 1; i < ips.size(); i++){
+                toastMessage("Client:" + ips.get(i));
             }
-            if (RootMan.isPortRedirected(1339)){
-                RootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p udp --dport 53 -j " +
-                        "REDIRECT --to-port 1339");
-            }
+        } catch (IOException e) {
+            Log.d(TAG, "Error reading /proc/net/arp");
+            e.printStackTrace();
         }
     }
 
