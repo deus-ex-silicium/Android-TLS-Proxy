@@ -48,4 +48,15 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"/>
 
+    <Button
+        android:text="Check clients"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button2"
+        android:layout_weight="1"
+        android:onClick="checkClientsPressed"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="21dp"/>
+
 </RelativeLayout>

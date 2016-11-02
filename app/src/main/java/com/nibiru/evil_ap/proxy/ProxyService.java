@@ -26,8 +26,8 @@ public class ProxyService extends Service{
                 getResources().openRawResource(R.raw.evil_ap)));
         proxyHTTPS.start();
         //start the DNS proxy
-        Thread proxyDNS = new Thread(new ProxyDNSMainLoop());
-        proxyDNS.start();
+        //Thread proxyDNS = new Thread(new ProxyDNSMainLoop());
+        //proxyDNS.start();
     }
 
     @Override

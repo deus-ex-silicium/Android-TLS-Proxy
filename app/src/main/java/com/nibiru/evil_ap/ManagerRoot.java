@@ -40,11 +40,6 @@ public class ManagerRoot {
             return false;
     }
 
-    public boolean isPortRedirected(int port){
-        return RunAsRoot("iptables -t nat -L | grep \"redir ports "
-                + Integer.toString(port) + "\"" );
-    }
-
     public static boolean isDeviceRooted() {
         return checkRootMethod1() || checkRootMethod2() || checkRootMethod3();
     }
