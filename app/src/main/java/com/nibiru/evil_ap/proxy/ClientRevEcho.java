@@ -9,17 +9,21 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
+import javax.net.ssl.SSLProtocolException;
+
 /**
  * Created by Nibiru on 2016-10-14.
  */
 
 class ClientRevEcho implements Runnable {
-    final static String TAG = "ClientRevEcho";
+    private final static String TAG = "ClientRevEcho";
     private Socket client = null;
+    private RequestParser rp;
     /*********************************************************************************************/
     ClientRevEcho(Socket socket) {
         super();
         this.client = socket;
+        rp = new RequestParser();
     }
 
     public void run() {
@@ -38,13 +42,17 @@ class ClientRevEcho implements Runnable {
             }
             Log.d(TAG, "<==================Sending response==================>");
             out.write(request);
+            rp.parse(request);
             Log.d(TAG, "<==================Closing connection==================>");
             out.close();
             in.close();
             client.close();
         } catch (IOException e) {
             Log.d(TAG, "<================ SHIT FUCK, EXCEPTION !!! ================>");
-            e.printStackTrace();
+            if (e instanceof SSLProtocolException){
+                Log.d(TAG, "ERROR: client doesnt like our self signed cert");
+            }
+            else e.printStackTrace();
         }
     }
 }
