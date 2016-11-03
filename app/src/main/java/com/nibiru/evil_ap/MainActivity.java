@@ -19,7 +19,6 @@ import com.nibiru.evil_ap.fragments.MainFragment;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         });
         //check if device is rooted
         rootMan = new ManagerRoot();
-        if (!rootMan.isDeviceRooted()){
+        if (!ManagerRoot.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
                     "permissions");
         }
