@@ -103,19 +103,19 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         //read /proc/net/arp
         try {
             BufferedReader br = new BufferedReader(new FileReader("/proc/net/arp"));
-            List<String> ips = new ArrayList<>(10);
+            List<Client> clients = new ArrayList<>(10);
             String line;
             while ((line = br.readLine()) != null) {
                 String[] splitted = line.split(" +");
                 if (splitted.length > 0 ) {
                     //IP idx = 0 , MAC idx = 3
-                    String ip = splitted[0];
-                    ips.add(ip);
+                    clients.add(new Client(splitted[0], splitted[3]));
                 }
             }
-            //skip first line (names of columns)
-            for(int i = 1; i < ips.size(); i++){
-                toastMessage("Client:" + ips.get(i));
+            //remove first line (names of columns)
+            clients.remove(0);
+            for(int i = 0; i < clients.size(); i++){
+                toastMessage("Client:" + clients.get(i).getIp());
             }
         } catch (IOException e) {
             Log.d(TAG, "Error reading /proc/net/arp");
