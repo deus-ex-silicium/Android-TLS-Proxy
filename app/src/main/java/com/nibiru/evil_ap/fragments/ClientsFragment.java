@@ -11,25 +11,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.nibiru.evil_ap.Client;
+import com.nibiru.evil_ap.ManagerRoot;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.clients_adapter;
+import com.nibiru.evil_ap.log.Client;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
 public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
-
+    /**************************************CLASS FIELDS********************************************/
+    private final static String TAG = "ClientsFragment";
     private OnFragmentInteractionListener mListener;
     private ListView clients_listView;
     private clients_adapter customAdapter;
     private View rootView;
     SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<Client> clientsList;
+    /**************************************CLASS METHODS*******************************************/
     public ClientsFragment() {
         // Required empty public constructor
     }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -37,16 +42,12 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         clients_listView = (ListView) rootView.findViewById(R.id.listk);
         final ListView clients_listView = (ListView) rootView.findViewById(R.id
                 .listk);
-        clientsList = getClients();
+        clientsList = getCurrentClients();
         customAdapter = new clients_adapter(getActivity().getApplicationContext(), R
                 .layout.list_item_clients, clientsList,this.getActivity());
         mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         mySwipeRefreshLayout.setOnRefreshListener(this);
         clients_listView.setAdapter(customAdapter);
-        Log.e("adapter",customAdapter.getItem(0).getIp());
-        Log.e("LIST!: ",clientsList.get(0).getIp());
-
-
         // Inflate the layout for this fragment
         return rootView;
     }
@@ -74,36 +75,27 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         super.onDetach();
         mListener = null;
     }
-    public ArrayList<Client> getClients(){
-        Client c = new Client("23.23.12.53","fdgdsf2");
-        Client c2 = new Client("23.23.12.54","fdgddssf2");
-        ArrayList<Client> k = new ArrayList<Client>();
-        for(int i = 0; i < 20 ; i ++) {
-            k.add(c);
-            k.add(c2);
+
+    public ArrayList<Client> getCurrentClients(){
+        ArrayList<Client> clients = new ArrayList<>(10);
+        ArrayList<String> output = ManagerRoot.RunAsRootWithOutput("ip -4 neigh");
+        for (String line : output) {
+            String[] split = line.split(" +");
+            //IP idx = 0 , MAC idx = 4, flags idx = 5
+            if (split.length == 6 && (split[5].equals("REACHABLE") || split[5].equals("STALE")) ) {
+                clients.add(new Client(split[0], split[4]));
+            }
         }
-        return k;
-    }
-    public ArrayList<Client> getClientss(){
-        Client c = new Client("23.23.12.51","fdgdsf2");
-        Client c2 = new Client("23.23.12.52","fdgddssf2");
-        ArrayList<Client> k = new ArrayList<Client>();
-        for(int i = 0; i < 20 ; i ++) {
-            k.add(c);
-            k.add(c2);
-        }
-        return k;
+        return clients;
     }
     @Override
     public void onRefresh() {
-        Log.e("Refresh", "SMASHING!");
-        clientsList = getClientss();
+        Log.d(TAG, "Refreshing!");
+        clientsList = getCurrentClients();
         customAdapter = new clients_adapter(getActivity().getApplicationContext(), R
                 .layout.list_item_clients, clientsList,this.getActivity());
         clients_listView.setAdapter(customAdapter);
         mySwipeRefreshLayout.setRefreshing(false);
-
-
     }
 
     /**

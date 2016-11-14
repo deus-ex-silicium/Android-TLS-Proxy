@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.nibiru.evil_ap.Client;
+import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 
@@ -20,18 +20,18 @@ import java.util.ArrayList;
  */
 
 public class clients_adapter extends ArrayAdapter<Client> {
-    Activity clients_activity;
-    ArrayList<Client> clientsList;
-    ArrayList<Client> cliList = null;
+    /**************************************CLASS FIELDS********************************************/
+    private Activity clients_activity;
+    private ArrayList<Client> clientsList;
+    private ArrayList<Client> cliList = null;
     ClientsFragment Fragment_Clients;
-
+    /**************************************CLASS METHODS*******************************************/
     public clients_adapter(Context context, int resource, ArrayList<Client> items,
                                Activity passed_clients_activity) {
         super(context, resource, items);
         clients_activity = passed_clients_activity;
         clientsList = items;
         cliList = new ArrayList<>(clientsList);
-        Log.e("adapter",clientsList.get(1).getIp());
     }
 
     @Override
@@ -46,7 +46,6 @@ public class clients_adapter extends ArrayAdapter<Client> {
         final Client d = clientsList.size()>0?clientsList.get(position):null;
 
         if(d!=null){
-
             final TextView ti = (TextView) v_clients.findViewById(R.id.text_content_clientip);
             if (ti!=null){
                 ti.setText(clientsList.get(position).getIp());
@@ -57,9 +56,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                     }
                 });
             }
-
         }
-
         return v_clients;
     }
 

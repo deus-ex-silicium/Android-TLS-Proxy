@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -16,6 +15,7 @@ import android.widget.Toast;
 import com.nibiru.evil_ap.fragments.ACFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
+import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 import java.io.BufferedReader;
@@ -28,12 +28,11 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener,ClientsFragment
         .OnFragmentInteractionListener,ACFragment
         .OnFragmentInteractionListener {
-    //CLASS FIELDS
+    /**************************************CLASS FIELDS********************************************/
     final static String TAG = "MainActivity";
-    Fragment MainFragment = new MainFragment();
     ManagerRoot rootMan;
     ManagerRouting routingMan;
-    /*********************************************************************************************/
+    /**************************************CLASS METHODS*******************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment
             }
         });
         //check if device is rooted
-        rootMan = new ManagerRoot();
         if (!ManagerRoot.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
                     "permissions");
@@ -84,44 +82,19 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         if(!isApOn){
             ManagerAp.turnOnAp("AP", "pa$$word", this);
             startService(new Intent(this, ProxyService.class));
-            routingMan.redirectHTTP(rootMan, true);
-            routingMan.redirectHTTPS(rootMan, true);
+            //routingMan.redirectHTTP(rootMan, true);
+            //routingMan.redirectHTTPS(rootMan, true);
             //routingMan.redirectDNS(rootMan, true);
         }
         else {
             ManagerAp.turnOffAp(this);
             stopService(new Intent(this, ProxyService.class));
-            routingMan.redirectHTTP(rootMan, false);
-            routingMan.redirectHTTPS(rootMan, false);
+            //routingMan.redirectHTTP(rootMan, false);
+            //routingMan.redirectHTTPS(rootMan, false);
             //routingMan.redirectDNS(rootMan, false);
         }
     }
 
-    public void checkClientsPressed(View v){
-        //refresh /proc/net/arp
-        rootMan.RunAsRoot("ip neigh flush all");
-        //read /proc/net/arp
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("/proc/net/arp"));
-            List<Client> clients = new ArrayList<>(10);
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] splitted = line.split(" +");
-                if (splitted.length > 0 ) {
-                    //IP idx = 0 , MAC idx = 3
-                    clients.add(new Client(splitted[0], splitted[3]));
-                }
-            }
-            //remove first line (names of columns)
-            clients.remove(0);
-            for(int i = 0; i < clients.size(); i++){
-                toastMessage("Client:" + clients.get(i).getIp());
-            }
-        } catch (IOException e) {
-            Log.d(TAG, "Error reading /proc/net/arp");
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onFragmentInteraction(Uri uri) {}

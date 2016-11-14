@@ -16,12 +16,10 @@ public class ManagerAp {
     //CLASS FIELDS
     final static String TAG = "ManagerAp";
     /*********************************************************************************************/
-    public ManagerAp(){}
-
     //check whether WiFI hotspot is on or off
     public static boolean isApOn(Context ctx) {
         try {
-            WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
+            WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
             Method method = wifiMan.getClass().getDeclaredMethod("isWifiApEnabled");
             method.setAccessible(true);
             return (Boolean) method.invoke(wifiMan);
@@ -32,7 +30,7 @@ public class ManagerAp {
 
     // toggle WiFi hotspot on
     static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
-        WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
+        WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = SSID;
         //network will be open if password not given
@@ -63,8 +61,8 @@ public class ManagerAp {
 
     // toggle WiFi hotspot off
     static boolean turnOffAp(Context ctx) {
-        WifiManager wifiMan = (WifiManager) ctx.getSystemService(ctx.WIFI_SERVICE);
-        Method method = null;
+        WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+        Method method;
         try {
             method = wifiMan.getClass()
                     .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
