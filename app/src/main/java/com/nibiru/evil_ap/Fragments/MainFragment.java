@@ -30,7 +30,6 @@ import com.nibiru.evil_ap.R;
 public class MainFragment extends Fragment {
 
     private Context ctx;
-    private ManagerAp ApMan;
     private OnFragmentInteractionListener mListener;
 
 
@@ -116,14 +115,8 @@ public class MainFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             //something about AP changed so update the UI button
-            boolean isApOn = ApMan.isApOn(ctx);
+            boolean isApOn = ManagerAp.isApOn(ctx);
             setBtnUI(isApOn);
         }
-    }
-
-    public void toastMessage(String msg){
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(ctx, msg, duration);
-        toast.show();
     }
 }
