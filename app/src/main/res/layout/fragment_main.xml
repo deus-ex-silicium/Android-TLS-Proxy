@@ -3,7 +3,8 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="com.nibiru.evil_ap.fragments.MainFragment"
-            android:id = "@+id/fragment_main">
+            android:id = "@+id/fragment_main"
+            android:paddingTop="50dp">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView

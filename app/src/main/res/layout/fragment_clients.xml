@@ -1,13 +1,45 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="com.nibiru.evil_ap.fragments.ClientsFragment">
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="false"
+                android:background="@color/opblack"
+                android:paddingTop="80dp"
+    >
+    <!--<ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/smile"
+        />-->
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:id="@+id/userName"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment"/>
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:paddingTop="0dp"
+        android:text="Select clients. Swipe down to refresh."
+        android:paddingBottom="20dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        />
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeLayout"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+    <ListView
+        android:id="@+id/listk"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:divider="@color/opblack"
+        android:focusable="true"
+        android:choiceMode="singleChoice"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="40dp"
+        >
+    </ListView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
-</FrameLayout>
+</RelativeLayout>
