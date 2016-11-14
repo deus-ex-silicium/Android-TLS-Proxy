@@ -46,8 +46,8 @@ public class MainFragment extends Fragment {
         // permissions to be able to change hotspot configuration
         //TODO: what about other versions ? FIX NEEDED
         //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
-        if ( !Settings.System.canWrite(ctx) &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                !Settings.System.canWrite(ctx)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
             intent.setData(Uri.parse("package:" + ctx.getPackageName()));
             startActivity(intent);

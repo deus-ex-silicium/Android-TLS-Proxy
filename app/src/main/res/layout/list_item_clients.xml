@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_height="wrap_content" android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:id="@+id/view_teams"
+              android:focusable="true"
+              android:paddingBottom="2dp"
+              android:includeFontPadding="false"
+              android:gravity="center"
+    >
+    <TextView
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_weight="2537.50"
+        android:ellipsize="end"
+        android:paddingLeft="2dp"
+        android:paddingRight="2dp"
+        android:singleLine="true"
+        android:textColor="@color/opblack"
+        android:textStyle="bold"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:focusable="false"
+        android:clickable="true"
+        android:contextClickable="true"
+        android:textSize="10dp"
+        android:background="@color/opblack"
+        />
+
+    <Button
+        android:text="SHOW Log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button3"
+        android:layout_marginEnd="13dp"
+        android:layout_below="@+id/separator"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@+id/text_content_clientip"/>
+
+    <TextView
+        android:id="@+id/text_content_clientip"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="left|center"
+        android:ellipsize="end"
+        android:paddingLeft="2dp"
+        android:paddingRight="2dp"
+        android:singleLine="true"
+        android:textColor="@color/oplblue"
+        android:textStyle="bold"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:focusable="false"
+        android:clickable="true"
+        android:contextClickable="true"
+        android:onClick="onClicktext"
+        android:textSize="30dp"
+        android:background="@color/opblue"
+        android:layout_below="@+id/separator"
+        android:layout_centerHorizontal="true"/>
+
+</RelativeLayout>
