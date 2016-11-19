@@ -15,7 +15,6 @@ import android.widget.Toast;
 import com.nibiru.evil_ap.fragments.ACFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
-import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 import java.io.BufferedReader;
