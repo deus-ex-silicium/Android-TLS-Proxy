@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap;
+package com.nibiru.evil_ap.manager;
 
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
@@ -7,15 +7,15 @@ import java.lang.reflect.Method;
 
 /**
  * Created by Nibiru on 2016-10-11.
- * ManagerAp class takes care of checking the state of hotspot
+ * Ap class takes care of checking the state of hotspot
  * it can also toggle the hotspot on and off
  */
 
-public class ManagerAp {
+public class Ap {
 
-    //CLASS FIELDS
-    final static String TAG = "ManagerAp";
-    /*********************************************************************************************/
+    /**************************************CLASS FIELDS********************************************/
+    final static String TAG = "Ap";
+    /**************************************CLASS METHODS*******************************************/
     //check whether WiFI hotspot is on or off
     public static boolean isApOn(Context ctx) {
         try {
@@ -29,7 +29,7 @@ public class ManagerAp {
     }
 
     // toggle WiFi hotspot on
-    static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
+    public static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = SSID;
@@ -60,7 +60,7 @@ public class ManagerAp {
     }
 
     // toggle WiFi hotspot off
-    static boolean turnOffAp(Context ctx) {
+    public static boolean turnOffAp(Context ctx) {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         Method method;
         try {

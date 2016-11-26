@@ -13,7 +13,10 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.manager.Root;
+import com.nibiru.evil_ap.manager.Routing;
 
 public class ACFragment extends Fragment implements View.OnClickListener,CompoundButton.OnCheckedChangeListener{
 
@@ -94,6 +97,7 @@ public class ACFragment extends Fragment implements View.OnClickListener,Compoun
         switch (buttonView.getId()) {
             case R.id.switch1:
                 Log.e("Switch - ","redirect "+isChecked);
+                Routing.redirectHTTP(isChecked);
                 break;
             case R.id.switch2:
                 Log.e("Switch - ","inject "+isChecked);
@@ -103,6 +107,10 @@ public class ACFragment extends Fragment implements View.OnClickListener,Compoun
                 break;
             case R.id.switch4:
                 Log.e("Switch - ","images "+isChecked);
+                if (isChecked)
+                    ((MainActivity)getActivity()).proxyService.swapWithImg(R.raw.pixel_skull);
+                else
+                    ((MainActivity)getActivity()).proxyService.swapWithImg(-1);
                 break;
         }
     }

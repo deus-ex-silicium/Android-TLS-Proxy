@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap;
+package com.nibiru.evil_ap.manager;
 
 import android.util.Log;
 
@@ -13,15 +13,15 @@ import java.util.ArrayList;
 
 /**
  * Created by Nibiru on 2016-10-14.
- * ManagerRoot class takes care of running root commands and checking exit status codes
+ * Root class takes care of running root commands and checking exit status codes
  * also proves a static method for checking if device is rooted
  */
 
-public class ManagerRoot {
+public class Root {
     /**************************************CLASS FIELDS********************************************/
-    private final static String TAG = "ManagerRoot";
+    private final static String TAG = "Root";
     /**************************************CLASS METHODS*******************************************/
-    public ManagerRoot(){}
+    public Root(){}
 
     public static boolean RunAsRoot(String command){
         Process p;

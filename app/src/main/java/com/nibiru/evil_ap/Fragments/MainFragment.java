@@ -9,13 +9,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 
-import com.nibiru.evil_ap.ManagerAp;
+import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.R;
 
 
@@ -28,11 +28,11 @@ import com.nibiru.evil_ap.R;
  * create an instance of this fragment.
  */
 public class MainFragment extends Fragment {
-
+    /**************************************CLASS FIELDS********************************************/
+    private final static String TAG = "MainFragment";
     private Context ctx;
     private OnFragmentInteractionListener mListener;
-
-
+    /**************************************CLASS METHODS*******************************************/
     public MainFragment() {
         // Required empty public constructor
     }
@@ -51,7 +51,7 @@ public class MainFragment extends Fragment {
             intent.setData(Uri.parse("package:" + ctx.getPackageName()));
             startActivity(intent);
         }
-        //setBtnUI(ManagerAp.isApOn(ctx));
+        //setBtnUI(Ap.isApOn(ctx));
 
         //Register BroadcastReceiver, filer specific intents
         ctx.registerReceiver(new ApBroadcastReceiver(),
@@ -84,11 +84,16 @@ public class MainFragment extends Fragment {
     }
 
     public void setBtnUI(boolean ApOn) {
-        Button btn = (Button)getView().findViewById(R.id.button);
-        if (ApOn)
-            btn.setBackgroundResource(R.drawable.onoffon);
-        else
-            btn.setBackgroundResource(R.drawable.onoff);
+        try {
+            Button btn = (Button) getView().findViewById(R.id.button);
+            if (ApOn)
+                btn.setBackgroundResource(R.drawable.onoffon);
+            else
+                btn.setBackgroundResource(R.drawable.onoff);
+        }
+        catch (NullPointerException e){
+            Log.e(TAG, "findViewById null pointer!");
+        }
     }
     @Override
     public void onDetach() {
@@ -115,7 +120,7 @@ public class MainFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             //something about AP changed so update the UI button
-            boolean isApOn = ManagerAp.isApOn(ctx);
+            boolean isApOn = Ap.isApOn(ctx);
             setBtnUI(isApOn);
         }
     }

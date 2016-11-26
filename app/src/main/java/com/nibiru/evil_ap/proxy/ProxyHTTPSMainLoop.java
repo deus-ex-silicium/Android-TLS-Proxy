@@ -55,7 +55,7 @@ class ProxyHTTPSMainLoop implements Runnable {
             // listen for incoming clients
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             while (work) {
-                executor.execute(new ClientRevEcho(serverSocket.accept()));
+                executor.execute(new RequestRevEcho(serverSocket.accept()));
                 Log.d(TAG, "Accepted HTTPS client");
             }
         } catch (Exception e ) {

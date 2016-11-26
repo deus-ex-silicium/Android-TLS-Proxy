@@ -13,28 +13,27 @@ import okhttp3.Request;
  * Created by Nibiru on 2016-11-03.
  */
 
-class RequestParser {
-    private final static String TAG = "RequestParser";
-    private String requestLine;
+class OkHttpParser {
+    private final static String TAG = "OkHttpParser";
     private Vector<Pair<String,String>> requestHeaders;
     private StringBuffer messageBody;
     /*********************************************************************************************/
-    RequestParser(){
+    OkHttpParser(){
         requestHeaders = new Vector<>();
         messageBody = new StringBuffer();
     }
     Request parse(String request){
-        Log.d(TAG, request);
         BufferedReader reader = new BufferedReader(new StringReader(request));
         try {
             //read request line
-            requestLine = reader.readLine(); // Request-Line ; Section 5.1
+            String requestLine = reader.readLine(); // Request-Line ; Section 5.1
             //read header
             String header = reader.readLine();
-            while (header.length() > 0) {
+            while (header != null && header.length() > 0) {
                 //skip over HTTPS upgrade header and HSTS header
                 if (!header.startsWith("Upgrade-Insecure-Requests")
-                        && !header.startsWith("Strict-Transport-Security")){
+                        && !header.startsWith("Strict-Transport-Security")
+                        && !header.startsWith("User-Agent")){
                     appendHeaderParameter(header);
                 }
                 header = reader.readLine();
@@ -45,12 +44,13 @@ class RequestParser {
                 appendMessageBody(bodyLine);
                 bodyLine = reader.readLine();
             }
+            return buildOkHTTPRequest(requestLine);
 
         } catch (Exception e) {
             Log.d(TAG, "Unable to parse request");
             e.printStackTrace();
+            return null;
         }
-        return buildOkHTTPRequest();
     }
 
     private void appendHeaderParameter(String header) throws Exception {
@@ -66,11 +66,15 @@ class RequestParser {
         messageBody.append(bodyLine).append("\r\n");
     }
 
-    private Request buildOkHTTPRequest() {
+    private Request buildOkHTTPRequest(String requestLine) {
+        String[] requestLineValues = requestLine.split("\\s+");
+        String url = "";
         Request.Builder builder = new Request.Builder();
         for(Pair<String, String> header : requestHeaders){
-            if (header.first.equals("Host")){
-                builder.url("http://" + header.second.trim());
+            if (header.first.equals("Host") || header.first.equals("host")){
+                url = "http://" + header.second.trim() + requestLineValues[1];
+                Log.d(TAG, url);
+                builder.url(url);
             }
             else builder.addHeader(header.first, header.second);
         }

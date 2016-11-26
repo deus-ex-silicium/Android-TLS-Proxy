@@ -25,6 +25,7 @@
             android:name="com.nibiru.evil_ap.proxy.ProxyService"
             android:label="HttpProxyService"
             android:exported="false"
+            android:stopWithTask="true"
             >
         </service>
     </application>
