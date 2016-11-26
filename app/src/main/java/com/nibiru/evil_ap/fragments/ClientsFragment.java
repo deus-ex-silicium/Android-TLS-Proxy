@@ -11,14 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.nibiru.evil_ap.ManagerRoot;
+import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.clients_adapter;
 import com.nibiru.evil_ap.log.Client;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -78,7 +75,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     public ArrayList<Client> getCurrentClients(){
         ArrayList<Client> clients = new ArrayList<>(10);
-        ArrayList<String> output = ManagerRoot.RunAsRootWithOutput("ip -4 neigh");
+        ArrayList<String> output = Root.RunAsRootWithOutput("ip -4 neigh");
         for (String line : output) {
             String[] split = line.split(" +");
             //IP idx = 0 , MAC idx = 4, flags idx = 5

@@ -1,27 +1,26 @@
 package com.nibiru.evil_ap;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.nibiru.evil_ap.fragments.ACFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
+import com.nibiru.evil_ap.manager.Ap;
+import com.nibiru.evil_ap.manager.Root;
+import com.nibiru.evil_ap.manager.Routing;
 import com.nibiru.evil_ap.proxy.ProxyService;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener,ClientsFragment
@@ -29,8 +28,10 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener {
     /**************************************CLASS FIELDS********************************************/
     final static String TAG = "MainActivity";
-    ManagerRoot rootMan;
-    ManagerRouting routingMan;
+    public ProxyService proxyService;
+    private boolean psIsBound;
+    private ServiceConnection mConnection;
+
     /**************************************CLASS METHODS*******************************************/
 
     @Override
@@ -68,25 +69,51 @@ public class MainActivity extends AppCompatActivity implements MainFragment
             }
         });
         //check if device is rooted
-        if (!ManagerRoot.isDeviceRooted()){
+        if (!Root.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
                     "permissions");
         }
-        routingMan = new ManagerRouting();
+        else {
+            startService(new Intent(this, ProxyService.class));
+            mConnection = new ServiceConnection() {
+                public void onServiceConnected(ComponentName className, IBinder service) {
+                    // This is called when the connection with the service has been
+                    // established, giving us the service object we can use to
+                    // interact with the service.  Because we have bound to a explicit
+                    // service that we know is running in our own process, we can
+                    // cast its IBinder to a concrete class and directly access it.
+                    proxyService = ((ProxyService.LocalBinder)service).getService();
+                }
+                public void onServiceDisconnected(ComponentName className) {
+                    // This is called when the connection with the service has been
+                    // unexpectedly disconnected -- that is, its process crashed.
+                    // Because it is running in our same process, we should never
+                    // see this happen.
+                    proxyService = null;
+                }
+            };
+            doBindService();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
     }
 
     public void onPowerBtnPressed(View v) {
         //if AP button was pressed turn on/off hotspot && proxy service
-        boolean isApOn = ManagerAp.isApOn(this);
+        boolean isApOn = Ap.isApOn(this);
         if(!isApOn){
-            ManagerAp.turnOnAp("AP", "pa$$word", this);
-            startService(new Intent(this, ProxyService.class));
+            Ap.turnOnAp("AP", "pa$$word", this);
+            //startService(new Intent(this, ProxyService.class));
             //routingMan.redirectHTTP(rootMan, true);
             //routingMan.redirectHTTPS(rootMan, true);
             //routingMan.redirectDNS(rootMan, true);
         }
         else {
-            ManagerAp.turnOffAp(this);
+            Ap.turnOffAp(this);
             stopService(new Intent(this, ProxyService.class));
             //routingMan.redirectHTTP(rootMan, false);
             //routingMan.redirectHTTPS(rootMan, false);
@@ -94,6 +121,22 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         }
     }
 
+    void doBindService() {
+        // Establish a connection with the service.  We use an explicit
+        // class name because we want a specific service implementation that
+        // we know will be running in our own process (and thus won't be
+        // supporting component replacement by other applications).
+        bindService(new Intent(this, ProxyService.class), mConnection, Context.BIND_AUTO_CREATE);
+        psIsBound = true;
+    }
+
+    void doUnbindService() {
+        if (psIsBound) {
+            // Detach our existing connection.
+            unbindService(mConnection);
+            psIsBound = false;
+        }
+    }
 
     @Override
     public void onFragmentInteraction(Uri uri) {}

@@ -10,7 +10,6 @@ import java.util.Vector;
 
 public class Client {
     /**************************************CLASS FIELDS********************************************/
-
     private final static String TAG = "Client";
     private final String ip;
     private final String mac;
