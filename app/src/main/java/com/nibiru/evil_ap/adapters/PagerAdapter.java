@@ -9,6 +9,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.nibiru.evil_ap.fragments.ACFragment;
+import com.nibiru.evil_ap.fragments.ACHTTPFragment;
+import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 
@@ -32,6 +34,8 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
                 return tab2;
             case 2:
                 ACFragment tab3 = new ACFragment();
+                ACHTTPFragment t4 = new ACHTTPFragment();
+                ACHTTPSFragment t5 = new ACHTTPSFragment();
                 return tab3;
             default:
                 return null;

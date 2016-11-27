@@ -1,0 +1,117 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                tools:context="com.nibiru.evil_ap.fragments.ACFragment"
+                android:src="@drawable/bground"
+                android:scaleType="centerCrop">
+
+    <!-- TODO: Update blank fragment layout -->
+    <LinearLayout
+        android:id="@+id/lin1s"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:background="@color/opblack">
+
+        <TextView
+            android:id="@+id/textView1s"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_weight="1"
+            android:text="Redirect HTML"
+            android:textSize="25sp"/>
+
+        <Switch
+            android:id="@+id/switch1s"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin2s"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lin1s"
+        android:layout_marginTop="40dp"
+        android:background="@color/opblack">
+
+        <TextView
+            android:id="@+id/textView2s"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Inject HTML"
+            android:textSize="25sp"/>
+
+        <Button
+            android:id="@+id/button_injectHTMLs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings"/>
+
+        <Switch
+            android:id="@+id/switch2s"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin3s"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lin2s"
+        android:layout_marginTop="40dp"
+        android:background="@color/opblack"
+        >
+
+        <TextView
+            android:id="@+id/textView3s"
+
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_weight="1"
+            android:text="SSL Strip"
+            android:textSize="25sp"/>
+
+        <Switch
+            android:id="@+id/switch3s"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin4s"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lin3s"
+        android:layout_marginTop="40dp"
+        android:background="@color/opblack">
+
+        <TextView
+            android:id="@+id/textView4s"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Replace Images"
+            android:textSize="25sp"/>
+
+        <Button
+            android:id="@+id/button_replaceImagess"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings"/>
+
+        <Switch
+            android:id="@+id/switch4s"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"/>
+    </LinearLayout>
+</RelativeLayout>

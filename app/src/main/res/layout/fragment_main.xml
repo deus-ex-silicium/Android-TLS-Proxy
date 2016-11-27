@@ -24,7 +24,8 @@
         android:layout_marginTop="15dp"
         android:id="@+id/editText2"
         android:text="pswrd"
-        android:textColor="@android:color/white"/>
+        android:textColor="@android:color/white"
+        android:gravity="bottom"/>
 
     <EditText
         android:layout_width="wrap_content"
@@ -35,8 +36,19 @@
         android:id="@+id/editText"
         android:layout_marginTop="40dp"
         android:textColor="@android:color/white"
-        android:layout_below="@+id/button"
-        android:layout_alignStart="@+id/button"/>
+        android:layout_alignStart="@+id/button"
+        android:gravity="bottom"/>
+
+    <CheckBox
+        android:text="WPA/WPA2 PSK"
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editText2"
+        android:layout_alignStart="@+id/editText2"
+        android:layout_marginTop="20dp"
+        android:id="@+id/checkBox"
+        android:layout_alignEnd="@+id/editText2"/>
 
     <Button
         android:text=""
@@ -45,9 +57,9 @@
         android:id="@+id/button"
         android:src="@drawable/onoff"
         android:background = "@drawable/onoff"
-        android:layout_marginTop="73dp"
         android:onClick="onPowerBtnPressed"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"/>
+        android:layout_below="@+id/checkBox"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="45dp"/>
 
 </RelativeLayout>

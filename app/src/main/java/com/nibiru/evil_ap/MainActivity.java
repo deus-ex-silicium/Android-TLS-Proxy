@@ -12,11 +12,14 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.nibiru.evil_ap.fragments.ACFragment;
+import com.nibiru.evil_ap.fragments.ACHTTPFragment;
+import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 import com.nibiru.evil_ap.manager.Ap;
@@ -27,7 +30,8 @@ import com.nibiru.evil_ap.proxy.ProxyService;
 public class MainActivity extends AppCompatActivity implements MainFragment
         .OnFragmentInteractionListener,ClientsFragment
         .OnFragmentInteractionListener,ACFragment
-        .OnFragmentInteractionListener {
+        .OnFragmentInteractionListener, ACHTTPFragment.OnFragmentInteractionListener,
+        ACHTTPSFragment.OnFragmentInteractionListener {
     /**************************************CLASS FIELDS********************************************/
     final static String TAG = "MainActivity";
     public ProxyService proxyService;
@@ -111,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         boolean isApOn = Ap.isApOn(this);
         if(!isApOn){
             Ap.turnOnAp("AP", "pa$$word", this);
+            (v.findViewById(R.id.editText)).setFocusable(false);
+            (v.findViewById(R.id.editText2)).setFocusable(false);
             //startService(new Intent(this, ProxyService.class));
             //routingMan.redirectHTTP(rootMan, true);
             //routingMan.redirectHTTPS(rootMan, true);
@@ -119,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         else {
             Ap.turnOffAp(this);
             stopService(new Intent(this, ProxyService.class));
+            (v.findViewById(R.id.editText)).setFocusableInTouchMode(true);
+            (v.findViewById(R.id.editText2)).setFocusableInTouchMode(true);
             //routingMan.redirectHTTP(rootMan, false);
             //routingMan.redirectHTTPS(rootMan, false);
             //routingMan.redirectDNS(rootMan, false);
