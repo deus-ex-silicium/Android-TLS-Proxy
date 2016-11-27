@@ -23,7 +23,7 @@
         android:layout_alignStart="@+id/editText"
         android:layout_marginTop="15dp"
         android:id="@+id/editText2"
-        android:text="pswrd"
+        android:hint="Enter AP Password"
         android:textColor="@android:color/white"
         android:gravity="bottom"/>
 
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
-        android:text="Name"
+        android:hint="Enter AP SSID"
         android:ems="10"
         android:id="@+id/editText"
         android:layout_marginTop="40dp"
@@ -57,7 +57,6 @@
         android:id="@+id/button"
         android:src="@drawable/onoff"
         android:background = "@drawable/onoff"
-        android:onClick="onPowerBtnPressed"
         android:layout_below="@+id/checkBox"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="45dp"/>

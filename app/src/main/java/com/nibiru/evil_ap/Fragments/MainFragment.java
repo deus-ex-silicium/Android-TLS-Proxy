@@ -17,9 +17,12 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
+import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.proxy.ProxyService;
 
 
 /**
@@ -30,12 +33,18 @@ import com.nibiru.evil_ap.R;
  * Use the {@link MainFragment#//newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MainFragment extends Fragment {
-    /**************************************CLASS FIELDS********************************************/
+public class MainFragment extends Fragment implements View.OnClickListener {
+    /**************************************
+     * CLASS FIELDS
+     ********************************************/
     private final static String TAG = "MainFragment";
     private Context ctx;
     private OnFragmentInteractionListener mListener;
-    /**************************************CLASS METHODS*******************************************/
+    private EditText et;
+    private EditText et2;
+    /**************************************
+     * CLASS METHODS
+     *******************************************/
     public MainFragment() {
         // Required empty public constructor
     }
@@ -48,7 +57,7 @@ public class MainFragment extends Fragment {
         // permissions to be able to change hotspot configuration
         //TODO: what about other versions ? FIX NEEDED
         //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
-        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 !Settings.System.canWrite(ctx)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
             intent.setData(Uri.parse("package:" + ctx.getPackageName()));
@@ -67,6 +76,10 @@ public class MainFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_main, container, false);
+        Button bt = (Button) v.findViewById(R.id.button);
+        bt.setOnClickListener(this);
+        et = (EditText)v.findViewById(R.id.editText);
+        et2 = (EditText)v.findViewById(R.id.editText2);
         return v;
     }
 
@@ -95,15 +108,51 @@ public class MainFragment extends Fragment {
                 btn.setBackgroundResource(R.drawable.onoffon);
             else
                 btn.setBackgroundResource(R.drawable.onoff);
-        }
-        catch (NullPointerException e){
+        } catch (NullPointerException e) {
             Log.e(TAG, "findViewById null pointer!");
         }
     }
+
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.button:
+                boolean isApOn = Ap.isApOn(getActivity().getApplicationContext());
+                if(!isApOn){
+                    if(et.getText().toString().equals("")||et2.getText().toString().equals(""))
+                    {
+                        Ap.turnOnAp("AP", "pa$$word", getActivity().getApplicationContext());
+                    }
+                    else
+                    {
+                        Ap.turnOnAp(et.getText().toString(),
+                                et2.getText().toString(),
+                                getActivity().getApplicationContext());
+                    }
+                    et.setFocusable(false);
+                    et2.setFocusable(false);
+                    //startService(new Intent(this, ProxyService.class));
+                    //routingMan.redirectHTTP(rootMan, true);
+                    //routingMan.redirectHTTPS(rootMan, true);
+                    //routingMan.redirectDNS(rootMan, true);
+                }
+                else {
+                    Ap.turnOffAp(getActivity().getApplicationContext());
+                    getActivity().stopService(new Intent(getActivity().getApplicationContext(), ProxyService.class));
+                    et.setFocusableInTouchMode(true);
+                    et2.setFocusableInTouchMode(true);
+                    //routingMan.redirectHTTP(rootMan, false);
+                    //routingMan.redirectHTTPS(rootMan, false);
+                    //routingMan.redirectDNS(rootMan, false);
+                }
+                break;
+        }
     }
 
     /**

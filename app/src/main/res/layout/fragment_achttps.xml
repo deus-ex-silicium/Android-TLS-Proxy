@@ -1,3 +1,10 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/ScrollView01"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none" >
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
@@ -59,12 +66,19 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"/>
     </LinearLayout>
-
+    <LinearLayout
+        android:id="@+id/lin2dynamics"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_below="@id/lin2s"
+        android:background="@color/opblack"
+        android:orientation="vertical"/>
     <LinearLayout
         android:id="@+id/lin3s"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/lin2s"
+        android:layout_below="@+id/lin2dynamics"
         android:layout_marginTop="40dp"
         android:background="@color/opblack"
         >
@@ -114,4 +128,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"/>
     </LinearLayout>
+    <LinearLayout
+        android:id="@+id/lin4dynamics"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_below="@id/lin4s"
+        android:background="@color/opblack"
+        android:orientation="vertical"/>
 </RelativeLayout>
+</ScrollView>
