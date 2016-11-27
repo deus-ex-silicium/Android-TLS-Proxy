@@ -114,9 +114,18 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         //if AP button was pressed turn on/off hotspot && proxy service
         boolean isApOn = Ap.isApOn(this);
         if(!isApOn){
+            if(((EditText)v.findViewById(R.id.editText)).getText().toString().equals("")||(
+                    (EditText)v.findViewById(R.id.editText2)).getText().toString().equals(""))
+            {
             Ap.turnOnAp("AP", "pa$$word", this);
-            (v.findViewById(R.id.editText)).setFocusable(false);
-            (v.findViewById(R.id.editText2)).setFocusable(false);
+            }
+            else
+            {
+                Ap.turnOnAp(((EditText)v.findViewById(R.id.editText)).getText().toString(), (
+                        (EditText)v.findViewById(R.id.editText2)).getText().toString(), this);
+            }
+            //(v.findViewById(R.id.editText)).setFocusable(false);
+            //(v.findViewById(R.id.editText2)).setFocusable(false);
             //startService(new Intent(this, ProxyService.class));
             //routingMan.redirectHTTP(rootMan, true);
             //routingMan.redirectHTTPS(rootMan, true);
@@ -125,14 +134,13 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         else {
             Ap.turnOffAp(this);
             stopService(new Intent(this, ProxyService.class));
-            (v.findViewById(R.id.editText)).setFocusableInTouchMode(true);
-            (v.findViewById(R.id.editText2)).setFocusableInTouchMode(true);
+            //(v.findViewById(R.id.editText)).setFocusableInTouchMode(true);
+            //(v.findViewById(R.id.editText2)).setFocusableInTouchMode(true);
             //routingMan.redirectHTTP(rootMan, false);
             //routingMan.redirectHTTPS(rootMan, false);
             //routingMan.redirectDNS(rootMan, false);
         }
     }
-
     void doBindService() {
         // Establish a connection with the service.  We use an explicit
         // class name because we want a specific service implementation that
