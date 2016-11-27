@@ -12,6 +12,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.nibiru.evil_ap.fragments.ACFragment;
@@ -68,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment
 
             }
         });
+        FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
+        r.setBackground((getResources().getDrawable(R.drawable.bground)));
         //check if device is rooted
         if (!Root.isDeviceRooted()){
             toastMessage("Application will only function properly on rooted phones with root " +
