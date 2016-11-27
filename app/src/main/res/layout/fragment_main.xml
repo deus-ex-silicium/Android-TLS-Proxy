@@ -4,13 +4,15 @@
              android:layout_height="match_parent"
              tools:context="com.nibiru.evil_ap.fragments.MainFragment"
             android:id = "@+id/fragment_main"
-            android:paddingTop="50dp">
+            android:paddingTop="50dp"
+>
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/background_dark"/>
+        android:src="@drawable/bground"
+        android:scaleType = "centerCrop"/>
 
     <EditText
         android:layout_width="wrap_content"
@@ -31,9 +33,8 @@
         android:text="Name"
         android:ems="10"
         android:id="@+id/editText"
-        android:layout_marginTop="33dp"
+        android:layout_marginTop="40dp"
         android:textColor="@android:color/white"
-        android:layout_marginStart="22dp"
         android:layout_below="@+id/button"
         android:layout_alignStart="@+id/button"/>
 
