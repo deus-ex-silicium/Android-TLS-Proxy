@@ -14,7 +14,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.R;
@@ -57,6 +59,7 @@ public class MainFragment extends Fragment {
         //Register BroadcastReceiver, filer specific intents
         ctx.registerReceiver(new ApBroadcastReceiver(),
                 new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
+
     }
 
     @Override

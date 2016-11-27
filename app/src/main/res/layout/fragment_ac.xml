@@ -8,118 +8,12 @@
                 android:scaleType="centerCrop">
 
     <!-- TODO: Update blank fragment layout -->
-    <LinearLayout
-        android:id="@+id/lin1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:background="@color/opblack">
-
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:layout_weight="1"
-            android:text="Redirect HTML"
-            android:textSize="25sp"/>
-
-        <Switch
-            android:id="@+id/switch1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/lin2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lin1"
-        android:layout_marginTop="40dp"
-        android:background="@color/opblack">
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Inject HTML"
-            android:textSize="25sp"/>
-
-        <Button
-            android:id="@+id/button_injectHTML"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Settings"/>
-
-        <Switch
-            android:id="@+id/switch2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/lin3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lin2"
-        android:layout_marginTop="40dp"
-        android:background="@color/opblack"
-        >
-
-        <TextView
-            android:id="@+id/textView3"
-
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:layout_weight="1"
-            android:text="SSL Strip"
-            android:textSize="25sp"/>
-
-        <Switch
-            android:id="@+id/switch3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/lin4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lin3"
-        android:layout_marginTop="40dp"
-        android:background="@color/opblack">
-
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Replace Images"
-            android:textSize="25sp"/>
-
-        <Button
-            android:id="@+id/button_replaceImages"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Settings"/>
-
-        <Switch
-            android:id="@+id/switch4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
-    </LinearLayout>
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:app="http://schemas.android.com/apk/res-auto"
                   android:layout_width="fill_parent"
                   android:layout_height="fill_parent"
                   android:orientation="vertical"
-                  android:layout_below="@+id/lin4">
+        android:layout_marginTop="60dp">
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tabs"
