@@ -16,11 +16,12 @@ import java.util.concurrent.TimeUnit;
  */
 
 class ProxyHTTPMainLoop implements Runnable{
-    final static String TAG = "ProxyHTTPMainLoop";
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
     private ServerSocket serverSocket;
     private static final int SERVERPORT = 1337;
     ProxyService ps;
-    /*********************************************************************************************/
+    /**************************************CLASS METHODS*******************************************/
     public ProxyHTTPMainLoop(ProxyService x){
         ps = x;
     }
@@ -44,10 +45,10 @@ class ProxyHTTPMainLoop implements Runnable{
                 if (ps.imgResource != -1) {
                     int copy = ps.imgResource;
                     executor.execute(new ThreadProxy(serverSocket.accept(), ps.getResources()
-                            .openRawResource(copy)));
+                            .openRawResource(copy), ps.config));
                 }
                 else
-                    executor.execute(new ThreadProxy(serverSocket.accept(), null));
+                    executor.execute(new ThreadProxy(serverSocket.accept(), null, ps.config));
                 Log.d(TAG, "Accepted HTTP client");
             }
         } catch (IOException e) {
@@ -61,5 +62,4 @@ class ProxyHTTPMainLoop implements Runnable{
             }
         }
     }
-
 }

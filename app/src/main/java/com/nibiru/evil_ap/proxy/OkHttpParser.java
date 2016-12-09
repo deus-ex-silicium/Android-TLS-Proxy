@@ -14,10 +14,11 @@ import okhttp3.Request;
  */
 
 class OkHttpParser {
-    private final static String TAG = "OkHttpParser";
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
     private Vector<Pair<String,String>> requestHeaders;
     private StringBuffer messageBody;
-    /*********************************************************************************************/
+    /**************************************CLASS METHODS*******************************************/
     OkHttpParser(){
         requestHeaders = new Vector<>();
         messageBody = new StringBuffer();

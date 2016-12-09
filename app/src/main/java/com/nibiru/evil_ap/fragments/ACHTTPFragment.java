@@ -241,6 +241,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 break;
             case R.id.switch3:
                 Log.e("Switch - ", "strip " + isChecked);
+                mListener.onSslStripToggle();
                 if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
                     //do everything normal
                 } else {
@@ -290,6 +291,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
      */
     public interface onAcFragmentInteraction {
         void onTrafficRedirect(String traffic, boolean on);
+        void onSslStripToggle();
+
     }
 
     @Override

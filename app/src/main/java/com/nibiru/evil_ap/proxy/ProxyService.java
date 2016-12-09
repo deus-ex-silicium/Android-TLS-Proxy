@@ -2,6 +2,7 @@ package com.nibiru.evil_ap.proxy;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 
@@ -23,7 +24,12 @@ public class ProxyService extends Service{
     Thread proxyHTTP;
     public volatile boolean work;
     public volatile int imgResource;
-    //NanoServer server;
+    // Configuration settings
+    public SharedPreferences config;
+    private boolean swapImgHTTP;
+    private boolean swapImgHTTPS;
+    private boolean sslStrip;
+    private String imgPath;
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
@@ -51,6 +57,7 @@ public class ProxyService extends Service{
             e.printStackTrace();
         }*/
 
+        config = getSharedPreferences("Config", 0);
         //start the HTTP proxy socket thread
         work = true;
         imgResource = -1;
