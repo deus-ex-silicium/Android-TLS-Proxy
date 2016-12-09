@@ -1,22 +1,14 @@
 package com.nibiru.evil_ap.fragments;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.text.InputType;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,38 +20,32 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
 public class ACHTTPFragment extends Fragment implements View.OnClickListener, CompoundButton
         .OnCheckedChangeListener {
-
-
-    private OnFragmentInteractionListener mListener;
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
+    private onAcFragmentInteraction mListener;
     private LinearLayout mLayout;
     private LinearLayout mLayout2;
     private boolean l1flag = false;
     private boolean l2flag = false;
     private ImageView iv;
-
+    /**************************************CLASS METHODS*******************************************/
     public ACHTTPFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,30 +74,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switchSSLStrip.setOnCheckedChangeListener(this);
         switchReplacImages.setOnCheckedChangeListener(this);
         return v;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -263,7 +225,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switch (buttonView.getId()) {
             case R.id.switch1:
                 Log.e("Switch - ", "redirect " + isChecked);
-                Routing.redirectHTTP(isChecked);
+                mListener.onTrafficRedirect("HTTP", true);
                 Log.e("Switch - ", "redirect " + isChecked);
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
@@ -315,7 +277,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         if (s.isChecked())
             s.setChecked(false);
     }
-
+/******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -326,8 +288,25 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public interface onAcFragmentInteraction {
+        void onTrafficRedirect(String traffic, boolean on);
     }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof onAcFragmentInteraction) {
+            mListener = (onAcFragmentInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteraction interface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 }

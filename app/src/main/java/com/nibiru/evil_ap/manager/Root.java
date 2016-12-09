@@ -19,11 +19,11 @@ import java.util.ArrayList;
 
 public class Root {
     /**************************************CLASS FIELDS********************************************/
-    private final static String TAG = "Root";
+    protected final String TAG = getClass().getSimpleName();
     /**************************************CLASS METHODS*******************************************/
     public Root(){}
 
-    public static boolean RunAsRoot(String command){
+    public boolean RunAsRoot(String command){
         Process p;
         try {
             p = Runtime.getRuntime().exec("su");
@@ -43,7 +43,7 @@ public class Root {
         return p.exitValue() == 0;
     }
 
-    public static ArrayList<String> RunAsRootWithOutput(String command){
+    public ArrayList<String> RunAsRootWithOutput(String command){
         ArrayList<String> output = new ArrayList<>(10);
         String line;
         try {
@@ -77,16 +77,16 @@ public class Root {
         return output;
     }
 
-    public static boolean isDeviceRooted() {
+    public boolean isDeviceRooted() {
         return checkRootMethod1() || checkRootMethod2() || checkRootMethod3();
     }
 
-    private static boolean checkRootMethod1() {
+    private boolean checkRootMethod1() {
         String buildTags = android.os.Build.TAGS;
         return buildTags != null && buildTags.contains("test-keys");
     }
 
-    private static boolean checkRootMethod2() {
+    private boolean checkRootMethod2() {
         String[] paths = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
                 "/system/bin/failsafe/su", "/data/local/su", "/su/bin/su"};
         for (String path : paths) {
@@ -95,7 +95,7 @@ public class Root {
         return false;
     }
 
-    private static boolean checkRootMethod3() {
+    private boolean checkRootMethod3() {
         Process process = null;
         try {
             process = Runtime.getRuntime().exec(new String[] { "/system/xbin/which", "su" });

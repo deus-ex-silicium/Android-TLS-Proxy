@@ -7,10 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -23,19 +20,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -43,7 +36,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         .OnCheckedChangeListener {
 
 
-    private OnFragmentInteractionListener mListener;
+    private onAcFragmentInteraction mListener;
     private LinearLayout mLayout;
     private LinearLayout mLayout2;
     private boolean l1flag = false;
@@ -84,30 +77,6 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         return v;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -133,7 +102,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                     mLayout.addView(et3);
                     break;
                 } else {
-                    l1flag = !l1flag;
+                    l1flag =! l1flag;
                     mLayout.removeAllViews();
                 }
             case R.id.button_replaceImagess:
@@ -264,7 +233,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         switch (buttonView.getId()) {
             case R.id.switch1s:
                 Log.e("Switch - ", "redirect " + isChecked);
-                Routing.redirectHTTP(isChecked);
+                mListener.onTrafficRedirect("HTTPS", isChecked);
                 Log.e("Switch - ", "redirect " + isChecked);
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2s));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3s));
@@ -306,7 +275,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         if (s.isChecked())
             s.setChecked(false);
     }
-
+/******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -317,8 +286,24 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public interface onAcFragmentInteraction {
+        void onTrafficRedirect(String traffic, boolean on);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof onAcFragmentInteraction) {
+            mListener = (onAcFragmentInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnMainFragmentInteraction");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 }

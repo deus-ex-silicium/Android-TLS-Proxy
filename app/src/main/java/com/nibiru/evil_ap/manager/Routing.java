@@ -13,53 +13,53 @@ public class Routing {
     /*********************************************************************************************/
     public Routing() {}
 
-    public static boolean isPortReceiving(String port){
-        return Root.RunAsRoot("iptables -t nat -L | grep \"redir ports "
+    public boolean isPortReceiving(String port, Root mRootMan){
+        return mRootMan.RunAsRoot("iptables -t nat -L | grep \"redir ports "
                 + port + "\"" );
     }
 
     //TODO: TEST!
-    public static void filterMAC(Root rootMan, String MAC, boolean ban){
+    public void filterMAC(Root mRootMan, String MAC, boolean ban){
         if (ban) {
-            rootMan.RunAsRoot("iptables -t nat -A PREROUTING -p all -m mac --mac-source " +
+            mRootMan.RunAsRoot("iptables -t nat -A PREROUTING -p all -m mac --mac-source " +
                     MAC + " -j DROP");
         }
         else{
-            rootMan.RunAsRoot("iptables -t nat -D PREROUTING -p all -m mac --mac-source " +
+            mRootMan.RunAsRoot("iptables -t nat -D PREROUTING -p all -m mac --mac-source " +
                     MAC + " -j DROP");
         }
     }
 
     //add rule only if it doesn't exist, delete only if it exists
-    public static void redirectHTTP(boolean on){
-        if (on && !isPortReceiving(HTTP_LISTNER_PORT)) {
-            Root.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 -j " +
+    public void redirectHTTP(boolean on, Root mRootMan){
+        if (on && !isPortReceiving(HTTP_LISTNER_PORT, mRootMan)) {
+            mRootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 80 -j " +
                     "REDIRECT --to-port " + HTTP_LISTNER_PORT);
         }
-        else if (!on && isPortReceiving(HTTP_LISTNER_PORT)){
-            Root.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j " +
+        else if (!on && isPortReceiving(HTTP_LISTNER_PORT, mRootMan)){
+            mRootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j " +
                     "REDIRECT --to-port " + HTTP_LISTNER_PORT);
         }
     }
 
-    public static void redirectHTTPS(boolean on){
-        if (on && !isPortReceiving(HTTPS_LISTNER_PORT)) {
-            Root.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 443 -j " +
+    public void redirectHTTPS(boolean on, Root mRootMan){
+        if (on && !isPortReceiving(HTTPS_LISTNER_PORT, mRootMan)) {
+            mRootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p tcp --dport 443 -j " +
                     "REDIRECT --to-port " + HTTPS_LISTNER_PORT);
         }
-        else if (!on && isPortReceiving(HTTPS_LISTNER_PORT)){
-            Root.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 443 -j " +
+        else if (!on && isPortReceiving(HTTPS_LISTNER_PORT, mRootMan)){
+            mRootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 443 -j " +
                     "REDIRECT --to-port " + HTTPS_LISTNER_PORT);
         }
     }
 
-    public static void redirectDNS(boolean on){
-        if (on && !isPortReceiving(DNS_LISTNER_PORT)){
-            Root.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p udp --dport 53 -j " +
+    public void redirectDNS(boolean on, Root mRootMan){
+        if (on && !isPortReceiving(DNS_LISTNER_PORT, mRootMan)){
+            mRootMan.RunAsRoot("iptables -t nat -I PREROUTING -i wlan0 -p udp --dport 53 -j " +
                     "REDIRECT --to-port " + DNS_LISTNER_PORT);
         }
-        else if (!on && isPortReceiving(DNS_LISTNER_PORT)){
-            Root.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p udp --dport 53 -j " +
+        else if (!on && isPortReceiving(DNS_LISTNER_PORT, mRootMan)){
+            mRootMan.RunAsRoot("iptables -t nat -D PREROUTING -i wlan0 -p udp --dport 53 -j " +
                     "REDIRECT --to-port " + DNS_LISTNER_PORT);
         }
     }

@@ -14,10 +14,10 @@ import java.lang.reflect.Method;
 public class Ap {
 
     /**************************************CLASS FIELDS********************************************/
-    final static String TAG = "Ap";
+    protected final String TAG = getClass().getSimpleName();
     /**************************************CLASS METHODS*******************************************/
     //check whether WiFI hotspot is on or off
-    public static boolean isApOn(Context ctx) {
+    public boolean isApOn(Context ctx) {
         try {
             WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
             Method method = wifiMan.getClass().getDeclaredMethod("isWifiApEnabled");
@@ -29,7 +29,7 @@ public class Ap {
     }
 
     // toggle WiFi hotspot on
-    public static boolean turnOnAp(String SSID, String PSK, Context ctx ) {
+    public boolean turnOnAp(String SSID, String PSK, Context ctx ) {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = SSID;
@@ -60,7 +60,7 @@ public class Ap {
     }
 
     // toggle WiFi hotspot off
-    public static boolean turnOffAp(Context ctx) {
+    public boolean turnOffAp(Context ctx) {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         Method method;
         try {
