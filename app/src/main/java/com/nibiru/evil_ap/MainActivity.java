@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -37,9 +38,9 @@ public class MainActivity extends AppCompatActivity implements
     // Responsible for maintaining objects state during changing configuration
     public final StateMaintainer mStateMaintainer =
             new StateMaintainer( this.getFragmentManager(), TAG );
-    //TODO: maciek, w tym MVP jest przekazywany fragment manager, to zadziała u nas ?
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
+    private SharedPreferences mConfig;
     /**************************************CLASS METHODS*******************************************/
 
     @Override
@@ -48,28 +49,20 @@ public class MainActivity extends AppCompatActivity implements
         startMVPOps();
         setContentView(R.layout.activity_main);
         setUpGUI();
+        mConfig = getSharedPreferences("Config", 0);
         mPresenter.checkIfDeviceRooted();
 
-            //TODO: refactor
-            startService(new Intent(this, ProxyService.class));
-            mConnection = new ServiceConnection() {
-                public void onServiceConnected(ComponentName className, IBinder service) {
-                    // This is called when the connection with the service has been
-                    // established, giving us the service object we can use to
-                    // interact with the service.  Because we have bound to a explicit
-                    // service that we know is running in our own process, we can
-                    // cast its IBinder to a concrete class and directly access it.
-                    proxyService = ((ProxyService.LocalBinder)service).getService();
-                }
-                public void onServiceDisconnected(ComponentName className) {
-                    // This is called when the connection with the service has been
-                    // unexpectedly disconnected -- that is, its process crashed.
-                    // Because it is running in our same process, we should never
-                    // see this happen.
-                    proxyService = null;
-                }
-            };
-            doBindService();
+        //TODO: refactor
+        startService(new Intent(this, ProxyService.class));
+        mConnection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                proxyService = ((ProxyService.LocalBinder)service).getService();
+            }
+            public void onServiceDisconnected(ComponentName className) {
+                proxyService = null;
+            }
+        };
+        doBindService();
 
     }
 
@@ -97,14 +90,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
+    public void onFragmentInteraction(Uri uri) {}
     /********************************Action Center Fragment****************************************/
+    public void onSslStripToggle(){
+        if (!mConfig.getBoolean("sslStrip", false))
+            mConfig.edit().putBoolean("sslStrip", true).apply();
+        else
+            mConfig.edit().putBoolean("sslStrip", false).apply();
+    }
+
     public void onTrafficRedirect(String traffic, boolean on) {
         mPresenter.onTrafficRedirect(traffic, on);
     }
-
     /**********************************Clients Fragment********************************************/
     @Override
     public ArrayList<Client> getCurrentClients() {

@@ -3,7 +3,6 @@ package com.nibiru.evil_ap;
 import android.content.Context;
 import android.content.Intent;
 
-import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
@@ -17,15 +16,7 @@ import java.util.ArrayList;
 
 public class Model implements IMVP.ModelOps{
     /**************************************CLASS FIELDS********************************************/
-    // Configuration settings
-    private String apSSID;
-    private String apPass;
-    private boolean redirectHTTP;
-    private boolean redirectHTTPS;
-    private boolean swapImgHTTP;
-    private boolean swapImgHTTPS;
-    private boolean sslStrip;
-    private String imgPath;
+    protected final String TAG = getClass().getSimpleName();
     // Presenter reference
     private IMVP.RequiredPresenterOps mPresenter;
     // Manager helpers
