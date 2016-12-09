@@ -1,7 +1,5 @@
 package com.nibiru.evil_ap.fragments;
 
-import android.media.Image;
-import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,41 +8,32 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
-import com.nibiru.evil_ap.MainActivity;
-import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.proxy.ProxyService;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link MainFragment.OnFragmentInteractionListener} interface
+ * {@link OnMainFragmentInteraction} interface
  * to handle interaction events.
  * Use the {@link MainFragment#//newInstance} factory method to
  * create an instance of this fragment.
  */
 public class MainFragment extends Fragment implements View.OnClickListener {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
-    private final static String TAG = "MainFragment";
-    private Context ctx;
-    private OnFragmentInteractionListener mListener;
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
+    private OnMainFragmentInteraction mListener;
     private EditText et;
     private EditText et2;
-    /**************************************
-     * CLASS METHODS
-     *******************************************/
+    /***************************************CLASS METHODS******************************************/
     public MainFragment() {
         // Required empty public constructor
     }
@@ -52,21 +41,20 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ctx = getActivity().getApplicationContext();
-        // only for marshmallow and newer versions, we need user to explicitly grant us WRITE_SETTINGS
-        // permissions to be able to change hotspot configuration
+        // only for marshmallow and newer versions, we need user to explicitly grant us
+        // WRITE_SETTINGS permissions to be able to change hotspot configuration
         //TODO: what about other versions ? FIX NEEDED
         //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                !Settings.System.canWrite(ctx)) {
+                !Settings.System.canWrite(getContext())) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-            intent.setData(Uri.parse("package:" + ctx.getPackageName()));
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
             startActivity(intent);
         }
-        //setBtnUI(Ap.isApOn(ctx));
+        //setBtnUI(Ap.apToggle(ctx));
 
         //Register BroadcastReceiver, filer specific intents
-        ctx.registerReceiver(new ApBroadcastReceiver(),
+        getContext().registerReceiver(new ApBroadcastReceiver(),
                 new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
 
     }
@@ -83,24 +71,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         return v;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
     public void setBtnUI(boolean ApOn) {
         try {
             Button btn = (Button) getView().findViewById(R.id.button);
@@ -114,47 +84,33 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                boolean isApOn = Ap.isApOn(getActivity().getApplicationContext());
-                if(!isApOn){
-                    if(et.getText().toString().equals("")||et2.getText().toString().equals(""))
-                    {
-                        Ap.turnOnAp("AP", "pa$$word", getActivity().getApplicationContext());
-                    }
-                    else
-                    {
-                        Ap.turnOnAp(et.getText().toString(),
-                                et2.getText().toString(),
-                                getActivity().getApplicationContext());
-                    }
+                if (mListener.onApPressed(et.getText().toString(), et2.getText().toString())){
                     et.setFocusable(false);
                     et2.setFocusable(false);
-                    //startService(new Intent(this, ProxyService.class));
-                    //routingMan.redirectHTTP(rootMan, true);
-                    //routingMan.redirectHTTPS(rootMan, true);
-                    //routingMan.redirectDNS(rootMan, true);
+                    setBtnUI(true);
                 }
-                else {
-                    Ap.turnOffAp(getActivity().getApplicationContext());
-                    getActivity().stopService(new Intent(getActivity().getApplicationContext(), ProxyService.class));
-                    et.setFocusableInTouchMode(true);
-                    et2.setFocusableInTouchMode(true);
-                    //routingMan.redirectHTTP(rootMan, false);
-                    //routingMan.redirectHTTPS(rootMan, false);
-                    //routingMan.redirectDNS(rootMan, false);
+                else{
+                    et.setFocusable(true);
+                    et2.setFocusable(true);
+                    setBtnUI(false);
                 }
                 break;
         }
     }
 
+    private class ApBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //something about AP changed so update the UI button
+            if (mListener == null) return;
+            setBtnUI(mListener.isApOn());
+            //TODO: what about iptables rules and redirection?
+        }
+    }
+/******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -165,17 +121,29 @@ public class MainFragment extends Fragment implements View.OnClickListener {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public interface OnMainFragmentInteraction {
+        //return true is Ap was turn on, false otherwise
+        boolean onApPressed( String SSID, String pass );
+        boolean isApOn();
     }
 
-    private class ApBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //something about AP changed so update the UI button
-            boolean isApOn = Ap.isApOn(ctx);
-            setBtnUI(isApOn);
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception
+        if (context instanceof OnMainFragmentInteraction) {
+            mListener = (OnMainFragmentInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteraction interface");
         }
     }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 }

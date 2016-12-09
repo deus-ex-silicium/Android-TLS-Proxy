@@ -11,10 +11,8 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.widget.EditText;
+import android.util.Log;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.nibiru.evil_ap.fragments.ACFragment;
@@ -22,66 +20,37 @@ import com.nibiru.evil_ap.fragments.ACHTTPFragment;
 import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
-import com.nibiru.evil_ap.manager.Ap;
-import com.nibiru.evil_ap.manager.Root;
-import com.nibiru.evil_ap.manager.Routing;
+import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
-public class MainActivity extends AppCompatActivity implements MainFragment
-        .OnFragmentInteractionListener,ClientsFragment
-        .OnFragmentInteractionListener,ACFragment
-        .OnFragmentInteractionListener, ACHTTPFragment.OnFragmentInteractionListener,
-        ACHTTPSFragment.OnFragmentInteractionListener {
-    /**************************************CLASS FIELDS********************************************/
-    final static String TAG = "MainActivity";
-    public ProxyService proxyService;
-    private boolean psIsBound;
-    private ServiceConnection mConnection;
+import java.util.ArrayList;
 
+public class MainActivity extends AppCompatActivity implements
+        MainFragment.OnMainFragmentInteraction,ClientsFragment.onClientsFragmentInteraction,
+        ACFragment.OnFragmentInteractionListener, ACHTTPFragment.onAcFragmentInteraction,
+        ACHTTPSFragment.onAcFragmentInteraction, IMVP.RequiredViewOps {
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
+    public ProxyService proxyService; //?
+    private boolean psIsBound; //?
+    private ServiceConnection mConnection; //?
+    // Responsible for maintaining objects state during changing configuration
+    public final StateMaintainer mStateMaintainer =
+            new StateMaintainer( this.getFragmentManager(), TAG );
+    //TODO: maciek, w tym MVP jest przekazywany fragment manager, to zadziała u nas ?
+    // Presenter operations
+    private IMVP.PresenterOps mPresenter;
     /**************************************CLASS METHODS*******************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startMVPOps();
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setUpGUI();
+        mPresenter.checkIfDeviceRooted();
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("Config"));
-        tabLayout.addTab(tabLayout.newTab().setText("Clients"));
-        tabLayout.addTab(tabLayout.newTab().setText("Action Center"));
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        final com.nibiru.evil_ap.adapters.PagerAdapter adapter = new com.nibiru.evil_ap.adapters.PagerAdapter
-                (getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-        FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
-        r.setBackground((getResources().getDrawable(R.drawable.bground)));
-        //check if device is rooted
-        if (!Root.isDeviceRooted()){
-            toastMessage("Application will only function properly on rooted phones with root " +
-                    "permissions");
-        }
-        else {
+            //TODO: refactor
             startService(new Intent(this, ProxyService.class));
             mConnection = new ServiceConnection() {
                 public void onServiceConnected(ComponentName className, IBinder service) {
@@ -101,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment
                 }
             };
             doBindService();
-        }
+
     }
 
     @Override
@@ -110,37 +79,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment
         doUnbindService();
     }
 
-    public void onPowerBtnPressed(View v) {
-        //if AP button was pressed turn on/off hotspot && proxy service
-        boolean isApOn = Ap.isApOn(this);
-        if(!isApOn){
-            if(((EditText)v.findViewById(R.id.editText)).getText().toString().equals("")||(
-                    (EditText)v.findViewById(R.id.editText2)).getText().toString().equals(""))
-            {
-            Ap.turnOnAp("AP", "pa$$word", this);
-            }
-            else
-            {
-                Ap.turnOnAp(((EditText)v.findViewById(R.id.editText)).getText().toString(), (
-                        (EditText)v.findViewById(R.id.editText2)).getText().toString(), this);
-            }
-            //(v.findViewById(R.id.editText)).setFocusable(false);
-            //(v.findViewById(R.id.editText2)).setFocusable(false);
-            //startService(new Intent(this, ProxyService.class));
-            //routingMan.redirectHTTP(rootMan, true);
-            //routingMan.redirectHTTPS(rootMan, true);
-            //routingMan.redirectDNS(rootMan, true);
-        }
-        else {
-            Ap.turnOffAp(this);
-            stopService(new Intent(this, ProxyService.class));
-            //(v.findViewById(R.id.editText)).setFocusableInTouchMode(true);
-            //(v.findViewById(R.id.editText2)).setFocusableInTouchMode(true);
-            //routingMan.redirectHTTP(rootMan, false);
-            //routingMan.redirectHTTPS(rootMan, false);
-            //routingMan.redirectDNS(rootMan, false);
-        }
-    }
     void doBindService() {
         // Establish a connection with the service.  We use an explicit
         // class name because we want a specific service implementation that
@@ -159,14 +97,108 @@ public class MainActivity extends AppCompatActivity implements MainFragment
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {}
+    public void onFragmentInteraction(Uri uri) {
 
-    //function for debugging etc. (shows toast with msg text)
-    public void toastMessage(String msg){
-        Context context = getApplicationContext();
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(context, msg, duration);
-        toast.show();
+    }
+    /********************************Action Center Fragment****************************************/
+    public void onTrafficRedirect(String traffic, boolean on) {
+        mPresenter.onTrafficRedirect(traffic, on);
+    }
+
+    /**********************************Clients Fragment********************************************/
+    @Override
+    public ArrayList<Client> getCurrentClients() {
+        return mPresenter.getCurrentClients();
+    }
+    /***********************************Main Fragment *********************************************/
+    @Override
+    public boolean onApPressed( String SSID, String pass ) {
+        return mPresenter.apBtnPressed( SSID, pass, getApplicationContext() );
+    }
+
+    @Override
+    public boolean isApOn() {
+        return mPresenter.isApOn(getApplicationContext());
+    }
+
+    /**************************************UI stuff************************************************/
+    private void setUpGUI(){
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.addTab(tabLayout.newTab().setText("Config"));
+        tabLayout.addTab(tabLayout.newTab().setText("Clients"));
+        tabLayout.addTab(tabLayout.newTab().setText("Action Center"));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        final com.nibiru.evil_ap.adapters.PagerAdapter adapter =
+                new com.nibiru.evil_ap.adapters.PagerAdapter
+                        (getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+        FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
+        r.setBackground((getResources().getDrawable(R.drawable.bground)));
+    }
+    /*************************************MVP stuff ***********************************************/
+    @Override
+    public void showToast(String msg) {
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Initialize and restart the Presenter.
+     * This method should be called after {@link MainActivity#onCreate(Bundle)}
+     */
+    public void startMVPOps() {
+        try {
+            if ( mStateMaintainer.firstTimeIn() ) {
+                Log.d(TAG, "onCreate() called for the first time");
+                initialize(this);
+            } else {
+                Log.d(TAG, "onCreate() called more than once");
+                reinitialize(this);
+            }
+        } catch ( InstantiationException | IllegalAccessException e ) {
+            Log.d(TAG, "onCreate() " + e );
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Initialize relevant MVP Objects.
+     * Creates a Presenter instance, saves the presenter in {@link StateMaintainer}
+     */
+    private void initialize( IMVP.RequiredViewOps view )
+            throws InstantiationException, IllegalAccessException{
+        mPresenter = new Presenter(view);
+        mStateMaintainer.put(IMVP.PresenterOps.class.getSimpleName(), mPresenter);
+    }
+
+    /**
+     * Recovers Presenter and informs Presenter that a config change occurred.
+     * If Presenter has been lost, recreates an instance
+     */
+    private void reinitialize( IMVP.RequiredViewOps view )
+            throws InstantiationException, IllegalAccessException {
+        mPresenter = mStateMaintainer.get( IMVP.PresenterOps.class.getSimpleName() );
+        if ( mPresenter == null ) {
+            Log.w(TAG, "recreating Presenter");
+            initialize( view );
+        } else {
+            mPresenter.onConfigurationChanged( view );
+        }
     }
 
 }
