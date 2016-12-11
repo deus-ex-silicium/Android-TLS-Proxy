@@ -20,16 +20,17 @@ import java.io.OutputStream;
  */
 
 public class ProxyService extends Service{
-    final static String TAG = "proxyService";
+    /**************************************CLASS FIELDS********************************************/
+    protected final String TAG = getClass().getSimpleName();
     Thread proxyHTTP;
     public volatile boolean work;
-    public volatile int imgResource;
     // Configuration settings
     public SharedPreferences config;
     private boolean swapImgHTTP;
     private boolean swapImgHTTPS;
     private boolean sslStrip;
     private String imgPath;
+    /**************************************CLASS METHODS*******************************************/
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
@@ -60,7 +61,6 @@ public class ProxyService extends Service{
         config = getSharedPreferences("Config", 0);
         //start the HTTP proxy socket thread
         work = true;
-        imgResource = -1;
         proxyHTTP = new Thread(new ProxyHTTPMainLoop(this));
         proxyHTTP.start();
         //start the HTTPS proxy
@@ -80,10 +80,6 @@ public class ProxyService extends Service{
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
-    }
-
-    public void swapWithImg(int imgRes){
-        imgResource = imgRes;
     }
 
     private void testImgStream() {

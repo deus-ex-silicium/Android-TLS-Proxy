@@ -23,7 +23,6 @@ import android.widget.Switch;
 
 import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.manager.Routing;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -169,11 +168,11 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                                 e.printStackTrace();
                             }
                             Bitmap bmp = null;
-                            try {
+                            /*try {
                                 bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                             } catch (IOException e) {
                                 e.printStackTrace();
-                            }
+                            }*/
                             iv.setImageBitmap(bmp);
                             if(iv != null){
                                 mLayout2.removeView(iv);
@@ -201,7 +200,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 if (resultCode == RESULT_OK) {
 
                 }
-
                 break;
             case 1:
                 if (resultCode == RESULT_OK) {
@@ -215,6 +213,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     lp.height = 500;
                     lp.gravity = Gravity.CENTER;
                     iv.setImageURI(selectedImage);
+                    //commit configuration change
+                    mListener.onImgReplaceChosen(selectedImage);
                 }
                 break;
         }
@@ -226,7 +226,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             case R.id.switch1:
                 Log.e("Switch - ", "redirect " + isChecked);
                 mListener.onTrafficRedirect("HTTP", true);
-                Log.e("Switch - ", "redirect " + isChecked);
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
@@ -243,20 +242,16 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 Log.e("Switch - ", "strip " + isChecked);
                 mListener.onSslStripToggle();
                 if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
-                    //do everything normal
+                    //?
                 } else {
                     ((Switch) getActivity().findViewById(R.id.switch3)).setChecked(false);
                 }
                 break;
             case R.id.switch4:
                 Log.e("Switch - ", "images " + isChecked);
-                if (isChecked)
-                    ((MainActivity) getActivity()).proxyService.swapWithImg(R.raw.pixel_skull);
-                else
-                    ((MainActivity) getActivity()).proxyService.swapWithImg(-1);
-                Log.e("Switch - ", "images " + isChecked);
+                mListener.onImgReplaceToggle();
                 if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
-                    //do everything normal
+                    //?
                 } else {
                     ((Switch) getActivity().findViewById(R.id.switch4)).setChecked(false);
                 }
@@ -292,7 +287,9 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public interface onAcFragmentInteraction {
         void onTrafficRedirect(String traffic, boolean on);
         void onSslStripToggle();
-
+        View getView(int x);
+        void onImgReplaceChosen(Uri uri);
+        void onImgReplaceToggle();
     }
 
     @Override

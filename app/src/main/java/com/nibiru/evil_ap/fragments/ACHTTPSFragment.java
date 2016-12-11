@@ -257,11 +257,6 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                 break;
             case R.id.switch4s:
                 Log.e("Switch - ", "images " + isChecked);
-                if (isChecked)
-                    ((MainActivity) getActivity()).proxyService.swapWithImg(R.raw.pixel_skull);
-                else
-                    ((MainActivity) getActivity()).proxyService.swapWithImg(-1);
-                Log.e("Switch - ", "images " + isChecked);
                 if (((Switch) getActivity().findViewById(R.id.switch1s)).isChecked()) {
                     //do everything normal
                 } else {
