@@ -1,18 +1,25 @@
 package com.nibiru.evil_ap;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -41,6 +48,12 @@ public class MainActivity extends AppCompatActivity implements
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
     private SharedPreferences mConfig;
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
     /**************************************CLASS METHODS*******************************************/
 
     @Override
@@ -50,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setUpGUI();
         mConfig = getSharedPreferences("Config", 0);
+        mConfig.edit().putString("imgPath", null ).apply();
         mPresenter.checkIfDeviceRooted();
 
         //TODO: refactor
@@ -63,7 +77,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
         doBindService();
-
     }
 
     @Override
@@ -92,6 +105,44 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onFragmentInteraction(Uri uri) {}
     /********************************Action Center Fragment****************************************/
+    public View getView(int x){ return null; }
+
+    public void onImgReplaceChosen(Uri uri){
+        verifyStoragePermissions();
+        mConfig.edit().putString("imgPath", getPath(uri) ).apply();
+    }
+    //TODO: put in proper place
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        CursorLoader loader = new CursorLoader(this, uri, projection, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
+
+    public void verifyStoragePermissions() {
+        // Check if we have permission
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission
+                .READ_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+    public void onImgReplaceToggle(){
+        if (!mConfig.getBoolean("imgReplace", false))
+            mConfig.edit().putBoolean("imgReplace", true).apply();
+        else
+            mConfig.edit().putBoolean("imgReplace", false).apply();
+    }
+
     public void onSslStripToggle(){
         if (!mConfig.getBoolean("sslStrip", false))
             mConfig.edit().putBoolean("sslStrip", true).apply();

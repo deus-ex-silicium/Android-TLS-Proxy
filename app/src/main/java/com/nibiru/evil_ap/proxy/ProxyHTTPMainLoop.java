@@ -1,9 +1,12 @@
 package com.nibiru.evil_ap.proxy;
 
+import android.os.Environment;
 import android.util.Log;
 
 import com.nibiru.evil_ap.R;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -42,13 +45,16 @@ class ProxyHTTPMainLoop implements Runnable{
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             serverSocket = new ServerSocket(SERVERPORT);
             while (ps.work) {
-                if (ps.imgResource != -1) {
-                    int copy = ps.imgResource;
-                    executor.execute(new ThreadProxy(serverSocket.accept(), ps.getResources()
-                            .openRawResource(copy), ps.config));
+                InputStream imgStream;
+                String path;
+                if ( (path = ps.config.getString("imgPath", null)) != null) {
+                    File file = new File(path);
+                    imgStream = new FileInputStream(file);
                 }
-                else
-                    executor.execute(new ThreadProxy(serverSocket.accept(), null, ps.config));
+                else {
+                    imgStream = ps.getResources().openRawResource(R.raw.pixel_skull);
+                }
+                executor.execute(new ThreadProxy(serverSocket.accept(), imgStream, ps.config));
                 Log.d(TAG, "Accepted HTTP client");
             }
         } catch (IOException e) {
