@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements
             new StateMaintainer( this.getFragmentManager(), TAG );
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
-    private SharedPreferences mConfig;
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -62,8 +61,6 @@ public class MainActivity extends AppCompatActivity implements
         startMVPOps();
         setContentView(R.layout.activity_main);
         setUpGUI();
-        mConfig = getSharedPreferences("Config", 0);
-        mConfig.edit().putString("imgPath", null ).apply();
         mPresenter.checkIfDeviceRooted();
 
         //TODO: refactor
@@ -109,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onImgReplaceChosen(Uri uri){
         verifyStoragePermissions();
-        mConfig.edit().putString("imgPath", getPath(uri) ).apply();
+        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(), getPath(uri));
     }
     //TODO: put in proper place
     public String getPath(Uri uri) {
@@ -136,31 +133,11 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void onImgReplaceToggle(boolean on){
+    public void onSwitchToggle(boolean on, String tag){
         if (on)
-            mConfig.edit().putBoolean("imgReplace", true).apply();
+            mPresenter.setSharedPrefsBool(tag, true);
         else
-            mConfig.edit().putBoolean("imgReplace", false).apply();
-    }
-
-    public void onHTTPRedirectToggle(boolean on){
-        if (on)
-            mConfig.edit().putBoolean("httpRedirect", true).apply();
-        else
-            mConfig.edit().putBoolean("httpRedirect", false).apply();
-    }
-    public void onJsInject(boolean on){
-        if (on)
-            mConfig.edit().putBoolean("jsInject", true).apply();
-        else
-            mConfig.edit().putBoolean("jsInject", false).apply();
-    }
-
-    public void onSslStripToggle(boolean on){
-        if (on)
-            mConfig.edit().putBoolean("sslStrip", true).apply();
-        else
-            mConfig.edit().putBoolean("sslStrip", false).apply();
+            mPresenter.setSharedPrefsBool(tag, false);
     }
 
     public void onTrafficRedirect(String traffic, boolean on) {
