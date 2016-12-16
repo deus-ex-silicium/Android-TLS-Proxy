@@ -2,7 +2,6 @@ package com.nibiru.evil_ap.fragments;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 
+import com.nibiru.evil_ap.ConfigTags;
 import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
 
@@ -45,6 +45,17 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         super.onCreate(savedInstanceState);
     }
 
+    @Override
+    public void onStart(){
+        super.onStart();
+        checkSwitches();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        checkSwitches();
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -98,22 +109,13 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             case R.id.button_replaceImages:
                 if (!layoutImageflag) {
                     layoutImageflag = !layoutImageflag;
-                    String imgpath = " ";
-
-                    if (!mPresenter.checkIfSharedPrefsNull() && mPresenter
-                            .checkIfSharedPrefsContain(
-                                    "imgPath")) {
-                        try {
-                            imgpath = mPresenter.getSharedPrefsString("imgPath");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        if (imgpath == null || imgpath.equals(" ")) {
-                            Log.e("SP is null - ", imgpath);
-                        } else {
-                            applyToImageView(mLayout2, iv, Uri.parse(imgpath));
-                        }
+                    String imgpath = mPresenter.getSharedPrefsString(ConfigTags.imgPath.toString());
+                    if (imgpath == null || imgpath.equals("")) {
+                        Log.e("SP is null - ", imgpath);
+                    } else {
+                        applyToImageView(mLayout2, iv, Uri.parse(imgpath));
                     }
+
                     Log.e("E!", "images");
                     Button chooseImage_button = new Button(view.getContext());
                     iv = new ImageView(view.getContext());
@@ -152,8 +154,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     }
 
     public void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
-        if(iv != null){
-            layout.removeView(iv);
+        if(layout.getChildCount() > 1){
+            layout.removeViewAt(0);
         }
         layout.addView(iv, 0);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
@@ -161,21 +163,17 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         lp.height = 500;
         lp.gravity = Gravity.CENTER;
         iv.setImageURI(image);
-
     }
 
     public void checkSwitches() {
-        if (!mPresenter.checkIfSharedPrefsNull()) {
-            if (mPresenter.checkIfSharedPrefsContain("sslStrip") && mListener.getView(R.id.switch3) !=
-                    null)
-                ((Switch) mListener.getView(R.id.switch3)).setChecked(mPresenter.getSharedPrefsBool("sslStrip"));
-            if (mPresenter.checkIfSharedPrefsContain("imgReplace") && mListener.getView(R.id.switch4) != null)
-                ((Switch) mListener.getView(R.id.switch4)).setChecked(mPresenter.getSharedPrefsBool("imgReplace"
-                ));
-            if (mPresenter.checkIfSharedPrefsContain("httpRedirect") && mListener.getView(R.id.switch1) != null)
-                ((Switch) mListener.getView(R.id.switch1)).setChecked(mPresenter.getSharedPrefsBool("httpRedirect"
-                ));
-        }
+            ((Switch) mListener.getView(R.id.switch3)).setChecked(mPresenter.getSharedPrefsBool
+                    (ConfigTags.sslStrip.toString()));
+            ((Switch) mListener.getView(R.id.switch4)).setChecked(mPresenter.getSharedPrefsBool
+                    (ConfigTags.imgReplace.toString()));
+            ((Switch) mListener.getView(R.id.switch1)).setChecked(mPresenter.getSharedPrefsBool
+                    (ConfigTags.httpRedirect.toString()));
+            ((Switch) mListener.getView(R.id.switch2)).setChecked(mPresenter.getSharedPrefsBool
+                    (ConfigTags.jsInject.toString()));
     }
 
     @Override
@@ -187,12 +185,12 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
-                mListener.onHTTPRedirectToggle(isChecked);
+                mListener.onSwitchToggle(isChecked, ConfigTags.httpRedirect.toString());
                 break;
             case R.id.switch2:
                 Log.e("Switch - ", "inject " + isChecked);
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-                    mListener.onJsInject(isChecked);
+                    mListener.onSwitchToggle(isChecked, ConfigTags.jsInject.toString());
                 } else {
                     ((Switch) mListener.getView(R.id.switch2)).setChecked(false);
                 }
@@ -200,7 +198,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             case R.id.switch3:
                 Log.e("Switch - ", "strip " + isChecked);
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-                    mListener.onSslStripToggle(isChecked);
+                    mListener.onSwitchToggle(isChecked, ConfigTags.sslStrip.toString());
                 } else {
                     ((Switch) mListener.getView(R.id.switch3)).setChecked(false);
                 }
@@ -208,7 +206,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             case R.id.switch4:
                 Log.e("Switch - ", "images " + isChecked);
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-                    mListener.onImgReplaceToggle(isChecked);
+                    mListener.onSwitchToggle(isChecked, ConfigTags.imgReplace.toString());
                 } else {
                     ((Switch) mListener.getView(R.id.switch4)).setChecked(false);
                 }
@@ -239,18 +237,11 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public interface onAcFragmentInteraction {
         void onTrafficRedirect(String traffic, boolean on);
 
-        void onSslStripToggle(boolean on);
-
-        void onJsInject(boolean on);
-
         View getView(int x);
 
         void onImgReplaceChosen(Uri uri);
 
-        void onImgReplaceToggle(boolean on);
-
-
-        void onHTTPRedirectToggle(boolean isChecked);
+        void onSwitchToggle(boolean on, String tag);
 
         IMVP.PresenterOps getPresenter();
     }
@@ -261,7 +252,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         if (context instanceof onAcFragmentInteraction) {
             mListener = (onAcFragmentInteraction) context;
             mPresenter = mListener.getPresenter();
-            checkSwitches();
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteraction interface");
