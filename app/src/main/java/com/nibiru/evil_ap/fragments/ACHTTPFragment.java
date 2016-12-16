@@ -105,6 +105,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 } else {
                     layotPayloadflag = !layotPayloadflag;
                     mLayout.removeAllViews();
+                    break;
                 }
             case R.id.button_replaceImages:
                 if (!layoutImageflag) {
@@ -134,6 +135,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 } else {
                     layoutImageflag = !layoutImageflag;
                     mLayout2.removeAllViews();
+                    break;
                 }
         }
     }
