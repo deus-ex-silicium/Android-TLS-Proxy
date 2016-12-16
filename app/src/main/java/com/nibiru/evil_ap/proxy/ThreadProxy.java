@@ -38,7 +38,9 @@ public class ThreadProxy implements Runnable{
     ThreadProxy(Socket sClient, InputStream img, SharedPreferences config) {
         this.sClient = sClient;
         rp = new OkHttpParser();
-        okhttp = new OkHttpClient();
+        //make client not follow redirects!
+        okhttp = new OkHttpClient().newBuilder().followRedirects(false).followSslRedirects(false)
+                .build();
         imgSwap = img;
         mConfig = config;
     }
@@ -78,19 +80,14 @@ public class ThreadProxy implements Runnable{
             headers = headers.replaceAll("\\n", "\r\n");
 
             ByteArrayOutputStream streamResponse = new ByteArrayOutputStream();
-            //if we are sending back image then swap bytes
-            if (imgSwap != null && contentType != null && contentType.contains("image")){
+
+            //if we are sending back image and imgReplace is on then swap img bytes
+            if (contentType != null && contentType.contains("image")
+                    && mConfig.getBoolean("imgReplace", false)){
                 //update content length
                 headers = headers.replaceAll("Content-Length:.*", "Content-Length: " +
                         imgSwap.available());
-                //add header bytes to stream
-                streamResponse.write(headers.getBytes());
-                //add swapped image bytes to stream
-                int nRead;
-                byte[] data = new byte[8192];
-                while ((nRead = imgSwap.read(data, 0, data.length)) != -1) {
-                    streamResponse.write(data, 0, nRead);
-                }
+                streamResponse = swapImg(imgSwap, headers, streamResponse);
             }
             else {
                 streamResponse.write(headers.getBytes());
@@ -117,6 +114,20 @@ public class ThreadProxy implements Runnable{
                  e.printStackTrace();
              }
         }
+    }
+
+    private ByteArrayOutputStream swapImg(InputStream imgSwap,
+                                          String headers,
+                                          ByteArrayOutputStream streamResponse) throws IOException {
+        //add header bytes to stream
+        streamResponse.write(headers.getBytes());
+        //add swapped image bytes to stream
+        int nRead;
+        byte[] data = new byte[8192];
+        while ((nRead = imgSwap.read(data, 0, data.length)) != -1) {
+            streamResponse.write(data, 0, nRead);
+        }
+        return streamResponse;
     }
 
     private byte[] sslStrip(byte[] bytesBody) {
@@ -188,9 +199,12 @@ public class ThreadProxy implements Runnable{
         String resToClient = "";
         if (debug) Log.d(TAG, "<==================Sending response==================>");
         //find status line
+        // /n ! not /r/n !
         switch (res.code()) {
             case 200: resToClient += "HTTP/1.1 200 OK\n"; break;
             case 204: resToClient += "HTTP/1.1 204 No Content\n"; break;
+            case 301: resToClient += "HTTP/1.1 301 Moved Permanently\n"; break;
+            case 302: resToClient += "HTTP/1.1 302 Found\n"; break;
             case 304: resToClient += "HTTP/1.1 304 Not Modified\n"; break;
             case 403: resToClient += "HTTP/1.1 403 Forbidden\n"; break;
             case 404: resToClient += "HTTP/1.1 404 Not Found\n"; break;

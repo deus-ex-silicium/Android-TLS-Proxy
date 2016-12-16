@@ -42,11 +42,15 @@ public class Model implements IMVP.ModelOps{
 
     public void onTrafficRedirect(String traffic, boolean on){
         switch (traffic){
-            case "HTTP": mRouteMan.redirectHTTP(on, mRootMan);
+            case "HTTP":
+                mRouteMan.redirectHTTP(on, mRootMan);
                 break;
-            case "HTTPS": mRouteMan.redirectHTTPS(on, mRootMan);
+            case "HTTPS":
+                mRouteMan.redirectHTTPS(on, mRootMan);
                 break;
-            case "DNS": mRouteMan.redirectDNS(on, mRootMan);
+            case "DNS":
+                mRouteMan.redirectDNS(on, mRootMan);
+                break;
         }
     }
 
@@ -59,12 +63,10 @@ public class Model implements IMVP.ModelOps{
                 mApMan.turnOnAp(SSID, pass, ctx);
             }
             ctx.startService(new Intent(ctx, ProxyService.class));
-            //mRouteMan.redirectHTTP(true, mRootMan);
             return true;
         }
         else{
             mApMan.turnOffAp(ctx);
-            //mRouteMan.redirectHTTP(false, mRootMan);
             ctx.stopService(new Intent(ctx, ProxyService.class));
             return false;
         }

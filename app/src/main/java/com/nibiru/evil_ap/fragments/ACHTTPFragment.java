@@ -38,9 +38,7 @@ import static android.app.Activity.RESULT_OK;
 
 public class ACHTTPFragment extends Fragment implements View.OnClickListener, CompoundButton
         .OnCheckedChangeListener {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
+    /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private SharedPreferences mConfig;
     private onAcFragmentInteraction mListener;
@@ -49,10 +47,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     private boolean layotPayloadflag = false;
     private boolean layoutImageflag = false;
     private ImageView iv;
-
-    /**************************************
-     * CLASS METHODS
-     *******************************************/
+    /**************************************CLASS METHODS*******************************************/
     public ACHTTPFragment() {
         // Required empty public constructor
     }
@@ -83,8 +78,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switchInjectHTML.setOnCheckedChangeListener(this);
         switchSSLStrip.setOnCheckedChangeListener(this);
         switchReplacImages.setOnCheckedChangeListener(this);
-
-
         return v;
     }
 
@@ -98,8 +91,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setText("Payload1");
                     EditText et = new EditText(view.getContext());
-                    et.setText
-                            (" ");
+                    et.setText("Hello from Evil-AP!");
                     mLayout.addView(cb);
                     mLayout.addView(et);
                     CheckBox cb2 = new CheckBox(view.getContext());
@@ -203,10 +195,10 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switch (buttonView.getId()) {
             case R.id.switch1:
                 Log.e("Switch - ", "redirect " + isChecked);
-                mListener.onTrafficRedirect("HTTP", true);
-                changeSwitch((Switch) mListener.getView(R.id.switch2));
-                changeSwitch((Switch) mListener.getView(R.id.switch3));
-                changeSwitch((Switch) mListener.getView(R.id.switch4));
+                mListener.onTrafficRedirect("HTTP", isChecked);
+                changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
+                changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
+                changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
                 mListener.onHTTPRedirectToggle();
                 break;
             case R.id.switch2:
