@@ -2,6 +2,7 @@ package com.nibiru.evil_ap;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.manager.Root;
@@ -23,12 +24,15 @@ public class Model implements IMVP.ModelOps{
     private Root mRootMan;
     private Ap mApMan;
     private Routing mRouteMan;
+    private SharedPreferences mConfig;
+
     /**************************************CLASS METHODS*******************************************/
-    public Model(IMVP.RequiredPresenterOps mPresenter) {
+    public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx) {
         this.mPresenter = mPresenter;
         mRootMan = new Root();
         mApMan = new Ap();
         mRouteMan = new Routing();
+        this.mConfig = ctx.getSharedPreferences("Config", 0);
     }
     /**
      * Sent from {@link Presenter#onDestroy(boolean)}
@@ -39,7 +43,33 @@ public class Model implements IMVP.ModelOps{
     public void onDestroy() {
         // destroying actions
     }
-
+    public void setSharedPrefsInt(String tag, int val){
+        mConfig.edit().putInt(tag,val).apply();
+    }
+    public void setSharedPrefsBool(String tag, boolean val){
+        mConfig.edit().putBoolean(tag,val).apply();
+    }
+    public void setSharedPrefsString(String tag, String val){
+        mConfig.edit().putString(tag,val).apply();
+    }
+    public int getSharedPrefsInt(String tag){
+        return mConfig.getInt(tag, -1);
+    }
+    public boolean getSharedPrefsBool(String tag){
+        return mConfig.getBoolean(tag, false);
+    }
+    public String getSharedPrefsString(String tag){
+        return mConfig.getString(tag,"");
+    }
+    public boolean checkIfSharedPrefsNull(){
+        if(mConfig != null){
+            return false;
+        }
+        return true;
+    }
+    public boolean checkIfSharedPrefsContain(String tag){
+        return mConfig.contains(tag);
+    }
     public void onTrafficRedirect(String traffic, boolean on){
         switch (traffic){
             case "HTTP":

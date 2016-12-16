@@ -136,28 +136,27 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void onImgReplaceToggle(Boolean on){
+    public void onImgReplaceToggle(boolean on){
         if (on)
             mConfig.edit().putBoolean("imgReplace", true).apply();
         else
             mConfig.edit().putBoolean("imgReplace", false).apply();
     }
 
-    public void onHTTPRedirectToggle(Boolean on){
+    public void onHTTPRedirectToggle(boolean on){
         if (on)
             mConfig.edit().putBoolean("httpRedirect", true).apply();
         else
             mConfig.edit().putBoolean("httpRedirect", false).apply();
     }
-
-    public void onJsInject(Boolean on){
+    public void onJsInject(boolean on){
         if (on)
             mConfig.edit().putBoolean("jsInject", true).apply();
         else
             mConfig.edit().putBoolean("jsInject", false).apply();
     }
 
-    public void onSslStripToggle(Boolean on){
+    public void onSslStripToggle(boolean on){
         if (on)
             mConfig.edit().putBoolean("sslStrip", true).apply();
         else
@@ -167,13 +166,6 @@ public class MainActivity extends AppCompatActivity implements
     public void onTrafficRedirect(String traffic, boolean on) {
         mPresenter.onTrafficRedirect(traffic, on);
     }
-
-    @Override
-    public SharedPreferences getSharedPreferenceForFragment(String s, int i) {
-        SharedPreferences config = getSharedPreferences(s,i);
-        return config;
-    }
-
     /**********************************Clients Fragment********************************************/
     @Override
     public ArrayList<Client> getCurrentClients() {
@@ -220,12 +212,16 @@ public class MainActivity extends AppCompatActivity implements
         FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
         r.setBackground((getResources().getDrawable(R.drawable.bground)));
     }
+
     /*************************************MVP stuff ***********************************************/
     @Override
     public void showToast(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
+    public IMVP.PresenterOps getPresenter(){
+        return mPresenter;
+    }
     /**
      * Initialize and restart the Presenter.
      * This method should be called after {@link MainActivity#onCreate(Bundle)}
@@ -251,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void initialize( IMVP.RequiredViewOps view )
             throws InstantiationException, IllegalAccessException{
-        mPresenter = new Presenter(view);
+        mPresenter = new Presenter(view, this.getApplicationContext());
         mStateMaintainer.put(IMVP.PresenterOps.class.getSimpleName(), mPresenter);
     }
 
