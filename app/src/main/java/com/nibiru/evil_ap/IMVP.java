@@ -34,7 +34,19 @@ public interface IMVP {
         void onTrafficRedirect(String traffic, boolean on);
         ArrayList<Client> getCurrentClients();
         void onConfigurationChanged(RequiredViewOps view);
+        void setSharedPrefsInt(String tag, int val);
+        void setSharedPrefsBool(String tag, boolean val);
+        void setSharedPrefsString(String tag, String val);
+        int getSharedPrefsInt(String tag);
+        boolean getSharedPrefsBool(String tag);
+        String getSharedPrefsString(String tag);
         void onDestroy(boolean isChangingConfig);
+
+        void setContext(Context context);
+
+        boolean checkIfSharedPrefsNull();
+
+        boolean checkIfSharedPrefsContain(String tag);
         // any other ops to be called from View
     }
 
@@ -57,7 +69,17 @@ public interface IMVP {
         boolean apToggle(String SSID, String pass, Context ctx);
         boolean isApOn(Context ctx);
         boolean isDeviceRooted();
+        void setSharedPrefsInt(String tag, int val);
+        void setSharedPrefsBool(String tag, boolean val);
+        void setSharedPrefsString(String tag, String val);
+        int getSharedPrefsInt(String tag);
+        boolean getSharedPrefsBool(String tag);
+        String getSharedPrefsString(String tag);
+        boolean checkIfSharedPrefsNull();
+        boolean checkIfSharedPrefsContain(String tag);
         void onDestroy();
+
+
         // Any other data operation
     }
 }
