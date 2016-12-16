@@ -3,13 +3,9 @@ package com.nibiru.evil_ap.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -23,16 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 
-import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.Map;
-import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -61,7 +48,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        mConfig = mListener.getSharedPreferenceFromFragment("Config", 0);
+        mConfig = mListener.getSharedPreferenceForFragment("Config", 0);
         View v = inflater.inflate(R.layout.fragment_achttp, container, false);
         Button b = (Button) v.findViewById(R.id.button_injectHTML);
         Button bb = (Button) v.findViewById(R.id.button_replaceImages);
@@ -198,34 +185,28 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
-                mListener.onHTTPRedirectToggle();
+                mListener.onHTTPRedirectToggle(isChecked);
                 break;
             case R.id.switch2:
                 Log.e("Switch - ", "inject " + isChecked);
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-
-                    //do everything normal
+                    mListener.onJsInject(isChecked);
                 } else {
                     ((Switch) mListener.getView(R.id.switch2)).setChecked(false);
                 }
                 break;
             case R.id.switch3:
                 Log.e("Switch - ", "strip " + isChecked);
-
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-                    //?
-                    mListener.onSslStripToggle();
+                    mListener.onSslStripToggle(isChecked);
                 } else {
                     ((Switch) mListener.getView(R.id.switch3)).setChecked(false);
                 }
                 break;
             case R.id.switch4:
                 Log.e("Switch - ", "images " + isChecked);
-
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
-                    //?
-                    mListener.onImgReplaceToggle();
-
+                    mListener.onImgReplaceToggle(isChecked);
                 } else {
                     ((Switch) mListener.getView(R.id.switch4)).setChecked(false);
                 }
@@ -251,17 +232,19 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public interface onAcFragmentInteraction {
         void onTrafficRedirect(String traffic, boolean on);
 
-        void onSslStripToggle();
+        void onSslStripToggle(Boolean on);
+
+        void onJsInject(Boolean on);
 
         View getView(int x);
 
         void onImgReplaceChosen(Uri uri);
 
-        void onImgReplaceToggle();
+        void onImgReplaceToggle(Boolean on);
 
-        SharedPreferences getSharedPreferenceFromFragment(String s, int i);
+        SharedPreferences getSharedPreferenceForFragment(String s, int i);
 
-        void onHTTPRedirectToggle();
+        void onHTTPRedirectToggle(Boolean on);
     }
 
     @Override
@@ -269,7 +252,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         super.onAttach(context);
         if (context instanceof onAcFragmentInteraction) {
             mListener = (onAcFragmentInteraction) context;
-            mConfig = mListener.getSharedPreferenceFromFragment("Config", 0);
+            mConfig = mListener.getSharedPreferenceForFragment("Config", 0);
             checkSwitches();
         } else {
             throw new RuntimeException(context.toString()
