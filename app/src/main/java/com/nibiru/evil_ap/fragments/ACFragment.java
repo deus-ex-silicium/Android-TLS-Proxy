@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.adapters.ac_adapter;
 import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
 
@@ -28,7 +29,8 @@ public class ACFragment extends Fragment {
 
 
     private OnFragmentInteractionListener mListener;
-    Adapter adapter;
+    private ac_adapter adapter;
+
     public ACFragment() {
         // Required empty public constructor
     }
@@ -45,9 +47,9 @@ public class ACFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_ac, container, false);
-        final ViewPager viewPager = (ViewPager)v.findViewById(R.id.viewpager);
+        final ViewPager viewPager = (ViewPager) v.findViewById(R.id.viewpager);
         setupViewPager(viewPager);
-        TabLayout tabLayout = (TabLayout)v.findViewById(R.id.tabs);
+        TabLayout tabLayout = (TabLayout) v.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
         return v;
     }
@@ -90,38 +92,12 @@ public class ACFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
     private void setupViewPager(ViewPager viewPager) {
-     adapter = new Adapter(getChildFragmentManager());
-            adapter.addFragment(new ACHTTPFragment(), "HTTP");
-    adapter.addFragment(new ACHTTPSFragment(), "HTTPS");
-    viewPager.setAdapter(adapter);
-}
-    static class Adapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragments = new ArrayList<>();
-        private final List<String> mFragmentTitles = new ArrayList<>();
-
-        public Adapter(android.support.v4.app.FragmentManager fm) {
-            super(fm);
-        }
-
-        public void addFragment(Fragment fragment, String title) {
-            mFragments.add(fragment);
-            mFragmentTitles.add(title);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return mFragments.get(position);
-        }
-
-        @Override
-        public int getCount() {
-            return mFragments.size();
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitles.get(position);
-        }
+        adapter = new ac_adapter(getChildFragmentManager());
+        adapter.addFragment(new ACHTTPFragment(), "HTTP");
+        adapter.addFragment(new ACHTTPSFragment(), "HTTPS");
+        viewPager.setAdapter(adapter);
     }
+
 }

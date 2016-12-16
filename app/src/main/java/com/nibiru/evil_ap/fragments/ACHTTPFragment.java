@@ -2,12 +2,14 @@ package com.nibiru.evil_ap.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -27,21 +29,28 @@ import com.nibiru.evil_ap.R;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import static android.app.Activity.RESULT_OK;
 
 public class ACHTTPFragment extends Fragment implements View.OnClickListener, CompoundButton
         .OnCheckedChangeListener {
-    /**************************************CLASS FIELDS********************************************/
+    /**************************************
+     * CLASS FIELDS
+     ********************************************/
     protected final String TAG = getClass().getSimpleName();
+    private SharedPreferences mConfig;
     private onAcFragmentInteraction mListener;
     private LinearLayout mLayout;
     private LinearLayout mLayout2;
-    private boolean l1flag = false;
-    private boolean l2flag = false;
+    private boolean layotPayloadflag = false;
+    private boolean layoutImageflag = false;
     private ImageView iv;
-    /**************************************CLASS METHODS*******************************************/
+
+    /**************************************
+     * CLASS METHODS
+     *******************************************/
     public ACHTTPFragment() {
         // Required empty public constructor
     }
@@ -49,15 +58,14 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        mConfig = mListener.getSharedPreferenceFromFragment("Config", 0);
         View v = inflater.inflate(R.layout.fragment_achttp, container, false);
-
         Button b = (Button) v.findViewById(R.id.button_injectHTML);
         Button bb = (Button) v.findViewById(R.id.button_replaceImages);
         b.setOnClickListener(this);
@@ -79,14 +87,14 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_injectHTML:
-                if (!l1flag) {
-                    l1flag = !l1flag;
+                if (!layotPayloadflag) {
+                    layotPayloadflag = !layotPayloadflag;
                     Log.e("E!", "inject");
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setText("Payload1");
                     EditText et = new EditText(view.getContext());
                     et.setText
-                            ("PADSFPSFSDPFSPDFPSDPFDSPFPSDFPSDPFPSDFPDSPFPSDPFPSDFPSDPFPSDFPSAPDFPASPDFPASDPFAPSDFPASPDFPASDPFPSDAFPSDFP");
+                            (" ");
                     mLayout.addView(cb);
                     mLayout.addView(et);
                     CheckBox cb2 = new CheckBox(view.getContext());
@@ -100,20 +108,32 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     mLayout.addView(et3);
                     break;
                 } else {
-                    l1flag = !l1flag;
+                    layotPayloadflag = !layotPayloadflag;
                     mLayout.removeAllViews();
                 }
             case R.id.button_replaceImages:
-                if (!l2flag) {
-                    l2flag = !l2flag;
+                if (!layoutImageflag) {
+                    layoutImageflag = !layoutImageflag;
+                    String imgpath = " ";
+
+                    if (mConfig != null && mConfig.contains("imgPath")) {
+                        try {
+                            imgpath = mConfig.getString("imgPath", " ");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (imgpath == null || imgpath.equals(" ")) {
+                            Log.e("SP is null - ", imgpath);
+                        } else {
+                            applyToImageView(mLayout2, iv, Uri.parse(imgpath));
+                        }
+                    }
                     Log.e("E!", "images");
-                    Button b = new Button(view.getContext());
-                    Button b2 = new Button(view.getContext());
+                    Button chooseImage_button = new Button(view.getContext());
                     iv = new ImageView(view.getContext());
 
-                    b.setText("choose image");
-                    b2.setText("load form url");
-                    b.setOnClickListener(new View.OnClickListener() {
+                    chooseImage_button.setText("choose image");
+                    chooseImage_button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             Intent pickPhoto = new Intent(Intent.ACTION_PICK,
@@ -121,72 +141,10 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                             startActivityForResult(pickPhoto, 1);//one can be replaced with any action code
                         }
                     });
-                    b2.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-//                            AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-//                            builder.setTitle("Input url");
-//
-//                            // Set up the input
-//                            final EditText input = new EditText(view.getContext());
-//                            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-//                            input.setInputType(InputType.TYPE_CLASS_TEXT);
-//                            builder.setView(input);
-//
-//                            // Set up the buttons
-//                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                                @Override
-//                                public void onClick(DialogInterface dialog, int which) {
-//                                    String url = input.getText().toString();
-//                                    url = "https://pbs.twimg" +
-//                                            ".com/profile_images/601755021403762688/7_MKT2B_.jpg";
-//                                    Log.e("e",url);
-//                                    Drawable d = LoadImageFromWebOperations(url);
-//                                    if(iv !=null){
-//                                        mLayout2.removeView(iv);
-//                                    }
-//                                    iv.setImageDrawable(d);
-//                                    mLayout2.addView(iv);
-//                                    LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
-//                                    lp.width = 500;
-//                                    lp.height = 500;
-//                                    lp.gravity = Gravity.CENTER;
-//                                }
-//                            });
-//                            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//                                @Override
-//                                public void onClick(DialogInterface dialog, int which) {
-//                                    dialog.cancel();
-//                                }
-//                            });
-//                            builder.show();
-//
-                            URL url = null;
-                            try {
-                                url = new URL("http://image10.bizrate-images.com/resize?sq=60&uid=2216744464");
-                            } catch (MalformedURLException e) {
-                                e.printStackTrace();
-                            }
-                            Bitmap bmp = null;
-                            /*try {
-                                bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }*/
-                            iv.setImageBitmap(bmp);
-                            if(iv != null){
-                                mLayout2.removeView(iv);
-                            }
-                            mLayout2.addView(iv);
-                        }
-
-                    });
-
-                    mLayout2.addView(b);
-                    mLayout2.addView(b2);
+                    mLayout2.addView(chooseImage_button);
                     break;
                 } else {
-                    l2flag = !l2flag;
+                    layoutImageflag = !layoutImageflag;
                     mLayout2.removeAllViews();
                 }
         }
@@ -196,28 +154,30 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     public void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
         switch (requestCode) {
-            case 0:
-                if (resultCode == RESULT_OK) {
-
-                }
-                break;
             case 1:
                 if (resultCode == RESULT_OK) {
                     Uri selectedImage = imageReturnedIntent.getData();
-                    if(iv != null){
-                        mLayout2.removeView(iv);
-                    }
-                    mLayout2.addView(iv);
-                    LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
-                    lp.width = 500;
-                    lp.height = 500;
-                    lp.gravity = Gravity.CENTER;
-                    iv.setImageURI(selectedImage);
+                    applyToImageView(mLayout2, iv, selectedImage);
                     //commit configuration change
                     mListener.onImgReplaceChosen(selectedImage);
                 }
                 break;
         }
+    }
+
+    public void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
+        if (iv != null) {
+            layout.removeView(iv);
+        }
+        Log.e("e", image.toString());
+        layout.addView(iv,0);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
+        lp.width = 500;
+        lp.height = 500;
+        lp.gravity = Gravity.CENTER;
+        Log.e("e", image.toString());
+        iv.setImageURI(image);
+
     }
 
     @Override
@@ -286,10 +246,16 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
      */
     public interface onAcFragmentInteraction {
         void onTrafficRedirect(String traffic, boolean on);
+
         void onSslStripToggle();
+
         View getView(int x);
+
         void onImgReplaceChosen(Uri uri);
+
         void onImgReplaceToggle();
+
+        SharedPreferences getSharedPreferenceFromFragment(String s, int i);
     }
 
     @Override
