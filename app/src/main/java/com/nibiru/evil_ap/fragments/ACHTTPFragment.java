@@ -55,7 +55,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkSwitches();
     }
 
     @Override
@@ -74,6 +73,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         Switch switchReplacImages = (Switch) v.findViewById(R.id.switch4);
         mLayout = (LinearLayout) v.findViewById(R.id.lin2dynamic);
         mLayout2 = (LinearLayout) v.findViewById(R.id.lin4dynamic);
+        iv = new ImageView(v.getContext());
         switchRedirectHTML.setOnCheckedChangeListener(this);
         switchInjectHTML.setOnCheckedChangeListener(this);
         switchSSLStrip.setOnCheckedChangeListener(this);
@@ -163,7 +163,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     }
 
     public void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
-        if (iv != null) {
+        if(iv != null){
             layout.removeView(iv);
         }
         layout.addView(iv, 0);
@@ -171,20 +171,19 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         lp.width = 500;
         lp.height = 500;
         lp.gravity = Gravity.CENTER;
-        Log.e("e", image.toString());
         iv.setImageURI(image);
 
     }
 
     public void checkSwitches() {
         if (mConfig != null) {
-            if (mConfig.contains("sslStrip"))
+            if (mConfig.contains("sslStrip") && mListener.getView(R.id.switch3) != null)
                 ((Switch) mListener.getView(R.id.switch3)).setChecked(mConfig.getBoolean
                         ("sslStrip", false));
-            if (mConfig.contains("imgReplace"))
+            if (mConfig.contains("imgReplace")&& mListener.getView(R.id.switch4) != null)
                 ((Switch) mListener.getView(R.id.switch4)).setChecked(mConfig.getBoolean("imgReplace",
                         false));
-            if (mConfig.contains("httpRedirect"))
+            if (mConfig.contains("httpRedirect")&& mListener.getView(R.id.switch1) != null)
                 ((Switch) mListener.getView(R.id.switch1)).setChecked(mConfig.getBoolean("httpRedirect",
                         false));
         }
@@ -270,6 +269,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         super.onAttach(context);
         if (context instanceof onAcFragmentInteraction) {
             mListener = (onAcFragmentInteraction) context;
+            mConfig = mListener.getSharedPreferenceFromFragment("Config", 0);
+            checkSwitches();
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteraction interface");
