@@ -143,6 +143,13 @@ public class MainActivity extends AppCompatActivity implements
             mConfig.edit().putBoolean("imgReplace", false).apply();
     }
 
+    @Override
+    public SharedPreferences getSharedPreferenceFromFragment(String s, int i) {
+        SharedPreferences config = getSharedPreferences(s,i);
+        return config;
+    }
+
+
     public void onSslStripToggle(){
         if (!mConfig.getBoolean("sslStrip", false))
             mConfig.edit().putBoolean("sslStrip", true).apply();
