@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onFragmentInteraction(Uri uri) {}
     /********************************Action Center Fragment****************************************/
-    public View getView(int x){ return null; }
+    public View getView(int x){ return this.findViewById(x); }
 
     public void onImgReplaceChosen(Uri uri){
         verifyStoragePermissions();
@@ -142,7 +142,12 @@ public class MainActivity extends AppCompatActivity implements
         else
             mConfig.edit().putBoolean("imgReplace", false).apply();
     }
-
+    public void onHTTPRedirectToggle(){
+        if (!mConfig.getBoolean("httpRedirect", false))
+            mConfig.edit().putBoolean("httpRedirect", true).apply();
+        else
+            mConfig.edit().putBoolean("httpRedirect", false).apply();
+    }
     @Override
     public SharedPreferences getSharedPreferenceFromFragment(String s, int i) {
         SharedPreferences config = getSharedPreferences(s,i);

@@ -31,6 +31,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Map;
+import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -58,6 +60,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        checkSwitches();
     }
 
     @Override
@@ -80,6 +83,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switchInjectHTML.setOnCheckedChangeListener(this);
         switchSSLStrip.setOnCheckedChangeListener(this);
         switchReplacImages.setOnCheckedChangeListener(this);
+
+
         return v;
     }
 
@@ -169,8 +174,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         if (iv != null) {
             layout.removeView(iv);
         }
-        Log.e("e", image.toString());
-        layout.addView(iv,0);
+        layout.addView(iv, 0);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
         lp.width = 500;
         lp.height = 500;
@@ -180,52 +184,61 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
 
     }
 
+    public void checkSwitches() {
+        if (mConfig != null) {
+            if (mConfig.contains("sslStrip"))
+                ((Switch) mListener.getView(R.id.switch3)).setChecked(mConfig.getBoolean
+                        ("sslStrip", false));
+            if (mConfig.contains("imgReplace"))
+                ((Switch) mListener.getView(R.id.switch4)).setChecked(mConfig.getBoolean("imgReplace",
+                        false));
+            if (mConfig.contains("httpRedirect"))
+                ((Switch) mListener.getView(R.id.switch1)).setChecked(mConfig.getBoolean("httpRedirect",
+                        false));
+        }
+    }
+
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         switch (buttonView.getId()) {
             case R.id.switch1:
                 Log.e("Switch - ", "redirect " + isChecked);
                 mListener.onTrafficRedirect("HTTP", true);
-                changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
-                changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
-                changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
+                changeSwitch((Switch) mListener.getView(R.id.switch2));
+                changeSwitch((Switch) mListener.getView(R.id.switch3));
+                changeSwitch((Switch) mListener.getView(R.id.switch4));
+                mListener.onHTTPRedirectToggle();
                 break;
             case R.id.switch2:
                 Log.e("Switch - ", "inject " + isChecked);
-                if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
+                if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
+
                     //do everything normal
                 } else {
-                    ((Switch) getActivity().findViewById(R.id.switch2)).setChecked(false);
+                    ((Switch) mListener.getView(R.id.switch2)).setChecked(false);
                 }
                 break;
             case R.id.switch3:
                 Log.e("Switch - ", "strip " + isChecked);
-                mListener.onSslStripToggle();
-                if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
+
+                if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
                     //?
+                    mListener.onSslStripToggle();
                 } else {
-                    ((Switch) getActivity().findViewById(R.id.switch3)).setChecked(false);
+                    ((Switch) mListener.getView(R.id.switch3)).setChecked(false);
                 }
                 break;
             case R.id.switch4:
                 Log.e("Switch - ", "images " + isChecked);
-                mListener.onImgReplaceToggle();
-                if (((Switch) getActivity().findViewById(R.id.switch1)).isChecked()) {
+
+                if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
                     //?
+                    mListener.onImgReplaceToggle();
+
                 } else {
-                    ((Switch) getActivity().findViewById(R.id.switch4)).setChecked(false);
+                    ((Switch) mListener.getView(R.id.switch4)).setChecked(false);
                 }
                 break;
-        }
-    }
-
-    public static Drawable LoadImageFromWebOperations(String url) {
-        try {
-            InputStream is = (InputStream) new URL(url).getContent();
-            Drawable d = Drawable.createFromStream(is, "src name");
-            return d;
-        } catch (Exception e) {
-            return null;
         }
     }
 
@@ -256,6 +269,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         void onImgReplaceToggle();
 
         SharedPreferences getSharedPreferenceFromFragment(String s, int i);
+
+        void onHTTPRedirectToggle();
     }
 
     @Override
