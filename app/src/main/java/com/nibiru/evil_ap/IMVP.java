@@ -1,10 +1,14 @@
 package com.nibiru.evil_ap;
 
+import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
+import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Nibiru on 2016-12-06.
@@ -28,25 +32,28 @@ public interface IMVP {
      *      View -> Presenter
      */
     interface PresenterOps{
+        void onDestroy(boolean isChangingConfig);
+
         void checkIfDeviceRooted();
         boolean apBtnPressed(String SSID, String pass, Context ctx);
+
         boolean isApOn(Context ctx);
         void onTrafficRedirect(String traffic, boolean on);
-        ArrayList<Client> getCurrentClients();
         void onConfigurationChanged(RequiredViewOps view);
+        void onLoadReplaceImg(Uri uri, Activity act);
+        void onJsPayloadApply(List<Pair<Integer, String>> payloads);
+
         void setSharedPrefsInt(String tag, int val);
         void setSharedPrefsBool(String tag, boolean val);
         void setSharedPrefsString(String tag, String val);
+        void setContext(Context context);
+
+        ArrayList<Client> getCurrentClients();
         int getSharedPrefsInt(String tag);
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
-        void onDestroy(boolean isChangingConfig);
+        SharedClass getSharedObj();
 
-        void setContext(Context context);
-
-        boolean checkIfSharedPrefsNull();
-
-        boolean checkIfSharedPrefsContain(String tag);
         // any other ops to be called from View
     }
 
@@ -64,21 +71,24 @@ public interface IMVP {
      *      Presenter -> Model
      */
     interface ModelOps {
+        void onDestroy();
+
         void onTrafficRedirect(String traffic, boolean on);
-        ArrayList<String> getCurrentClients();
-        boolean apToggle(String SSID, String pass, Context ctx);
+        void onLoadReplaceImg(Uri uri, Activity act);
+        void onJsPayloadApply(List<Pair<Integer, String>> payloads);
+        boolean onApToggle(String SSID, String pass, Context ctx);
         boolean isApOn(Context ctx);
         boolean isDeviceRooted();
+
         void setSharedPrefsInt(String tag, int val);
         void setSharedPrefsBool(String tag, boolean val);
         void setSharedPrefsString(String tag, String val);
+
+        ArrayList<String> getCurrentClients();
         int getSharedPrefsInt(String tag);
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
-        boolean checkIfSharedPrefsNull();
-        boolean checkIfSharedPrefsContain(String tag);
-        void onDestroy();
-
+        SharedClass getSharedObj();
 
         // Any other data operation
     }

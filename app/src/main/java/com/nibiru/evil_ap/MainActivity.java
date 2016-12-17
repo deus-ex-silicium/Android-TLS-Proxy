@@ -1,20 +1,14 @@
 package com.nibiru.evil_ap;
 
-import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -33,6 +27,7 @@ import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
         MainFragment.OnMainFragmentInteraction,ClientsFragment.onClientsFragmentInteraction,
@@ -41,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements
         IMVP.RequiredViewOps {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
-    public ProxyService proxyService; //?
+    private ProxyService.IProxyService mProxyService;
     private boolean psIsBound; //?
     private ServiceConnection mConnection; //?
     // Responsible for maintaining objects state during changing configuration
@@ -49,12 +44,6 @@ public class MainActivity extends AppCompatActivity implements
             new StateMaintainer( this.getFragmentManager(), TAG );
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
-    // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
     /**************************************CLASS METHODS*******************************************/
 
     @Override
@@ -65,17 +54,21 @@ public class MainActivity extends AppCompatActivity implements
         setUpGUI();
         mPresenter.checkIfDeviceRooted();
 
-        //TODO: refactor
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
-                proxyService = ((ProxyService.LocalBinder)service).getService();
+                mProxyService = ((ProxyService.IProxyService)service);
+                mProxyService.setSharedObj(mPresenter.getSharedObj());
             }
             public void onServiceDisconnected(ComponentName className) {
-                proxyService = null;
+                mProxyService = null;
             }
         };
         doBindService();
+
+        //reset some settings
+        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
+                "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
     }
 
     @Override
@@ -107,32 +100,12 @@ public class MainActivity extends AppCompatActivity implements
     public View getView(int x){ return this.findViewById(x); }
 
     public void onImgReplaceChosen(Uri uri){
-        verifyStoragePermissions();
-        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(), getPath(uri));
-    }
-    //TODO: put in proper place
-    public String getPath(Uri uri) {
-        String[] projection = { MediaStore.Images.Media.DATA };
-        CursorLoader loader = new CursorLoader(this, uri, projection, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        return cursor.getString(column_index);
+        mPresenter.onLoadReplaceImg(uri, this);
     }
 
-    public void verifyStoragePermissions() {
-        // Check if we have permission
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission
-                .READ_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    this,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
+    @Override
+    public void onJsPayloadApply(List<Pair<Integer, String>> payloads) {
+        mPresenter.onJsPayloadApply(payloads);
     }
 
     public void onSwitchToggle(boolean on, String tag){
@@ -160,7 +133,6 @@ public class MainActivity extends AppCompatActivity implements
     public boolean isApOn() {
         return mPresenter.isApOn(getApplicationContext());
     }
-
     /**************************************UI stuff************************************************/
     private void setUpGUI(){
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -191,7 +163,6 @@ public class MainActivity extends AppCompatActivity implements
         FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
         r.setBackground((getResources().getDrawable(R.drawable.bground)));
     }
-
     /*************************************MVP stuff ***********************************************/
     @Override
     public void showToast(String msg) {

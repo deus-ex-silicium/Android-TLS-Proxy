@@ -7,6 +7,7 @@ import android.os.Binder;
 import android.os.IBinder;
 
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.SharedClass;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,21 +25,19 @@ public class ProxyService extends Service{
     protected final String TAG = getClass().getSimpleName();
     Thread proxyHTTP;
     public volatile boolean work;
+    public SharedClass mSharedObj;
     // Configuration settings
     public SharedPreferences config;
-    private boolean swapImgHTTP;
-    private boolean swapImgHTTPS;
-    private boolean sslStrip;
-    private String imgPath;
     /**************************************CLASS METHODS*******************************************/
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
      * IPC.
      */
-    public class LocalBinder extends Binder {
-        public ProxyService getService() {
-            return ProxyService.this;
+    public class LocalBinder extends Binder implements IProxyService{
+        @Override
+        public void setSharedObj(SharedClass sharedObj) {
+            mSharedObj = sharedObj;
         }
     }
     // This is the object that receives interactions from clients.  See
@@ -50,36 +49,24 @@ public class ProxyService extends Service{
     public void onCreate() {
         // Start up the thread running the service.  Note that we create a separate thread because
         // the service normally runs in the process's main thread, which we don't want to block.
-
-        /*try {
-            server = new NanoServer();
-            server.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
+        work = true;
         config = getSharedPreferences("Config", 0);
         //start the HTTP proxy socket thread
-        work = true;
         proxyHTTP = new Thread(new ProxyHTTPMainLoop(this));
         proxyHTTP.start();
-        //start the HTTPS proxy
-        /*Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
-                getResources().openRawResource(R.raw.evil_ap)));
-        proxyHTTPS.start();*/
-        //start the DNS proxy
-        //Thread proxyDNS = new Thread(new ProxyDNSMainLoop());
-        //proxyDNS.start();
     }
 
     @Override
     public void onDestroy(){
-        //server.stop();
         work = false;
     }
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+
+    public interface IProxyService {
+        void setSharedObj(SharedClass sharedObj);
     }
 
     private void testImgStream() {
