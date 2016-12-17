@@ -45,16 +45,7 @@ class ProxyHTTPMainLoop implements Runnable{
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             serverSocket = new ServerSocket(SERVERPORT);
             while (ps.work) {
-                InputStream imgStream;
-                String path;
-                if ( (path = ps.config.getString("imgPath", null)) != null) {
-                    File file = new File(path);
-                    imgStream = new FileInputStream(file);
-                }
-                else {
-                    imgStream = ps.getResources().openRawResource(R.raw.pixel_skull);
-                }
-                executor.execute(new ThreadProxy(serverSocket.accept(), imgStream, ps.config));
+                executor.execute(new ThreadProxy(serverSocket.accept(), ps.config, ps.mSharedObj));
                 Log.d(TAG, "Accepted HTTP client");
             }
         } catch (IOException e) {

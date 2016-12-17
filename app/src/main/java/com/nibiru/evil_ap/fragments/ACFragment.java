@@ -5,25 +5,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.Switch;
-import android.widget.Toast;
 
-import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.ac_adapter;
-import com.nibiru.evil_ap.manager.Root;
-import com.nibiru.evil_ap.manager.Routing;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ACFragment extends Fragment {
 

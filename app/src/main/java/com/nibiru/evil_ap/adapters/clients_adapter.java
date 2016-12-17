@@ -1,11 +1,9 @@
 package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
-import android.app.Application;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +12,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.nibiru.evil_ap.fragments.ServerItemFragment;
-import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
+import com.nibiru.evil_ap.fragments.ServerItemFragment;
+import com.nibiru.evil_ap.log.Client;
 
 import java.util.ArrayList;
 
@@ -66,8 +64,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                     public void onClick(View v) {
                         LinearLayout ll = (LinearLayout) ti.getParent();
                         if (ll.getBackground().equals(finalV_clients.getResources().getColor(R
-                                .color
-                                .oplblue))) {
+                                .color.oplblue))) {
                             ll.setBackgroundColor(finalV_clients.getResources().getColor(R.color
                                     .opblue));
                         } else {

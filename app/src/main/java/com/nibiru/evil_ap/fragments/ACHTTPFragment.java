@@ -2,9 +2,11 @@ package com.nibiru.evil_ap.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,6 +23,9 @@ import android.widget.Switch;
 import com.nibiru.evil_ap.ConfigTags;
 import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -86,9 +91,9 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                 if (!layotPayloadflag) {
                     layotPayloadflag = !layotPayloadflag;
                     Log.e("E!", "inject");
-                    CheckBox cb = new CheckBox(view.getContext());
-                    cb.setText("Payload1");
-                    EditText et = new EditText(view.getContext());
+                    final CheckBox cb = new CheckBox(view.getContext());
+                    cb.setText("Payload1 - Alert dialog box message");
+                    final EditText et = new EditText(view.getContext());
                     et.setText("Hello from Evil-AP!");
                     mLayout.addView(cb);
                     mLayout.addView(et);
@@ -103,7 +108,12 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     apply.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-
+                            List<Pair<Integer, String>> payloads = new ArrayList<>();
+                            if(cb.isChecked()){
+                                Pair<Integer, String> p1 = new Pair<>(1, et.getText().toString());
+                                payloads.add(p1);
+                            }
+                            mListener.onJsPayloadApply(payloads);
                         }
                     });
                     mLayout.addView(cb2);
@@ -122,6 +132,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     String imgpath = mPresenter.getSharedPrefsString(ConfigTags.imgPath.toString());
                     if (imgpath == null || imgpath.equals("")) {
                         Log.e("SP is null - ", imgpath);
+
                     } else {
                         applyToImageView(mLayout2, iv, Uri.parse(imgpath));
                     }
@@ -177,6 +188,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
     }
 
     public void checkSwitches() {
+        if (mPresenter == null) return;
             ((Switch) mListener.getView(R.id.switch3)).setChecked(mPresenter.getSharedPrefsBool
                     (ConfigTags.sslStrip.toString()));
             ((Switch) mListener.getView(R.id.switch4)).setChecked(mPresenter.getSharedPrefsBool
@@ -193,15 +205,20 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             case R.id.switch1:
                 Log.e("Switch - ", "redirect " + isChecked);
                 mListener.onTrafficRedirect("HTTP", isChecked);
+                mListener.onSwitchToggle(isChecked, ConfigTags.httpRedirect.toString());
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch2));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch3));
                 changeSwitch((Switch) getActivity().findViewById(R.id.switch4));
-                mListener.onSwitchToggle(isChecked, ConfigTags.httpRedirect.toString());
                 break;
             case R.id.switch2:
                 Log.e("Switch - ", "inject " + isChecked);
                 if (((Switch) mListener.getView(R.id.switch1)).isChecked()) {
                     mListener.onSwitchToggle(isChecked, ConfigTags.jsInject.toString());
+                    //add default payload
+                    List<Pair<Integer, String>> payloads = new ArrayList<>();
+                    Pair<Integer, String> p1 = new Pair<>(1, "Hello from Evil-AP!");
+                    payloads.add(p1);
+                    mListener.onJsPayloadApply(payloads);
                 } else {
                     ((Switch) mListener.getView(R.id.switch2)).setChecked(false);
                 }
@@ -251,6 +268,8 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         View getView(int x);
 
         void onImgReplaceChosen(Uri uri);
+
+        void onJsPayloadApply(List<Pair<Integer, String>> payloads);
 
         void onSwitchToggle(boolean on, String tag);
 

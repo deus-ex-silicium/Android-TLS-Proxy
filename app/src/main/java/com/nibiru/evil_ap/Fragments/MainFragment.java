@@ -51,11 +51,19 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             intent.setData(Uri.parse("package:" + getContext().getPackageName()));
             startActivity(intent);
         }
-        //setBtnUI(Ap.apToggle(ctx));
+        //setBtnUI(Ap.onApToggle(ctx));
 
         //Register BroadcastReceiver, filer specific intents
         getContext().registerReceiver(new ApBroadcastReceiver(),
                 new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
+
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        //Register BroadcastReceiver, filer specific intents
+        //getContext().unregisterReceiver();
 
     }
 

