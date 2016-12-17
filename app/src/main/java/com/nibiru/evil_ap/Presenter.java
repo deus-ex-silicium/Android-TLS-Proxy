@@ -45,6 +45,9 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
                 clients.add(new Client(split[0], split[4]));
             }
         }
+        clients.add(new Client("192.168.0.12", "vdfsdddsdfdas"));
+        clients.add(new Client("192.168.0.13", "vdfsdddsdfdas"));
+        clients.add(new Client("192.168.0.14", "vdfsdddsdfdas"));
         return clients;
     }
 

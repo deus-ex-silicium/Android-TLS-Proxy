@@ -37,7 +37,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         clients_listView = (ListView) rootView.findViewById(R.id.listk);
         final ListView clients_listView = (ListView) rootView.findViewById(R.id.listk);
         clientsList = getCurrentClients();
-        customAdapter = new clients_adapter(getActivity().getApplicationContext(),
+        customAdapter = new clients_adapter(this.getContext(),
                 R.layout.list_item_clients, clientsList,this.getActivity());
         mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         mySwipeRefreshLayout.setOnRefreshListener(this);
