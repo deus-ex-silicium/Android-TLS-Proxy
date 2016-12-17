@@ -47,33 +47,9 @@ public class server_adapter extends ArrayAdapter<String> {
         if (v_server == null) {
             LayoutInflater vid;
             vid = LayoutInflater.from(getContext());
-            v_server = vid.inflate(R.layout.list_item_clients, null);
+            v_server = vid.inflate(R.layout.fragment_serveritem, null);
         }
 
-        final String d = serverList.size() > 0 ? serverList.get(position) : null;
-
-        if (d != null) {
-            final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientip);
-            if (ti != null) {
-                ti.setText(serverList.get(position));
-                final View finalV_clients = v_server;
-                ti.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        LinearLayout ll = (LinearLayout) ti.getParent();
-                        if (ll.getBackground().equals(finalV_clients.getResources().getColor(R
-                                .color
-                                .oplblue))) {
-                            ll.setBackgroundColor(finalV_clients.getResources().getColor(R.color
-                                    .opblue));
-                        } else {
-                            ll.setBackgroundColor(finalV_clients.getResources().getColor(R.color
-                                    .oplblue));
-                        }
-                    }
-                });
-            }
-        }
         return v_server;
     }
 
