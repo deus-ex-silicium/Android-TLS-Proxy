@@ -36,7 +36,7 @@ public class ServerItemFragment extends Fragment {
         server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
         final ListView clients_listView = (ListView) rootView.findViewById(R.id.Serverlist);
         serverList = getClientServers();
-        customAdapter = new server_adapter(getActivity().getApplicationContext(),
+        customAdapter = new server_adapter(getActivity(),
                 R.layout.fragment_serveritem, serverList,this.getActivity());
         //mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         //mySwipeRefreshLayout.setOnRefreshListener(this);
