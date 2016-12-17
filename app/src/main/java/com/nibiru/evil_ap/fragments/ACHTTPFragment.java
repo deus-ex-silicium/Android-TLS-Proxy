@@ -98,9 +98,18 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     EditText et3 = new EditText(view.getContext());
                     et2.setHint("IP");
                     et3.setHint("Port");
+                    Button apply = new Button(view.getContext());
+                    apply.setText("Apply");
+                    apply.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                        }
+                    });
                     mLayout.addView(cb2);
                     mLayout.addView(et2);
                     mLayout.addView(et3);
+                    mLayout.addView(apply);
                     break;
                 } else {
                     layotPayloadflag = !layotPayloadflag;

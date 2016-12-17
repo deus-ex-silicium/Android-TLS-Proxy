@@ -1,16 +1,12 @@
 package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
-import android.app.Application;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -25,42 +21,42 @@ import java.util.ArrayList;
  * Created by Wobbaf on 04/11/2016.
  */
 
-public class clients_adapter extends ArrayAdapter<Client> {
+public class server_adapter extends ArrayAdapter<String> {
     /**************************************
      * CLASS FIELDS
      ********************************************/
-    private Activity clients_activity;
-    private ArrayList<Client> clientsList;
-    private ArrayList<Client> cliList = null;
-    ClientsFragment Fragment_Clients;
+    private Activity server_activity;
+    private ArrayList<String> serverList;
+    private ArrayList<String> cliList = null;
+    ServerItemFragment Fragment_Server;
 
     /**************************************
      * CLASS METHODS
      *******************************************/
-    public clients_adapter(Context context, int resource, ArrayList<Client> items,
-                           Activity passed_clients_activity) {
+    public server_adapter(Context context, int resource, ArrayList<String> items,
+                           Activity passed_server_activity) {
         super(context, resource, items);
-        clients_activity = passed_clients_activity;
-        clientsList = items;
-        cliList = new ArrayList<>(clientsList);
+        server_activity = passed_server_activity;
+        serverList = items;
+        cliList = new ArrayList<>(serverList);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View v_clients = convertView;
-        if (v_clients == null) {
+        View v_server = convertView;
+        if (v_server == null) {
             LayoutInflater vid;
             vid = LayoutInflater.from(getContext());
-            v_clients = vid.inflate(R.layout.list_item_clients, null);
+            v_server = vid.inflate(R.layout.list_item_clients, null);
         }
 
-        final Client d = clientsList.size() > 0 ? clientsList.get(position) : null;
+        final String d = serverList.size() > 0 ? serverList.get(position) : null;
 
         if (d != null) {
-            final TextView ti = (TextView) v_clients.findViewById(R.id.text_content_clientip);
+            final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientip);
             if (ti != null) {
-                ti.setText(clientsList.get(position).getIp());
-                final View finalV_clients = v_clients;
+                ti.setText(serverList.get(position));
+                final View finalV_clients = v_server;
                 ti.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -77,23 +73,8 @@ public class clients_adapter extends ArrayAdapter<Client> {
                     }
                 });
             }
-            final Button log = (Button) v_clients.findViewById(R.id.button1);
-            if (log != null) {
-                final View finalV_clients = v_clients;
-                log.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Activity a = (Activity)getContext();
-                        FragmentManager fm = a.getFragmentManager();
-                        FragmentTransaction ft = fm.beginTransaction();
-                        ft.replace(R.id.activity_main, new ServerItemFragment(),
-                                null);
-                        ft.addToBackStack(null).commit();
-                    }
-                });
-            }
         }
-        return v_clients;
+        return v_server;
     }
 
     /** in case we want async client sync, \/ template */

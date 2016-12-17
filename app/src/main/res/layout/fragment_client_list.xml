@@ -10,5 +10,5 @@
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context="com.nibiru.evil_ap.fragments.ClientFragment"
+    tools:context="com.nibiru.evil_ap.fragments.ClientsFragment"
     tools:listitem="@layout/fragment_client"/>
