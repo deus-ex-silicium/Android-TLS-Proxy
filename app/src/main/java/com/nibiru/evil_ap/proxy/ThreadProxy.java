@@ -31,7 +31,6 @@ public class ThreadProxy implements Runnable{
     private Socket sClient;
     private OkHttpParser rp;
     private OkHttpClient okhttp;
-    private InputStream imgSwap;
     private SharedPreferences mConfig;
     private SharedClass mSharedObj;
     private boolean debug = true;
@@ -107,7 +106,6 @@ public class ThreadProxy implements Runnable{
             //clean up
             if (res != null) res.body().close();
              try {
-                 if (imgSwap != null)imgSwap.close();
                  if (outToClient != null) outToClient.close();
                  if (inFromServer != null) inFromServer.close();
                  if (sClient != null) sClient.close();
