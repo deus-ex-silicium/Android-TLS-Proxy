@@ -17,14 +17,12 @@ import javax.net.ssl.SSLProtocolException;
 
 class RequestRevEcho implements Runnable {
     /**************************************CLASS FIELDS********************************************/
-    private final static String TAG = "RequestRevEcho";
+    protected final String TAG = getClass().getSimpleName();
     private Socket client = null;
-    private OkHttpParser rp;
     /**************************************CLASS METHODS*******************************************/
     RequestRevEcho(Socket socket) {
         super();
         this.client = socket;
-        rp = new OkHttpParser();
     }
 
     public void run() {
@@ -43,7 +41,6 @@ class RequestRevEcho implements Runnable {
             }
             Log.d(TAG, "<==================Sending response==================>");
             out.write(request);
-            rp.parse(request);
             Log.d(TAG, "<==================Closing connection==================>");
             out.close();
             in.close();
@@ -51,7 +48,7 @@ class RequestRevEcho implements Runnable {
         } catch (IOException e) {
             Log.d(TAG, "<================ SHIT FUCK, EXCEPTION !!! ================>");
             if (e instanceof SSLProtocolException){
-                Log.d(TAG, "ERROR: client doesnt like our self signed cert");
+                Log.d(TAG, "ERROR: client doesn't like our self signed cert");
             }
             else e.printStackTrace();
         }
