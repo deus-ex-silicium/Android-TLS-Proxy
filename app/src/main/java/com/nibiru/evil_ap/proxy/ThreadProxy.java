@@ -248,12 +248,11 @@ public class ThreadProxy implements Runnable{
                 String len = line.substring(index).trim();
                 length = Integer.parseInt(len);
             }
-            if (line.startsWith("Accept-Encoding")) { //make sure content is not zipped...
-                continue;
+            //make sure content is not zipped...
+            //by not including the Accept-Encoding header
+            if (!line.startsWith("Accept-Encoding")) {
                 /*Log.d(TAG + "[IN]", "Accept-Encoding: identity");
                 request += "Accept-Encoding: identity\r\n";*/
-            }
-            else {
                 if (debug) Log.d(TAG + "[IN]", line);
                 request += line + "\r\n";
             }
