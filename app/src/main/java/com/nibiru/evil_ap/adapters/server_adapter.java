@@ -2,18 +2,14 @@ package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.nibiru.evil_ap.fragments.ServerItemFragment;
-import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.fragments.ClientsFragment;
+import com.nibiru.evil_ap.fragments.ServerItemFragment;
 
 import java.util.ArrayList;
 
@@ -34,7 +30,7 @@ public class server_adapter extends ArrayAdapter<String> {
      * CLASS METHODS
      *******************************************/
     public server_adapter(Context context, int resource, ArrayList<String> items,
-                           Activity passed_server_activity) {
+                          Activity passed_server_activity) {
         super(context, resource, items);
         server_activity = passed_server_activity;
         serverList = items;
@@ -50,6 +46,20 @@ public class server_adapter extends ArrayAdapter<String> {
             v_server = vid.inflate(R.layout.fragment_serveritem, null);
         }
 
+        final String d = serverList.size() > 0 ? serverList.get(position) : null;
+
+        if (d != null) {
+            final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientsserver);
+            if (ti != null) {
+                ti.setText(serverList.get(position));
+                final View finalV_clients = v_server;
+                ti.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                    }
+                });
+            }
+        }
         return v_server;
     }
 

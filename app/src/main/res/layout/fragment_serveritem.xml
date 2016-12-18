@@ -47,7 +47,6 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:singleLine="true"
-            android:text="fbbbbb.com"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@color/oplblue"
             android:textSize="30dp"
