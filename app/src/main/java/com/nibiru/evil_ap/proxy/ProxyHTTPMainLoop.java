@@ -23,7 +23,7 @@ class ProxyHTTPMainLoop implements Runnable{
     protected final String TAG = getClass().getSimpleName();
     private ServerSocket serverSocket;
     private static final int SERVERPORT = 1337;
-    ProxyService ps;
+    private ProxyService ps;
     /**************************************CLASS METHODS*******************************************/
     public ProxyHTTPMainLoop(ProxyService x){
         ps = x;

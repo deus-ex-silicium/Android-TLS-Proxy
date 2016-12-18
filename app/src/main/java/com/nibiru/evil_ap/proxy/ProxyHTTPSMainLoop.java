@@ -2,6 +2,7 @@ package com.nibiru.evil_ap.proxy;
 
 import android.util.Log;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,15 +19,16 @@ import javax.net.ssl.SSLServerSocketFactory;
  */
 
 class ProxyHTTPSMainLoop implements Runnable {
-    final static String TAG = "ProxyHTTPSMainLoop";
+    protected final String TAG = getClass().getSimpleName();
     private SSLServerSocket serverSocket;
     private static final int SERVERPORT = 1338;
-    private Boolean work = true;
     private String keyStorePath;
     private InputStream keyStore;
+    ProxyService ps;
     /*********************************************************************************************/
-    public ProxyHTTPSMainLoop(InputStream file){
+    public ProxyHTTPSMainLoop(InputStream file, ProxyService ps){
         keyStore = file;
+        this.ps = ps;
     }
     //http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions
     @Override
@@ -54,7 +56,7 @@ class ProxyHTTPSMainLoop implements Runnable {
             );
             // listen for incoming clients
             Log.d(TAG, "Listening on port: " + SERVERPORT);
-            while (work) {
+            while (ps.work) {
                 executor.execute(new RequestRevEcho(serverSocket.accept()));
                 Log.d(TAG, "Accepted HTTPS client");
             }
@@ -62,7 +64,11 @@ class ProxyHTTPSMainLoop implements Runnable {
             Log.d(TAG, "Error!");
             e.printStackTrace();
         } finally {
-            //TODO: clean shit up?
+            if (serverSocket != null) try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

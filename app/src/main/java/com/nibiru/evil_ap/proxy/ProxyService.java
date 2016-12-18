@@ -23,7 +23,6 @@ import java.io.OutputStream;
 public class ProxyService extends Service{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
-    Thread proxyHTTP;
     public volatile boolean work;
     public SharedClass mSharedObj;
     // Configuration settings
@@ -52,8 +51,12 @@ public class ProxyService extends Service{
         work = true;
         config = getSharedPreferences("Config", 0);
         //start the HTTP proxy socket thread
-        proxyHTTP = new Thread(new ProxyHTTPMainLoop(this));
+        Thread proxyHTTP = new Thread(new ProxyHTTPMainLoop(this));
         proxyHTTP.start();
+        //start the HTTPS proxy socket thread
+        Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
+                getResources().openRawResource(R.raw.evil_ap), this));
+        proxyHTTPS.start();
     }
 
     @Override
