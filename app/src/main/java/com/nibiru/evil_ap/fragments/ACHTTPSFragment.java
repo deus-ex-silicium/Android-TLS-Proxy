@@ -35,7 +35,6 @@ import static android.app.Activity.RESULT_OK;
 public class ACHTTPSFragment extends Fragment implements View.OnClickListener, CompoundButton
         .OnCheckedChangeListener {
 
-
     private onAcFragmentInteraction mListener;
     private LinearLayout mLayout;
     private LinearLayout mLayout2;

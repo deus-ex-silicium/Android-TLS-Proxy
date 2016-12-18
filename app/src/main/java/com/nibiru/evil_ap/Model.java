@@ -55,6 +55,14 @@ public class Model implements IMVP.ModelOps{
         this.ctx = ctx;
         mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull));
     }
+    public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx, boolean flag) {
+        this.mPresenter = mPresenter;
+        mRootMan = new Root();
+        mApMan = new Ap();
+        mRouteMan = new Routing();
+        this.mConfig = ctx.getSharedPreferences("Config", 0);
+        this.ctx = ctx;
+    }
     /**
      * Sent from {@link Presenter#onDestroy(boolean)}
      * Should stop/kill operations that could be running
@@ -134,9 +142,12 @@ public class Model implements IMVP.ModelOps{
             ctx.startService(new Intent(ctx, ProxyService.class));
             return true;
         }
-        else{
+        else if (mApMan.isApOn(ctx)){
             mApMan.turnOffAp(ctx);
             ctx.stopService(new Intent(ctx, ProxyService.class));
+            return false;
+        }
+        else{
             return false;
         }
     }

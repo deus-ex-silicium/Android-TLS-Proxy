@@ -2,7 +2,9 @@ package com.nibiru.evil_ap.fragments;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +17,7 @@ import com.nibiru.evil_ap.adapters.server_adapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerItemFragment extends Fragment {
+public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
@@ -32,15 +34,15 @@ public class ServerItemFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState){
-        rootView = inflater.inflate(R.layout.fragment_clients, container, false);
+        rootView = inflater.inflate(R.layout.fragment_serveritem_list, container, false);
         server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
-        final ListView clients_listView = (ListView) rootView.findViewById(R.id.Serverlist);
+        final ListView server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
         serverList = getClientServers();
-        customAdapter = new server_adapter(getActivity(),
-                R.layout.fragment_serveritem, serverList,this.getActivity());
+        customAdapter = new server_adapter(getActivity().getApplicationContext(),
+                R.layout.fragment_serveritem, serverList, this.getActivity());
         //mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         //mySwipeRefreshLayout.setOnRefreshListener(this);
-        clients_listView.setAdapter(customAdapter);
+        server_listView.setAdapter(customAdapter);
         // Inflate the layout for this fragment
         return rootView;
     }
