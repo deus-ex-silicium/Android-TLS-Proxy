@@ -3,6 +3,9 @@ package com.nibiru.evil_ap.manager;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.widget.Toast;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -55,8 +58,9 @@ public class Ap {
         }
         catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
+
     }
 
     // toggle WiFi hotspot off

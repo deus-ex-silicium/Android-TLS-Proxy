@@ -13,6 +13,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.util.Pair;
 
+import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
@@ -53,7 +54,7 @@ public class Model implements IMVP.ModelOps{
         mRouteMan = new Routing();
         this.mConfig = ctx.getSharedPreferences("Config", 0);
         this.ctx = ctx;
-        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull));
+        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,this);
     }
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx, boolean flag) {
         this.mPresenter = mPresenter;
@@ -98,6 +99,17 @@ public class Model implements IMVP.ModelOps{
     public SharedClass getSharedObj(){
         return mSharedObj;
     }
+    public Client getClientByIp(String ip){
+        ArrayList<String> output = mRootMan.RunAsRootWithOutput("ip -4 neigh");
+        for (String line : output) {
+            String[] split = line.split(" +");
+            //IP idx = 0 , MAC idx = 4, flags idx = 5
+            if (split.length == 6 && (split[0].equals(ip) )) {
+                return new Client(split[0], split[4]);
+            }
+        }
+        return null;
+    }
 
     public void onTrafficRedirect(String traffic, boolean on){
         switch (traffic){
@@ -118,7 +130,6 @@ public class Model implements IMVP.ModelOps{
         setSharedPrefsString(ConfigTags.imgPath.toString(), path);
         mSharedObj.loadImage(path);
     }
-
     public void onJsPayloadApply(List<Pair<Integer, String>> payloads) {
         ArrayList<String> listP = new ArrayList<>();
         for (Pair<Integer, String> pair: payloads) {
@@ -130,11 +141,14 @@ public class Model implements IMVP.ModelOps{
         }
         mSharedObj.setPayloads(listP);
     }
-
     public boolean onApToggle(String SSID, String pass, Context ctx){
         if (!mApMan.isApOn(ctx)){
             if( SSID.equals("") || pass.equals("") ) {
-                mApMan.turnOnAp("AP", "pa$$word", ctx);
+                //error handling
+                if ( !mApMan.turnOnAp("AP", "pa$$word", ctx) ){
+                    mPresenter.onError("Hotspot error!\n" +
+                            "perhaps app doesn't have necessary permissions?");
+                }
             }
             else {
                 mApMan.turnOnAp(SSID, pass, ctx);
