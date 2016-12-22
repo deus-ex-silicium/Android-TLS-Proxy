@@ -63,15 +63,12 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     }
 
     public void setContext(Context ctx) { this.ctx = ctx;}
-
     public void setSharedPrefsInt(String tag, int val) {
         mModel.setSharedPrefsInt(tag, val);
     }
-
     public void setSharedPrefsBool(String tag, boolean val) {
         mModel.setSharedPrefsBool(tag, val);
     }
-
     public void setSharedPrefsString(String tag, String val) {
         mModel.setSharedPrefsString(tag,val);
     }
@@ -91,11 +88,9 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     public int getSharedPrefsInt(String tag) {
         return mModel.getSharedPrefsInt(tag);
     }
-
     public boolean getSharedPrefsBool(String tag) {
         return mModel.getSharedPrefsBool(tag);
     }
-
     public String getSharedPrefsString(String tag) {
         return mModel.getSharedPrefsString(tag);
     }
@@ -126,6 +121,6 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
      */
     @Override
     public void onError(String errorMsg) {
-
+        mView.get().showToast(errorMsg);
     }
 }

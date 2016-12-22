@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.nibiru.evil_ap.ConfigTags;
 import com.nibiru.evil_ap.SharedClass;
+import com.nibiru.evil_ap.log.Client;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -29,6 +30,7 @@ public class ThreadProxy implements Runnable{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
+    private Client c;
     private OkHttpParser rp;
     private OkHttpClient okhttp;
     private SharedPreferences mConfig;
@@ -43,6 +45,7 @@ public class ThreadProxy implements Runnable{
                 .build();
         mConfig = config;
         mSharedObj = sharedObj;
+        c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
     }
     @Override
     public void run() {
@@ -60,7 +63,7 @@ public class ThreadProxy implements Runnable{
             if (sRequest == null) {return;}
 
             //parse string request into okhttp request (remove some security headers)
-            Request req = rp.parse(sRequest);
+            Request req = rp.parse(sRequest, mSharedObj, c);
             if (req == null) {return;}
 
             //make request and get response

@@ -89,6 +89,7 @@ public interface IMVP {
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
         SharedClass getSharedObj();
+        Client getClientByIp(String ip);
 
         // Any other data operation
     }

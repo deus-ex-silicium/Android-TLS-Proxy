@@ -13,7 +13,6 @@ public class Client {
     private final static String TAG = "Client";
     private final String ip;
     private final String mac;
-    private Log log;
     /**************************************CLASS METHODS*******************************************/
     public Client (String ip, String mac){
         this.ip = ip;

