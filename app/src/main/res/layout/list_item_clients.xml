@@ -62,7 +62,6 @@
 
         <Button
             android:id="@+id/button2"
-            android:layout_marginStart="20dp"
             android:layout_width="30pt"
             android:layout_height="20pt"
             android:text="BAN"/>
