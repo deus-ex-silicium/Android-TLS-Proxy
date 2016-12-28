@@ -40,8 +40,8 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         serverList = getClientServers();
         customAdapter = new server_adapter(getActivity().getApplicationContext(),
                 R.layout.fragment_serveritem, serverList, this.getActivity());
-        //mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
-        //mySwipeRefreshLayout.setOnRefreshListener(this);
+        mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
+        mySwipeRefreshLayout.setOnRefreshListener(this);
         server_listView.setAdapter(customAdapter);
         // Inflate the layout for this fragment
         return rootView;

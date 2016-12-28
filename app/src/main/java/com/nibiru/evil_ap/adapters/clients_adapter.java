@@ -80,7 +80,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                 log.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Activity a = (Activity)getContext();
+                        Activity a = clients_activity;
                         FragmentManager fm = a.getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         ft.replace(R.id.activity_main, new ServerItemFragment(),
