@@ -51,5 +51,10 @@
             android:textColor="@color/oplblue"
             android:textSize="30dp"
             android:textStyle="bold"/>
+        <Button
+            android:id="@+id/button_details"
+            android:layout_width="50pt"
+            android:layout_height="20pt"
+            android:text="Details"/>
     </LinearLayout>
 </RelativeLayout>

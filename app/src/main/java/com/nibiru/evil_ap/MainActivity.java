@@ -22,6 +22,7 @@ import com.nibiru.evil_ap.fragments.ACHTTPFragment;
 import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
+import com.nibiru.evil_ap.fragments.ServerDetailsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
 import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements
         MainFragment.OnMainFragmentInteraction,ClientsFragment.onClientsFragmentInteraction,
         ACFragment.OnFragmentInteractionListener, ACHTTPFragment.onAcFragmentInteraction,
         ACHTTPSFragment.onAcFragmentInteraction, ServerItemFragment.onClientsFragmentInteraction,
-        IMVP.RequiredViewOps {
+        ServerDetailsFragment.OnFragmentInteractionListener, IMVP.RequiredViewOps {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;

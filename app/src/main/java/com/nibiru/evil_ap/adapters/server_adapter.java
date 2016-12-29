@@ -1,14 +1,18 @@
 package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.fragments.ServerDetailsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
 
 import java.util.ArrayList;
@@ -50,12 +54,19 @@ public class server_adapter extends ArrayAdapter<String> {
 
         if (d != null) {
             final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientsserver);
+            final Button b = (Button) v_server.findViewById(R.id.button_details);
             if (ti != null) {
                 ti.setText(serverList.get(position));
                 final View finalV_clients = v_server;
-                ti.setOnClickListener(new View.OnClickListener() {
+                b.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Activity a = server_activity;
+                        FragmentManager fm = a.getFragmentManager();
+                        FragmentTransaction ft = fm.beginTransaction();
+                        ft.replace(R.id.activity_main, new ServerDetailsFragment(),
+                                null);
+                        ft.addToBackStack(null).commit();
                     }
                 });
             }
