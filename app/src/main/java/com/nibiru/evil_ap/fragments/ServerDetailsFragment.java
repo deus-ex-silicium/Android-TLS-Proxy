@@ -22,11 +22,16 @@ public class ServerDetailsFragment extends Fragment {
     private ArrayList<String> server_arrayl = new ArrayList<>();
     private View rootView;
     private TextView displayDetails;
+    private String serverLocal;
+    private String clientLocal;
     LinearLayout ll;
     public ServerDetailsFragment() {
         // Required empty public constructor
     }
-
+    public ServerDetailsFragment(String server, String client){
+        serverLocal = server;
+        clientLocal = client;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +39,7 @@ public class ServerDetailsFragment extends Fragment {
     }
     public void onResume(){
         super.onResume();
-        getServerDetails();
+        getServerDetails(clientLocal);
         displayDetails.setText(server_arrayl.get(0));
     }
     @Override
@@ -45,7 +50,7 @@ public class ServerDetailsFragment extends Fragment {
         // Inflate the layout for this fragment
         return rootView;
     }
-    void getServerDetails(){
+    void getServerDetails(String client){
         server_arrayl.add("tempString");
     }
     // TODO: Rename method, update argument and hook method into UI event

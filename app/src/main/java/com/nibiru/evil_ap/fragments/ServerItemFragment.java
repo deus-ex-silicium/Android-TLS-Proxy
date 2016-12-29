@@ -14,6 +14,8 @@ import android.widget.ListView;
 
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.server_adapter;
+import com.nibiru.evil_ap.log.Client;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +27,15 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     private ListView server_listView;
     private server_adapter customAdapter;
     private View rootView;
+    private Client clientLocal;
     SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<String> serverList;
     /**************************************CLASS METHODS*******************************************/
     public ServerItemFragment() {
         // Required empty public constructor
+    }
+    public ServerItemFragment(Client client) {
+        clientLocal = client;
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,7 +45,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         final ListView server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
         serverList = getClientServers();
         customAdapter = new server_adapter(getActivity().getApplicationContext(),
-                R.layout.fragment_serveritem, serverList, this.getActivity());
+                R.layout.fragment_serveritem, serverList, this.getActivity(), clientLocal);
         mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         mySwipeRefreshLayout.setOnRefreshListener(this);
         server_listView.setAdapter(customAdapter);
@@ -58,7 +64,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         Log.d(TAG, "Refreshing!");
         serverList = getClientServers();
         customAdapter = new server_adapter(getActivity().getApplicationContext(),
-                R.layout.fragment_serveritem, serverList,this.getActivity());
+                R.layout.fragment_serveritem, serverList,this.getActivity(), clientLocal);
         server_listView.setAdapter(customAdapter);
         mySwipeRefreshLayout.setRefreshing(false);
     }

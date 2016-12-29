@@ -44,7 +44,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         View v_clients = convertView;
         if (v_clients == null) {
             LayoutInflater vid;
@@ -83,7 +83,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                         Activity a = clients_activity;
                         FragmentManager fm = a.getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
-                        ft.replace(R.id.activity_main, new ServerItemFragment(),
+                        ft.replace(R.id.activity_main, new ServerItemFragment(clientsList.get(position)),
                                 null);
                         ft.addToBackStack(null).commit();
                     }
