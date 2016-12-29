@@ -2,6 +2,7 @@ package com.nibiru.evil_ap;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.nibiru.evil_ap.log.Client;
@@ -15,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -27,16 +29,16 @@ public class SharedClass {
     protected final String TAG = getClass().getSimpleName();
     private volatile byte[] imgData;
     private volatile List<String> payloads;
-    private volatile SQLiteDatabase mDatabase;
+    private volatile DatabaseManager mDbManager;
     private IMVP.ModelOps mModel;
     /**************************************CLASS METHODS*******************************************/
     public SharedClass(InputStream is, Context ctx, IMVP.ModelOps model){
         try {
             loadStream(is);
             DatabaseManager.initializeInstance(new LogDbHelper(ctx));
-            DatabaseManager manager = DatabaseManager.getInstance();
-            mDatabase = manager.openDatabase();
-            DatabaseManager.cleanDatabase(mDatabase);
+            mDbManager = DatabaseManager.getInstance();
+            mDbManager.openDatabase();
+            mDbManager.cleanDatabase();
             mModel = model;
             //TODO: close ?
             //DatabaseManager.getInstance().closeDatabase();
@@ -46,18 +48,14 @@ public class SharedClass {
     }
 
     //no need for synchronized since we only use one database connections
-    //and log entried will be added in a queue manner
-    public void addRequest(Client c, String host, String reqLine){
-        // Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_MAC, c.getMac());
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP,
-                DateFormat.getDateTimeInstance().format(new Date()));
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_HOST, host);
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE, reqLine);
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_HEADERS, "test headers");
-        // Insert the new row, returning the primary key value of the new row
-        long newRowId = mDatabase.insert(LogDbContract.LogEntry.TABLE_NAME, null, values);
+    //and log entries will be added in a queue manner
+    public void addRequest(Client c, String host, String reqLine, String headers){
+        mDbManager.addRequest(c, host, reqLine, headers);
+    }
+
+    //get client log
+    public void getClientLog(Client c){
+        mDbManager.getClientLog(c);
     }
 
     synchronized void loadImage(String path){
@@ -93,6 +91,9 @@ public class SharedClass {
     }
     public byte[] getImgData(){
         return imgData;
+    }
+    public byte[] getImgChunk(int start, int end){
+        return Arrays.copyOfRange(imgData, start, end);
     }
     public int getImgDataLength(){
         return imgData.length;

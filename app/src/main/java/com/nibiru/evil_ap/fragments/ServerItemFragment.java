@@ -49,8 +49,8 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
 
     public ArrayList<String> getClientServers(){
         ArrayList<String> x = new ArrayList<>();
-        x.add("xxx");
-        x.add("pornhub");
+        x.add("Dec 22, 2016 22:11:18\njoemonster.org");
+        x.add("Dec 22, 2016 23:11:18\npornhub.com");
         return x;
     }
 

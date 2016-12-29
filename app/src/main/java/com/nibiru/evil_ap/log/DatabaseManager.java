@@ -1,7 +1,11 @@
 package com.nibiru.evil_ap.log;
 
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -17,10 +21,10 @@ public class DatabaseManager {
     private SQLiteDatabase mDatabase;
     /**************************************CLASS METHODS*******************************************/
     //TODO: things to show when log is pressed
-    // select distinct host from log where mac="dc:85:de:8d:56:b5"
-    // for each host from that list get number of requests that were sent to that host
+    // for client log
+    // select timestamp, host from log where mac="dc:85:de:8d:56:b5"
+    // for request details
     // select count(host) from log where mac="dc:85:de:8d:56:b5" and host="joemonster.org"
-
 
     // To prevent someone from accidentally instantiating the DatabaseManager class,
     // make the constructor private.
@@ -41,16 +45,15 @@ public class DatabaseManager {
         return instance;
     }
 
-    public static synchronized void cleanDatabase(SQLiteDatabase db){
-        mDatabaseHelper.onClear(db);
+    public synchronized void cleanDatabase(){
+        mDatabaseHelper.onClear(mDatabase);
     }
 
-    public synchronized SQLiteDatabase openDatabase() {
+    public synchronized void openDatabase() {
         if(mOpenCounter.incrementAndGet() == 1) {
             // Opening new database
             mDatabase = mDatabaseHelper.getWritableDatabase();
         }
-        return mDatabase;
     }
 
     public synchronized void closeDatabase() {
@@ -58,5 +61,52 @@ public class DatabaseManager {
             // Closing database
             mDatabase.close();
         }
+    }
+
+    public void addRequest(Client c, String host, String reqLine, String headers){
+        String date = (String) android.text.format.DateFormat.format
+                ("yyyy-MM-dd kk:mm:ss", new java.util.Date());
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(LogDbContract.LogEntry.COLUMN_NAME_MAC, c.getMac());
+        values.put(LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP, date);
+        values.put(LogDbContract.LogEntry.COLUMN_NAME_HOST, host);
+        values.put(LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE, reqLine);
+        values.put(LogDbContract.LogEntry.COLUMN_NAME_HEADERS, headers);
+        // Insert the new row, returning the primary key value of the new row
+        long newRowId = mDatabase.insert(LogDbContract.LogEntry.TABLE_NAME, null, values);
+    }
+
+    public void getClientLog(Client c){
+        // Define a projection that specifies which columns from the database we want to get
+        String[] projection = {
+                LogDbContract.LogEntry._ID,
+                LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP,
+                LogDbContract.LogEntry.COLUMN_NAME_HOST
+        };
+        // Filter results WHERE "MAC" = client's mac
+        String selection = LogDbContract.LogEntry.COLUMN_NAME_MAC + " = ?";
+        String[] selectionArgs = { c.getMac() };
+        // Sort resulting Cursor by date and time
+        String sortOrder = "datetime("+LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP+") DESC";
+
+        Cursor cursor = mDatabase.query(
+                LogDbContract.LogEntry.TABLE_NAME,        // The table to query
+                projection,                               // The columns to return
+                selection,                                // The columns for the WHERE clause
+                selectionArgs,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder                                 // The sort order
+        );
+
+        //read results
+        List itemIds = new ArrayList<>();
+        while(cursor.moveToNext()) {
+            long itemId = cursor.getLong(
+                    cursor.getColumnIndexOrThrow(LogDbContract.LogEntry._ID));
+            itemIds.add(itemId);
+        }
+        cursor.close();
     }
 }

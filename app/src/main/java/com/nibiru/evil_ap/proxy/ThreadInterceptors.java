@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -25,22 +23,24 @@ import okhttp3.Response;
  * Created by Nibiru on 2016-11-25.
  */
 
-public class ThreadProxy implements Runnable{
+final class ThreadInterceptors implements Runnable{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
-    private OkHttpParser rp;
     private OkHttpClient okhttp;
+    private OkHttpParserInterceptor rp;
     private SharedPreferences mConfig;
     private SharedClass mSharedObj;
     private boolean debug = true;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
+    ThreadInterceptors(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
         this.sClient = sClient;
-        rp = new OkHttpParser();
+        rp = new OkHttpParserInterceptor();
         //make client not follow redirects!
         okhttp = new OkHttpClient().newBuilder().followRedirects(false).followSslRedirects(false)
+                .addInterceptor(new InterceptorRequest())
+                .addInterceptor(new InterceptorResponse(config, sharedObj))
                 .build();
         mConfig = config;
         mSharedObj = sharedObj;
@@ -60,7 +60,7 @@ public class ThreadProxy implements Runnable{
             String sRequest = getRequestString(inFromClient);
             if (sRequest == null) {return;}
 
-            //parse string request into okhttp request (remove some security headers)
+            //parse string request into okhttp request
             Request req = rp.parse(sRequest, mSharedObj, c);
             if (req == null) {return;}
 
@@ -95,11 +95,7 @@ public class ThreadProxy implements Runnable{
             else { //else we are not swapping image or we are not sending image
                 //EDIT RESPONSE HERE (if it is text)
                 if (contentType != null && contentType.contains("text")) {
-                    boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
-                    boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
-                    if (sslStrip || jsInject) {
-                        bytesBody = editBytes(bytesBody, sslStrip, jsInject);
-                    }
+
                 }
                 sendChunk(bytesBody, outToClient);
             }
@@ -128,27 +124,6 @@ public class ThreadProxy implements Runnable{
             e.printStackTrace();
         }
         if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
-    }
-
-    private byte[] editBytes(byte[] bytesBody, Boolean sslStrip, Boolean jsInject) {
-        try {
-            String response = new String(bytesBody, "UTF-8");
-            if (sslStrip) {
-                response = response.replaceAll("https", "http");
-            }
-            if (jsInject){
-                List<String> payloads = mSharedObj.getPayloads();
-                String full = "";
-                for(String p: payloads){
-                    full += p;
-                }
-                response = response.replaceAll("</head>", full + "</head>");
-            }
-            return response.getBytes();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private String getEtag(String sRequest){

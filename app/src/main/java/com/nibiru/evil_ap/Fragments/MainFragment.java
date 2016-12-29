@@ -18,7 +18,6 @@ import android.widget.EditText;
 
 import com.nibiru.evil_ap.R;
 
-
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -31,6 +30,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private OnMainFragmentInteraction mListener;
+    private BroadcastReceiver mApChangeReceiver;
     private EditText et;
     private EditText et2;
     /***************************************CLASS METHODS******************************************/
@@ -51,21 +51,27 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             intent.setData(Uri.parse("package:" + getContext().getPackageName()));
             startActivity(intent);
         }
-        //setBtnUI(Ap.onApToggle(ctx));
+    }
 
-        //Register BroadcastReceiver, filer specific intents
-        getContext().registerReceiver(new ApBroadcastReceiver(),
+    @Override //unregister broadcast receiver for WIFI_AP_STATE_CHANGED
+    public void onStop(){
+        super.onStop();
+        getContext().unregisterReceiver(mApChangeReceiver);
+    }
+
+    @Override //register broadcast receiver for WIFI_AP_STATE_CHANGED
+    public void onStart(){
+        super.onStart();
+        mApChangeReceiver = new ApBroadcastReceiver();
+        getContext().registerReceiver(mApChangeReceiver,
                 new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
-
     }
 
     @Override
     public void onDestroy(){
         super.onDestroy();
-        //Register BroadcastReceiver, filer specific intents
-        //getContext().unregisterReceiver();
-
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

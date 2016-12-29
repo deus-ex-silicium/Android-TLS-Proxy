@@ -16,14 +16,14 @@ import okhttp3.Request;
  * Created by Nibiru on 2016-11-03.
  */
 
-class OkHttpParser {
+class OkHttpParserInterceptor {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Vector<Pair<String,String>> requestHeaders;
     private String requestLine;
     private StringBuffer messageBody;
     /**************************************CLASS METHODS*******************************************/
-    OkHttpParser(){
+    OkHttpParserInterceptor(){
         requestHeaders = new Vector<>();
         messageBody = new StringBuffer();
     }
@@ -32,15 +32,10 @@ class OkHttpParser {
         try {
             //read request line
             requestLine = reader.readLine(); // Request-Line ; Section 5.1
-            //read header
+            //read headers
             String header = reader.readLine();
             while (header != null && header.length() > 0) {
-                //skip over HTTPS upgrade header and HSTS header
-                if (!header.startsWith("Upgrade-Insecure-Requests")
-                        && !header.startsWith("Strict-Transport-Security")
-                        && !header.startsWith("User-Agent")){
-                    appendHeaderParameter(header);
-                }
+                appendHeaderParameter(header);
                 header = reader.readLine();
             }
             //read body
@@ -73,26 +68,20 @@ class OkHttpParser {
 
     private Request buildOkHTTPRequest(String requestLine, SharedClass shrObj, Client c)
             throws NullPointerException{
-        String url;
-        String host="";
-        StringBuilder headers = new StringBuilder();
         String[] requestLineValues = requestLine.split("\\s+");
+        String url;
         Request.Builder builder = new Request.Builder();
-
         for(Pair<String, String> header : requestHeaders){
-            if (header.first.equalsIgnoreCase("host")){
-                host = header.second.trim();
+            if (header.first.equals("Host") || header.first.equals("host")){
+                String host = header.second.trim();
                 url = "http://" + host + requestLineValues[1];
                 Log.d(TAG, url);
                 builder.url(url);
+                //TODO: testing logging
+                shrObj.addRequest(c, host, requestLine);
             }
-            else{
-                builder.addHeader(header.first, header.second);
-                headers.append(header.first+": "+header.second);
-            }
+            else builder.addHeader(header.first, header.second);
         }
-        //TODO: testing logging
-        shrObj.addRequest(c, host, requestLine, headers.toString());
         return builder.build();
     }
 }

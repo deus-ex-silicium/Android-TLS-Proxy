@@ -45,7 +45,7 @@ class ProxyHTTPMainLoop implements Runnable{
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             serverSocket = new ServerSocket(SERVERPORT);
             while (ps.work) {
-                executor.execute(new ThreadProxy(serverSocket.accept(), ps.config, ps.mSharedObj));
+                executor.execute(new ThreadChunkedTE(serverSocket.accept(), ps.config, ps.mSharedObj));
                 Log.d(TAG, "Accepted HTTP client");
             }
         } catch (IOException e) {

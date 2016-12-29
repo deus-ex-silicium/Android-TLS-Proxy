@@ -96,6 +96,9 @@ public class Model implements IMVP.ModelOps{
     public ArrayList<String> getCurrentClients(){
         return mRootMan.RunAsRootWithOutput("ip -4 neigh");
     }
+    public ArrayList<String> getClientLog(Client c){
+        return null;
+    }
     public SharedClass getSharedObj(){
         return mSharedObj;
     }

