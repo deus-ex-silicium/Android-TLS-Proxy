@@ -1,13 +1,20 @@
 package com.nibiru.evil_ap;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +24,11 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.nibiru.evil_ap.adapters.PagerAdapter;
 import com.nibiru.evil_ap.fragments.ACFragment;
 import com.nibiru.evil_ap.fragments.ACHTTPFragment;
 import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
@@ -31,21 +43,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
-        MainFragment.OnMainFragmentInteraction,ClientsFragment.onClientsFragmentInteraction,
+        MainFragment.OnMainFragmentInteraction, ClientsFragment.onClientsFragmentInteraction,
         ACFragment.OnFragmentInteractionListener, ACHTTPFragment.onAcFragmentInteraction,
         ACHTTPSFragment.onAcFragmentInteraction, ServerItemFragment.onClientsFragmentInteraction,
         ServerDetailsFragment.OnFragmentInteractionListener, IMVP.RequiredViewOps {
-    /**************************************CLASS FIELDS********************************************/
+    /**************************************
+     * CLASS FIELDS
+     ********************************************/
     protected final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;
     private boolean psIsBound; //?
     private ServiceConnection mConnection; //?
     // Responsible for maintaining objects state during changing configuration
     public final StateMaintainer mStateMaintainer =
-            new StateMaintainer( this.getFragmentManager(), TAG );
+            new StateMaintainer(this.getFragmentManager(), TAG);
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
-    /**************************************CLASS METHODS*******************************************/
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
+    /**************************************
+     * CLASS METHODS
+     *******************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +80,10 @@ public class MainActivity extends AppCompatActivity implements
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
-                mProxyService = ((ProxyService.IProxyService)service);
+                mProxyService = ((ProxyService.IProxyService) service);
                 mProxyService.setSharedObj(mPresenter.getSharedObj());
             }
+
             public void onServiceDisconnected(ComponentName className) {
                 mProxyService = null;
             }
@@ -70,12 +93,53 @@ public class MainActivity extends AppCompatActivity implements
         //reset some settings
         mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
                 "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         doUnbindService();
+    }
+
+    void setupNotification() {
+        Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
+                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
+                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
+                true);
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 01, intent, Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pi = PendingIntent.getActivity(this,01,intent, Intent
+                .FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+        Notification.Builder builder = new Notification.Builder(getApplicationContext());
+        builder.setContentTitle("Your AP is on.");
+        builder.setNumber(101);
+        builder.setContentIntent(pendingIntent);
+        builder.setTicker("Evil-AP Notification");
+        builder.setSmallIcon(R.drawable.onoffon);
+        builder.setLargeIcon(bm);
+        builder.setAutoCancel(true);
+        builder.setPriority(0);
+        builder.setOngoing(true);
+        /** TODO: Make method not deprecated */
+//        NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.drawable.onoff,
+//                "Previous", pendingIntent).build();
+        Notification notification = builder.addAction(0,
+                "Tap here to turn AP off.", pi).setVisibility
+                (NotificationCompat
+                .VISIBILITY_PUBLIC)
+                .build();
+        NotificationManager notificationManger =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManger.notify(01, notification);
+    }
+
+    public static void cancelNotification(Context ctx, int notifyId) {
+        String ns = Context.NOTIFICATION_SERVICE;
+        NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
+        nMgr.cancel(notifyId);
     }
 
     void doBindService() {
@@ -96,11 +160,17 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {}
-    /********************************Action Center Fragment****************************************/
-    public View getView(int x){ return this.findViewById(x); }
+    public void onFragmentInteraction(Uri uri) {
+    }
 
-    public void onImgReplaceChosen(Uri uri){
+    /********************************
+     * Action Center Fragment
+     ****************************************/
+    public View getView(int x) {
+        return this.findViewById(x);
+    }
+
+    public void onImgReplaceChosen(Uri uri) {
         mPresenter.onLoadReplaceImg(uri, this);
     }
 
@@ -109,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements
         mPresenter.onJsPayloadApply(payloads);
     }
 
-    public void onSwitchToggle(boolean on, String tag){
+    public void onSwitchToggle(boolean on, String tag) {
         if (on)
             mPresenter.setSharedPrefsBool(tag, true);
         else
@@ -119,23 +189,37 @@ public class MainActivity extends AppCompatActivity implements
     public void onTrafficRedirect(String traffic, boolean on) {
         mPresenter.onTrafficRedirect(traffic, on);
     }
-    /**********************************Clients Fragment********************************************/
+
+    /**********************************
+     * Clients Fragment
+     ********************************************/
     @Override
     public ArrayList<Client> getCurrentClients() {
         return mPresenter.getCurrentClients();
     }
-    /***********************************Main Fragment *********************************************/
+
+    /***********************************
+     * Main Fragment
+     *********************************************/
     @Override
-    public boolean onApPressed( String SSID, String pass ) {
-        return mPresenter.apBtnPressed( SSID, pass, getApplicationContext() );
+    public boolean onApPressed(String SSID, String pass) {
+        if (!isApOn()) {
+            setupNotification();
+        } else {
+            cancelNotification(getApplicationContext(), 01);
+        }
+        return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
     }
 
     @Override
     public boolean isApOn() {
         return mPresenter.isApOn(getApplicationContext());
     }
-    /**************************************UI stuff************************************************/
-    private void setUpGUI(){
+
+    /**************************************
+     * UI stuff
+     ************************************************/
+    private void setUpGUI() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -146,8 +230,8 @@ public class MainActivity extends AppCompatActivity implements
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        final com.nibiru.evil_ap.adapters.PagerAdapter adapter =
-                new com.nibiru.evil_ap.adapters.PagerAdapter
+        final PagerAdapter adapter =
+                new PagerAdapter
                         (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
@@ -156,39 +240,47 @@ public class MainActivity extends AppCompatActivity implements
             public void onTabSelected(TabLayout.Tab tab) {
                 viewPager.setCurrentItem(tab.getPosition());
             }
+
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
-        FrameLayout r = (FrameLayout)findViewById(R.id.activity_main);
+        FrameLayout r = (FrameLayout) findViewById(R.id.activity_main);
         r.setBackground((getResources().getDrawable(R.drawable.bground)));
     }
-    /*************************************MVP stuff ***********************************************/
+
+    /*************************************
+     * MVP stuff
+     ***********************************************/
     @Override
     public void showToast(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-    public IMVP.PresenterOps getPresenter(){
+    public IMVP.PresenterOps getPresenter() {
         return mPresenter;
     }
+
     /**
      * Initialize and restart the Presenter.
      * This method should be called after {@link MainActivity#onCreate(Bundle)}
      */
     public void startMVPOps() {
         try {
-            if ( mStateMaintainer.firstTimeIn() ) {
+            if (mStateMaintainer.firstTimeIn()) {
                 Log.d(TAG, "onCreate() called for the first time");
                 initialize(this);
             } else {
                 Log.d(TAG, "onCreate() called more than once");
                 reinitialize(this);
             }
-        } catch ( InstantiationException | IllegalAccessException e ) {
-            Log.d(TAG, "onCreate() " + e );
-            throw new RuntimeException( e );
+        } catch (InstantiationException | IllegalAccessException e) {
+            Log.d(TAG, "onCreate() " + e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -196,8 +288,8 @@ public class MainActivity extends AppCompatActivity implements
      * Initialize relevant MVP Objects.
      * Creates a Presenter instance, saves the presenter in {@link StateMaintainer}
      */
-    private void initialize( IMVP.RequiredViewOps view )
-            throws InstantiationException, IllegalAccessException{
+    private void initialize(IMVP.RequiredViewOps view)
+            throws InstantiationException, IllegalAccessException {
         mPresenter = new Presenter(view, this.getApplicationContext());
         mStateMaintainer.put(IMVP.PresenterOps.class.getSimpleName(), mPresenter);
     }
@@ -206,19 +298,55 @@ public class MainActivity extends AppCompatActivity implements
      * Recovers Presenter and informs Presenter that a config change occurred.
      * If Presenter has been lost, recreates an instance
      */
-    private void reinitialize( IMVP.RequiredViewOps view )
+    private void reinitialize(IMVP.RequiredViewOps view)
             throws InstantiationException, IllegalAccessException {
-        mPresenter = mStateMaintainer.get( IMVP.PresenterOps.class.getSimpleName() );
-        if ( mPresenter == null ) {
+        mPresenter = mStateMaintainer.get(IMVP.PresenterOps.class.getSimpleName());
+        if (mPresenter == null) {
             Log.w(TAG, "recreating Presenter");
-            initialize( view );
+            initialize(view);
         } else {
-            mPresenter.onConfigurationChanged( view );
+            mPresenter.onConfigurationChanged(view);
         }
     }
 
     @Override
     public ArrayList<String> getClientServers() {
         return null;
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Main Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
     }
 }
