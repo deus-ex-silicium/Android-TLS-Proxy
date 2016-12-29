@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
+import com.nibiru.evil_ap.log.LogEntry;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -85,6 +86,11 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
         }
         return clients;
     }
+
+    public List<LogEntry> getClientLog(Client c) {
+        return mModel.getClientLog(c);
+    }
+
     public int getSharedPrefsInt(String tag) {
         return mModel.getSharedPrefsInt(tag);
     }

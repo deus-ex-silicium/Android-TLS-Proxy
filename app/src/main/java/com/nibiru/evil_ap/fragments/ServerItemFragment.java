@@ -37,6 +37,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     public ServerItemFragment(Client client) {
         clientLocal = client;
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState){

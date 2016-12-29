@@ -77,7 +77,7 @@ public class DatabaseManager {
         long newRowId = mDatabase.insert(LogDbContract.LogEntry.TABLE_NAME, null, values);
     }
 
-    public void getClientLog(Client c){
+    public List<LogEntry> getClientLog(Client c){
         // Define a projection that specifies which columns from the database we want to get
         String[] projection = {
                 LogDbContract.LogEntry._ID,
@@ -100,13 +100,21 @@ public class DatabaseManager {
                 sortOrder                                 // The sort order
         );
 
-        //read results
-        List itemIds = new ArrayList<>();
+        //read and return results
+        List<LogEntry> logEntries = new ArrayList<LogEntry>();
         while(cursor.moveToNext()) {
             long itemId = cursor.getLong(
                     cursor.getColumnIndexOrThrow(LogDbContract.LogEntry._ID));
-            itemIds.add(itemId);
+            String itemTimestamp = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
+                    .LogEntry.COLUMN_NAME_TIMESTAMP));
+            String itemHost = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
+                    .LogEntry.COLUMN_NAME_HOST));
+            String itemDetails = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
+                    .LogEntry.COLUMN_NAME_HEADERS));
+            LogEntry entry = new LogEntry(itemId, itemTimestamp, itemHost, itemDetails);
+            logEntries.add(entry);
         }
         cursor.close();
+        return logEntries;
     }
 }
