@@ -43,18 +43,21 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:ellipsize="end"
-            android:onClick="onClicktext"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
+            android:scrollHorizontally="false"
             android:textColor="@color/oplblue"
+            android:layout_weight="1"
             android:textSize="30dp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:inputType="textMultiLine"/>
         <Button
             android:id="@+id/button_details"
             android:layout_width="50pt"
             android:layout_height="20pt"
+            android:layout_gravity="center"
             android:text="Details"/>
     </LinearLayout>
 </RelativeLayout>

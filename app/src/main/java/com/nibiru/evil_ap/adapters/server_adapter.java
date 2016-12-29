@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.fragments.ServerDetailsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
+import com.nibiru.evil_ap.log.Client;
 
 import java.util.ArrayList;
 
@@ -28,17 +29,19 @@ public class server_adapter extends ArrayAdapter<String> {
     private Activity server_activity;
     private ArrayList<String> serverList;
     private ArrayList<String> cliList = null;
+    private Client client;
     ServerItemFragment Fragment_Server;
 
     /**************************************
      * CLASS METHODS
      *******************************************/
     public server_adapter(Context context, int resource, ArrayList<String> items,
-                          Activity passed_server_activity) {
+                          Activity passed_server_activity, Client c) {
         super(context, resource, items);
         server_activity = passed_server_activity;
         serverList = items;
         cliList = new ArrayList<>(serverList);
+        client = c;
     }
 
     @Override
@@ -64,7 +67,8 @@ public class server_adapter extends ArrayAdapter<String> {
                         Activity a = server_activity;
                         FragmentManager fm = a.getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
-                        ft.replace(R.id.activity_main, new ServerDetailsFragment(),
+                        ft.replace(R.id.activity_main, new ServerDetailsFragment(ti.getText()
+                                .toString(),client.getIp()),
                                 null);
                         ft.addToBackStack(null).commit();
                     }
