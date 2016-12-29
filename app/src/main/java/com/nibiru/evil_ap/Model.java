@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
+import com.nibiru.evil_ap.log.LogEntry;
 import com.nibiru.evil_ap.manager.Ap;
 import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
@@ -96,8 +97,8 @@ public class Model implements IMVP.ModelOps{
     public ArrayList<String> getCurrentClients(){
         return mRootMan.RunAsRootWithOutput("ip -4 neigh");
     }
-    public ArrayList<String> getClientLog(Client c){
-        return null;
+    public List<LogEntry> getClientLog(Client c){
+        return mSharedObj.getClientLog(c);
     }
     public SharedClass getSharedObj(){
         return mSharedObj;
@@ -148,7 +149,7 @@ public class Model implements IMVP.ModelOps{
         if (!mApMan.isApOn(ctx)){
             if( SSID.equals("") || pass.equals("") ) {
                 //error handling
-                if ( !mApMan.turnOnAp("AP", "pa$$word", ctx) ){
+                if ( !mApMan.turnOnAp("AP_nomap", "pa$$word", ctx) ){
                     mPresenter.onError("Hotspot error!\n" +
                             "perhaps app doesn't have necessary permissions?");
                 }

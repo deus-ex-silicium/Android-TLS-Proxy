@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
+import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,7 @@ public interface IMVP {
         void setContext(Context context);
 
         ArrayList<Client> getCurrentClients();
+        List<LogEntry> getClientLog(Client c);
         int getSharedPrefsInt(String tag);
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
@@ -90,6 +92,7 @@ public interface IMVP {
         String getSharedPrefsString(String tag);
         SharedClass getSharedObj();
         Client getClientByIp(String ip);
+        List<LogEntry> getClientLog(Client c);
 
         // Any other data operation
     }
