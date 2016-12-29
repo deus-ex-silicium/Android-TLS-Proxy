@@ -78,8 +78,7 @@ class OkHttpParserInterceptor {
                 Log.d(TAG, url);
                 builder.url(url);
                 //TODO: testing logging
-                /******* WARNING:COS TU NIE GRA PROSZE O TYM NIE ZAPOMNIEC*/
-                shrObj.addRequest(c, host, requestLine, null);
+                //shrObj.addRequest(c, host, requestLine);
             }
             else builder.addHeader(header.first, header.second);
         }
