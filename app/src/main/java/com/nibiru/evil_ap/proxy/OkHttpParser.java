@@ -88,7 +88,7 @@ class OkHttpParser {
             }
             else{
                 builder.addHeader(header.first, header.second);
-                headers.append(header.first+": "+header.second);
+                headers.append(header.first + ": " + header.second + "\n");
             }
         }
         //TODO: testing logging

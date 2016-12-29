@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
@@ -107,7 +108,10 @@ public class ThreadProxy implements Runnable{
             if (debug) Log.d(TAG + "[OUT]", headers);
             outToClient.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            if (e instanceof SocketTimeoutException)
+                Log.e(TAG, "TIMEOUT!");
+            else
+                e.printStackTrace();
         } finally {
             //clean up
             if (res != null) res.body().close();

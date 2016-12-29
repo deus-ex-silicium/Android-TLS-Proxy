@@ -9,6 +9,7 @@ import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.log.DatabaseManager;
 import com.nibiru.evil_ap.log.LogDbContract;
 import com.nibiru.evil_ap.log.LogDbHelper;
+import com.nibiru.evil_ap.log.LogEntry;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,8 +55,8 @@ public class SharedClass {
     }
 
     //get client log
-    public void getClientLog(Client c){
-        mDbManager.getClientLog(c);
+    public List<LogEntry> getClientLog(Client c){
+        return mDbManager.getClientLog(c);
     }
 
     synchronized void loadImage(String path){
