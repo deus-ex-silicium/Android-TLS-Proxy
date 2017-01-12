@@ -20,8 +20,10 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
@@ -70,13 +72,37 @@ public class MainActivity extends AppCompatActivity implements
      *******************************************/
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.e("Intent:", "notification");
+        if(intent.getStringExtra("methodName").equals("disableAP")){
+            onApPressed("","");
+            Log.e("Intent:", "notification");
+        }
+    }
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         startMVPOps();
         setContentView(R.layout.activity_main);
         setUpGUI();
         mPresenter.checkIfDeviceRooted();
+        if (savedInstanceState == null) {
+            Log.e("Intent", "outside");
+            Bundle extras = getIntent().getExtras();
+            if(extras == null)
+            {
+                //Cry about not being clicked on
+            }
+            else if (extras.get("methodName").equals("disableAP"))
+            {
+                //Do your stuff here mate :)
+                Log.e("Intent", "inside");
+                onApPressed("","");
+            }
 
+        }
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -110,13 +136,13 @@ public class MainActivity extends AppCompatActivity implements
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
                 true);
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 01, intent, Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("methodName","disableAP");
         PendingIntent pi = PendingIntent.getActivity(this,01,intent, Intent
-                .FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                .FLAG_ACTIVITY_CLEAR_TOP);
         Notification.Builder builder = new Notification.Builder(getApplicationContext());
         builder.setContentTitle("Your AP is on.");
         builder.setNumber(101);
-        builder.setContentIntent(pendingIntent);
+        builder.setContentIntent(pi);
         builder.setTicker("Evil-AP Notification");
         builder.setSmallIcon(R.drawable.onoffon);
         builder.setLargeIcon(bm);
@@ -205,8 +231,10 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onApPressed(String SSID, String pass) {
         if (!isApOn()) {
             setupNotification();
+            enableTabLayout();
         } else {
             cancelNotification(getApplicationContext(), 01);
+            disableTabLayout();
         }
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
     }
@@ -219,26 +247,60 @@ public class MainActivity extends AppCompatActivity implements
     /**************************************
      * UI stuff
      ************************************************/
+
+    private void enableTabLayout(){
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
+        viewPager.setPagingEnabled(true);
+        LinearLayout tabStrip = ((LinearLayout)tabLayout.getChildAt(0));
+        for(int i = 0; i < tabStrip.getChildCount(); i++) {
+            tabStrip.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    return false;
+                }
+            });
+        }
+    }
+    private void disableTabLayout(){
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
+        viewPager.setPagingEnabled(false);
+        LinearLayout tabStrip = ((LinearLayout)tabLayout.getChildAt(0));
+        for(int i = 0; i < tabStrip.getChildCount(); i++) {
+            tabStrip.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    Toast.makeText(getApplicationContext(),"AP must be ON!",Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+            });
+        }
+    }
     private void setUpGUI() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Config"));
         tabLayout.addTab(tabLayout.newTab().setText("Clients"));
         tabLayout.addTab(tabLayout.newTab().setText("Action Center"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
         final PagerAdapter adapter =
                 new PagerAdapter
                         (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        disableTabLayout();
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
+                if(isApOn()) {
+                    viewPager.setCurrentItem(tab.getPosition());
+                }
+                else{
+                }
             }
 
             @Override
@@ -248,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
+
         });
         FrameLayout r = (FrameLayout) findViewById(R.id.activity_main);
         r.setBackground((getResources().getDrawable(R.drawable.bground)));

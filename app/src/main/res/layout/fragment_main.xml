@@ -42,6 +42,7 @@
     <CheckBox
         android:text="WPA/WPA2 PSK"
         android:textSize="15sp"
+        android:checked="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editText2"
