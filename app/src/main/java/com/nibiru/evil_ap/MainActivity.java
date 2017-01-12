@@ -3,9 +3,11 @@ package com.nibiru.evil_ap;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -72,15 +74,6 @@ public class MainActivity extends AppCompatActivity implements
      *******************************************/
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        Log.e("Intent:", "notification");
-        if(intent.getStringExtra("methodName").equals("disableAP")){
-            onApPressed("","");
-            Log.e("Intent:", "notification");
-        }
-    }
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -88,21 +81,18 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setUpGUI();
         mPresenter.checkIfDeviceRooted();
-        if (savedInstanceState == null) {
-            Log.e("Intent", "outside");
-            Bundle extras = getIntent().getExtras();
-            if(extras == null)
-            {
-                //Cry about not being clicked on
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("tap");
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals("tap")) {
+                    Log.e("Intent", "inside");
+                    onApPressed("", "");
+                }
             }
-            else if (extras.get("methodName").equals("disableAP"))
-            {
-                //Do your stuff here mate :)
-                Log.e("Intent", "inside");
-                onApPressed("","");
-            }
-
-        }
+        };
+        registerReceiver(receiver, filter);
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -135,31 +125,34 @@ public class MainActivity extends AppCompatActivity implements
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
                 true);
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("methodName","disableAP");
-        PendingIntent pi = PendingIntent.getActivity(this,01,intent, Intent
-                .FLAG_ACTIVITY_CLEAR_TOP);
-        Notification.Builder builder = new Notification.Builder(getApplicationContext());
+        Intent intent = new Intent("tap");
+        Intent intentShow = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 0);
+        PendingIntent contentIntent =
+                PendingIntent.getActivity(this, 1, intentShow, Intent
+                        .FLAG_ACTIVITY_CLEAR_TOP);
+        NotificationCompat.Action actionOFF = new NotificationCompat.Action.Builder(0,
+                "Turn AP off", pi).build();
+        NotificationCompat.Action actionSHOW = new NotificationCompat.Action.Builder(1, "Bring to" +
+                " front", contentIntent).build();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext
+                ());
         builder.setContentTitle("Your AP is on.");
-        builder.setNumber(101);
-        builder.setContentIntent(pi);
         builder.setTicker("Evil-AP Notification");
         builder.setSmallIcon(R.drawable.onoffon);
         builder.setLargeIcon(bm);
         builder.setAutoCancel(true);
-        builder.setPriority(0);
         builder.setOngoing(true);
-        /** TODO: Make method not deprecated */
-//        NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.drawable.onoff,
-//                "Previous", pendingIntent).build();
-        Notification notification = builder.addAction(0,
-                "Tap here to turn AP off.", pi).setVisibility
-                (NotificationCompat
-                .VISIBILITY_PUBLIC)
+        builder.addAction(actionOFF);
+        builder.addAction(actionSHOW);
+        Notification notification = builder
+                .setVisibility
+                        (NotificationCompat
+                                .VISIBILITY_PUBLIC)
                 .build();
         NotificationManager notificationManger =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManger.notify(01, notification);
+        notificationManger.notify(1, notification);
     }
 
     public static void cancelNotification(Context ctx, int notifyId) {
@@ -248,12 +241,12 @@ public class MainActivity extends AppCompatActivity implements
      * UI stuff
      ************************************************/
 
-    private void enableTabLayout(){
+    private void enableTabLayout() {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
         viewPager.setPagingEnabled(true);
-        LinearLayout tabStrip = ((LinearLayout)tabLayout.getChildAt(0));
-        for(int i = 0; i < tabStrip.getChildCount(); i++) {
+        LinearLayout tabStrip = ((LinearLayout) tabLayout.getChildAt(0));
+        for (int i = 0; i < tabStrip.getChildCount(); i++) {
             tabStrip.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
@@ -262,21 +255,23 @@ public class MainActivity extends AppCompatActivity implements
             });
         }
     }
-    private void disableTabLayout(){
+
+    private void disableTabLayout() {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
         viewPager.setPagingEnabled(false);
-        LinearLayout tabStrip = ((LinearLayout)tabLayout.getChildAt(0));
-        for(int i = 0; i < tabStrip.getChildCount(); i++) {
+        LinearLayout tabStrip = ((LinearLayout) tabLayout.getChildAt(0));
+        for (int i = 0; i < tabStrip.getChildCount(); i++) {
             tabStrip.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    Toast.makeText(getApplicationContext(),"AP must be ON!",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "AP must be ON!", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
         }
     }
+
     private void setUpGUI() {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -296,10 +291,9 @@ public class MainActivity extends AppCompatActivity implements
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if(isApOn()) {
+                if (isApOn()) {
                     viewPager.setCurrentItem(tab.getPosition());
-                }
-                else{
+                } else {
                 }
             }
 
