@@ -14,6 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import com.nibiru.evil_ap.R;
@@ -27,13 +29,18 @@ import com.nibiru.evil_ap.R;
  * create an instance of this fragment.
  */
 public class MainFragment extends Fragment implements View.OnClickListener {
-    /**************************************CLASS FIELDS********************************************/
+    /**************************************
+     * CLASS FIELDS
+     ********************************************/
     protected final String TAG = getClass().getSimpleName();
     private OnMainFragmentInteraction mListener;
     private BroadcastReceiver mApChangeReceiver;
     private EditText et;
     private EditText et2;
-    /***************************************CLASS METHODS******************************************/
+
+    /***************************************
+     * CLASS METHODS
+     ******************************************/
     public MainFragment() {
         // Required empty public constructor
     }
@@ -54,13 +61,13 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override //unregister broadcast receiver for WIFI_AP_STATE_CHANGED
-    public void onStop(){
+    public void onStop() {
         super.onStop();
         getContext().unregisterReceiver(mApChangeReceiver);
     }
 
     @Override //register broadcast receiver for WIFI_AP_STATE_CHANGED
-    public void onStart(){
+    public void onStart() {
         super.onStart();
         mApChangeReceiver = new ApBroadcastReceiver();
         getContext().registerReceiver(mApChangeReceiver,
@@ -68,7 +75,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
     }
 
@@ -80,8 +87,21 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         View v = inflater.inflate(R.layout.fragment_main, container, false);
         Button bt = (Button) v.findViewById(R.id.button);
         bt.setOnClickListener(this);
-        et = (EditText)v.findViewById(R.id.editText);
-        et2 = (EditText)v.findViewById(R.id.editText2);
+        et = (EditText) v.findViewById(R.id.editText);
+        et2 = (EditText) v.findViewById(R.id.editText2);
+        CheckBox cb = (CheckBox) v.findViewById(R.id.checkBox);
+        cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if(isChecked){
+                        et2.setVisibility(View.VISIBLE);
+                    }
+                    else{
+                        et2.setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+        );
         return v;
     }
 
@@ -101,12 +121,11 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                if (mListener.onApPressed(et.getText().toString(), et2.getText().toString())){
+                if (mListener.onApPressed(et.getText().toString(), et2.getText().toString())) {
                     et.setFocusable(false);
                     et2.setFocusable(false);
                     setBtnUI(true);
-                }
-                else{
+                } else {
                     et.setFocusable(true);
                     et2.setFocusable(true);
                     setBtnUI(false);
@@ -137,7 +156,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
      */
     public interface OnMainFragmentInteraction {
         //return true is Ap was turn on, false otherwise
-        boolean onApPressed( String SSID, String pass );
+        boolean onApPressed(String SSID, String pass);
+
         boolean isApOn();
     }
 
