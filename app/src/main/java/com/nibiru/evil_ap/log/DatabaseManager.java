@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,8 +22,9 @@ public class DatabaseManager {
     private static DatabaseManager instance;
     private static LogDbHelper mDatabaseHelper;
     private SQLiteDatabase mDatabase;
+    private ThreadPoolExecutor executor;
     /**************************************CLASS METHODS*******************************************/
-    //TODO: things to show when log is pressed
+
     // for client log
     // select timestamp, host from log where mac="dc:85:de:8d:56:b5"
     // for request details
@@ -28,7 +32,15 @@ public class DatabaseManager {
 
     // To prevent someone from accidentally instantiating the DatabaseManager class,
     // make the constructor private.
-    private DatabaseManager(){}
+    private DatabaseManager(){
+        executor = new ThreadPoolExecutor(
+                140,
+                140,
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>()
+        );
+    }
 
     public static synchronized void initializeInstance(LogDbHelper helper) {
         if (instance == null) {
@@ -64,17 +76,7 @@ public class DatabaseManager {
     }
 
     public void addRequest(Client c, String host, String reqLine, String headers){
-        String date = (String) android.text.format.DateFormat.format
-                ("yyyy-MM-dd kk:mm:ss", new java.util.Date());
-        // Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_MAC, c.getMac());
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP, date);
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_HOST, host);
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE, reqLine);
-        values.put(LogDbContract.LogEntry.COLUMN_NAME_HEADERS, headers);
-        // Insert the new row, returning the primary key value of the new row
-        long newRowId = mDatabase.insert(LogDbContract.LogEntry.TABLE_NAME, null, values);
+        executor.execute(new RunnableAddDbEntry(c, host, reqLine, headers, mDatabase));
     }
 
     public List<LogEntry> getClientLog(Client c){

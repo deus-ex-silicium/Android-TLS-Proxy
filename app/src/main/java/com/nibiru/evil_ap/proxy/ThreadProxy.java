@@ -45,6 +45,7 @@ public class ThreadProxy implements Runnable{
                 .build();
         mConfig = config;
         mSharedObj = sharedObj;
+        //TODO: fucking shit is sometimes null
         c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
     }
     @Override
@@ -62,7 +63,11 @@ public class ThreadProxy implements Runnable{
             if (sRequest == null) {return;}
 
             //parse string request into okhttp request (remove some security headers)
-            Request req = rp.parse(sRequest, mSharedObj, c);
+            Request req;
+            if (sRequest.startsWith("GET"))
+               req = rp.parse(sRequest, mSharedObj, c, "GET");
+            else
+                req = rp.parse(sRequest, mSharedObj, c, "POST");
             if (req == null) {return;}
 
             //make request and get response
@@ -83,7 +88,7 @@ public class ThreadProxy implements Runnable{
                 bodyLen = bytesBody.length;
             }
             //prepare response headers
-            String headers = getResponseHeaders(res, bodyLen, getEtag(sRequest));
+            String headers = getResponseHeaders(res, bodyLen, req.header("Etag"));
             // In order to comply with protocol
             headers = headers.replaceAll("\\n", "\r\n");
 
@@ -155,15 +160,6 @@ public class ThreadProxy implements Runnable{
         }
     }
 
-    private String getEtag(String sRequest){
-        String result = "";
-        if (sRequest.contains("\"")) {
-            result = sRequest.substring(sRequest.indexOf("\"") + 1);
-            result = result.substring(0, result.indexOf("\""));
-        }
-        return "\"" + result + "\"";
-    }
-
     private String getResponseHeaders(Response res, int len, String eTag) throws IOException {
         String resToClient = "";
         if (debug) Log.d(TAG, "<==================Sending response==================>");
@@ -204,11 +200,6 @@ public class ThreadProxy implements Runnable{
             if (line.isEmpty()) {
                 break;
             }
-            //TODO: implement POST
-            if (line.startsWith("POST")) {
-                Log.e(TAG, "DROPPED POST REQUEST!");
-                return null;
-            }
             if (line.startsWith("Content-Length")) { //get the content-length
                 int index = line.indexOf(':') + 1;
                 String len = line.substring(index).trim();
@@ -243,6 +234,14 @@ public class ThreadProxy implements Runnable{
         //add swapped image bytes to stream
         streamResponse.write(mSharedObj.getImgData());
         return streamResponse;
+    }
+    private String getEtag(String sRequest){
+        String result = "";
+        if (sRequest.contains("\"")) {
+            result = sRequest.substring(sRequest.indexOf("\"") + 1);
+            result = result.substring(0, result.indexOf("\""));
+        }
+        return "\"" + result + "\"";
     }
     private static String getStringFromInputStream(InputStream is) {
 

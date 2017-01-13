@@ -10,7 +10,11 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.Vector;
 
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 /**
  * Created by Nibiru on 2016-11-03.
@@ -27,7 +31,7 @@ class OkHttpParser {
         requestHeaders = new Vector<>();
         messageBody = new StringBuffer();
     }
-    Request parse(String request, SharedClass shrObj, Client c){
+    Request parse(String request, SharedClass shrObj, Client c, String method){
         BufferedReader reader = new BufferedReader(new StringReader(request));
         try {
             //read request line
@@ -49,7 +53,7 @@ class OkHttpParser {
                 appendMessageBody(bodyLine);
                 bodyLine = reader.readLine();
             }
-            return buildOkHTTPRequest(requestLine, shrObj, c);
+            return buildOkHTTPRequest(requestLine, shrObj, c, method);
 
         } catch (Exception e) {
             Log.d(TAG, "Unable to parse request");
@@ -71,15 +75,20 @@ class OkHttpParser {
         messageBody.append(bodyLine).append("\r\n");
     }
 
-    private Request buildOkHTTPRequest(String requestLine, SharedClass shrObj, Client c)
-            throws NullPointerException{
+    private Request buildOkHTTPRequest(String requestLine, SharedClass shrObj, Client c, String
+            method) throws NullPointerException{
         String url;
         String host="";
+        String mediaTypeStr="";
         StringBuilder headers = new StringBuilder();
         String[] requestLineValues = requestLine.split("\\s+");
         Request.Builder builder = new Request.Builder();
 
+
         for(Pair<String, String> header : requestHeaders){
+            if (header.first.equalsIgnoreCase("content-type")){
+                mediaTypeStr = header.second.trim();
+            }
             if (header.first.equalsIgnoreCase("host")){
                 host = header.second.trim();
                 url = "http://" + host + requestLineValues[1];
@@ -91,8 +100,19 @@ class OkHttpParser {
                 headers.append(header.first + ": " + header.second + "\n");
             }
         }
+        //find request type
+        MediaType mediaType = MediaType.parse(mediaTypeStr);
+        RequestBody requestBody = FormBody.create(mediaType, messageBody.toString());
+        switch (method) {
+            case "GET":
+                break;
+            case "POST":
+                builder.method("POST", RequestBody.create(null, new byte[0]))
+                        .post(requestBody);
+                break;
+        }
         //TODO: testing logging
-        shrObj.addRequest(c, host, requestLine, headers.toString());
+        //shrObj.addRequest(c, host, requestLine, headers.toString());
         return builder.build();
     }
 }
