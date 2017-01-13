@@ -138,8 +138,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             if (mListener == null) return;
             setBtnUI(mListener.isApOn());
             if (intent.getAction().equals("tap")) {
-                Log.e("Intent", "inside");
-                mListener.onApPressed("", "");
+                if(mListener.isApOn()) {
+                    mListener.onApPressed("", "");
+                }
+                else{
+                    mListener.onApPressed(et.getText().toString(),et2.getText().toString());
+                }
             }
             //TODO: what about iptables rules and redirection?
         }
