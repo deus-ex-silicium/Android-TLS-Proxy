@@ -76,7 +76,6 @@ public class clients_adapter extends ArrayAdapter<Client> {
             }
             final Button log = (Button) v_clients.findViewById(R.id.button1);
             if (log != null) {
-                final View finalV_clients = v_clients;
                 log.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -86,6 +85,20 @@ public class clients_adapter extends ArrayAdapter<Client> {
                         ft.replace(R.id.activity_main, new ServerItemFragment(clientsList.get(position)),
                                 null);
                         ft.addToBackStack(null).commit();
+                    }
+                });
+            }
+            final Button ban = (Button) v_clients.findViewById(R.id.button2);
+            if (ban != null) {
+                ban.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(ban.getText().equals(R.string.ban)) {
+                            ban.setText(R.string.unban);
+                        }
+                        else{
+                            ban.setText(R.string.ban);
+                        }
                     }
                 });
             }

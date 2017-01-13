@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.NotificationCompat;
@@ -51,9 +52,7 @@ public class MainActivity extends AppCompatActivity implements
         ACFragment.OnFragmentInteractionListener, ACHTTPFragment.onAcFragmentInteraction,
         ACHTTPSFragment.onAcFragmentInteraction, ServerItemFragment.onClientsFragmentInteraction,
         ServerDetailsFragment.OnFragmentInteractionListener, IMVP.RequiredViewOps {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
+    /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;
     private boolean psIsBound; //?
@@ -81,18 +80,6 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setUpGUI();
         mPresenter.checkIfDeviceRooted();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("tap");
-        BroadcastReceiver receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals("tap")) {
-                    Log.e("Intent", "inside");
-                    onApPressed("", "");
-                }
-            }
-        };
-        registerReceiver(receiver, filter);
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -118,47 +105,6 @@ public class MainActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         doUnbindService();
-    }
-
-    void setupNotification() {
-        Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
-                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
-                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
-                true);
-        Intent intent = new Intent("tap");
-        Intent intentShow = new Intent(this, MainActivity.class);
-        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 0);
-        PendingIntent contentIntent =
-                PendingIntent.getActivity(this, 1, intentShow, Intent
-                        .FLAG_ACTIVITY_CLEAR_TOP);
-        NotificationCompat.Action actionOFF = new NotificationCompat.Action.Builder(0,
-                "Turn AP off", pi).build();
-        NotificationCompat.Action actionSHOW = new NotificationCompat.Action.Builder(1, "Bring to" +
-                " front", contentIntent).build();
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext
-                ());
-        builder.setContentTitle("Your AP is on.");
-        builder.setTicker("Evil-AP Notification");
-        builder.setSmallIcon(R.drawable.onoffon);
-        builder.setLargeIcon(bm);
-        builder.setAutoCancel(true);
-        builder.setOngoing(true);
-        builder.addAction(actionOFF);
-        builder.addAction(actionSHOW);
-        Notification notification = builder
-                .setVisibility
-                        (NotificationCompat
-                                .VISIBILITY_PUBLIC)
-                .build();
-        NotificationManager notificationManger =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManger.notify(1, notification);
-    }
-
-    public static void cancelNotification(Context ctx, int notifyId) {
-        String ns = Context.NOTIFICATION_SERVICE;
-        NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
-        nMgr.cancel(notifyId);
     }
 
     void doBindService() {
@@ -223,10 +169,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onApPressed(String SSID, String pass) {
         if (!isApOn()) {
-            setupNotification();
             enableTabLayout();
         } else {
-            cancelNotification(getApplicationContext(), 1);
             disableTabLayout();
         }
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
@@ -265,7 +209,16 @@ public class MainActivity extends AppCompatActivity implements
             tabStrip.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    Toast.makeText(getApplicationContext(), "AP must be ON!", Toast.LENGTH_SHORT).show();
+                    final Toast toast = Toast.makeText(getApplicationContext(), "AP must be ON!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            toast.cancel();
+                        }
+                    }, 500);
                     return true;
                 }
             });

@@ -68,7 +68,7 @@ public class server_adapter extends ArrayAdapter<String> {
                         FragmentManager fm = a.getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         ft.replace(R.id.activity_main, new ServerDetailsFragment(ti.getText()
-                                .toString(),client.getIp()),
+                                .toString(),client),
                                 null);
                         ft.addToBackStack(null).commit();
                     }
