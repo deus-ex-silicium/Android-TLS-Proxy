@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements
             setupNotification();
             enableTabLayout();
         } else {
-            cancelNotification(getApplicationContext(), 01);
+            cancelNotification(getApplicationContext(), 1);
             disableTabLayout();
         }
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
