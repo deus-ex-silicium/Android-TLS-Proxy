@@ -73,6 +73,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         else {
             x.add("joemonster.org");
         }
+        x.add("joemonster.org");
         return x;
     }
 

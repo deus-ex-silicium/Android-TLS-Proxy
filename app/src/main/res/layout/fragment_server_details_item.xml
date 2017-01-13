@@ -13,7 +13,7 @@
     <TextView
         android:id="@+id/separator"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="5dp"
         android:layout_gravity="center"
         android:background="@color/opblack"
         android:clickable="true"
@@ -47,6 +47,7 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:scrollHorizontally="false"
             android:textColor="@color/oplblue"
+            android:clickable="false"
             android:layout_weight="1"
             android:textStyle="bold"
             android:inputType="textMultiLine"/>
@@ -74,7 +75,7 @@
             android:scrollHorizontally="false"
             android:textColor="@color/oplblue"
             android:layout_weight="1"
-            android:textStyle="bold"
+            android:clickable="false"
             android:inputType="textMultiLine"/>
 
     </LinearLayout>
