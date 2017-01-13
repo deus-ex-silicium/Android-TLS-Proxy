@@ -20,27 +20,15 @@ import android.widget.EditText;
 
 import com.nibiru.evil_ap.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnMainFragmentInteraction} interface
- * to handle interaction events.
- * Use the {@link MainFragment#//newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MainFragment extends Fragment implements View.OnClickListener {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
+    /************************************* CLASS FIELDS *******************************************/
     protected final String TAG = getClass().getSimpleName();
     private OnMainFragmentInteraction mListener;
     private BroadcastReceiver mApChangeReceiver;
     private EditText et;
     private EditText et2;
 
-    /***************************************
-     * CLASS METHODS
-     ******************************************/
+    /************************************** CLASS METHODS *****************************************/
     public MainFragment() {
         // Required empty public constructor
     }
@@ -60,13 +48,13 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    @Override //unregister broadcast receiver for WIFI_AP_STATE_CHANGED
+    @Override //unregister broadcast receiver
     public void onStop() {
         super.onStop();
         getContext().unregisterReceiver(mApChangeReceiver);
     }
 
-    @Override //register broadcast receiver for WIFI_AP_STATE_CHANGED
+    @Override //register broadcast receiver for WIFI_AP_STATE_CHANGED and notification tap
     public void onStart() {
         super.onStart();
         mApChangeReceiver = new ApBroadcastReceiver();
@@ -155,10 +143,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnMainFragmentInteraction {
         //return true is Ap was turn on, false otherwise

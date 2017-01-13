@@ -75,34 +75,82 @@ public class Model implements IMVP.ModelOps{
         // destroying actions
     }
 
+    /**
+     * Setter for SharedPreferences of an int variable
+     * @param tag The tag to be stored in SharedPreferences
+     * @param val The value to be stored in SharedPreferences
+     */
     public void setSharedPrefsInt(String tag, int val){
         mConfig.edit().putInt(tag,val).apply();
     }
+    /**
+     * Setter for SharedPreferences of a boolean variable
+     * @param tag The tag to be stored in SharedPreferences
+     * @param val The value to be stored in SharedPreferences
+     */
     public void setSharedPrefsBool(String tag, boolean val){
         mConfig.edit().putBoolean(tag,val).apply();
     }
+    /**
+     * Setter for SharedPreferences of a String variable
+     * @param tag The tag to be stored in SharedPreferences
+     * @param val The value to be stored in SharedPreferences
+     */
     public void setSharedPrefsString(String tag, String val){
         mConfig.edit().putString(tag,val).apply();
     }
 
+    /**
+     * Getter for SharedPreferences for an int variable
+     * @param tag The tag to get
+     * @return The stored SharedPreferences value
+     */
     public int getSharedPrefsInt(String tag){
         return mConfig.getInt(tag, -1);
     }
+    /**
+     * Getter for SharedPreferences for a boolean variable
+     * @param tag The tag to get
+     * @return The stored SharedPreferences value
+     */
     public boolean getSharedPrefsBool(String tag){
         return mConfig.getBoolean(tag, false);
     }
+    /**
+     * Getter for SharedPreferences for a String variable
+     * @param tag The tag to get
+     * @return The stored SharedPreferences value
+     */
     public String getSharedPrefsString(String tag){
         return mConfig.getString(tag,"");
     }
+    /**
+     * Runs the "ip -4 neigh" command
+     * @return Returns an ArrayList of String lines from the command
+     */
     public ArrayList<String> getCurrentClients(){
         return mRootMan.RunAsRootWithOutput("ip -4 neigh");
     }
+    /**
+     * Accesses database to retrieve requests made by client
+     * @param c The {@link Client} database will be queried for
+     * @return A list of {@link LogEntry} variables
+     */
     public List<LogEntry> getClientLog(Client c){
         return mSharedObj.getClientLog(c);
     }
+    /**
+     * Getter for the object shared between proxy threads handling clients
+     * @return {@link SharedClass}
+     */
     public SharedClass getSharedObj(){
         return mSharedObj;
     }
+    /**
+     * Using "ip -4 neigh" command retrieves the client by his IP
+     * @param ip String representing IP
+     * @return The {@link Client} or null if not found
+     */
     public Client getClientByIp(String ip){
         ArrayList<String> output = mRootMan.RunAsRootWithOutput("ip -4 neigh");
         for (String line : output) {
@@ -115,6 +163,17 @@ public class Model implements IMVP.ModelOps{
         return null;
     }
 
+    /**
+     * Resets the SharedSetting when application starts
+     */
+    public void resetSharedPrefs() {
+        mConfig.edit().clear().apply();
+    }
+    /**
+     * Applies an iptables rule to redirect traffic to our application
+     * @param traffic Possible values "HTTP", "HTTPS", "DNS", ports defined in {@link Routing}
+     * @param on Boolean value indicating if we should add(true) or delete(false) iptable rules
+     */
     public void onTrafficRedirect(String traffic, boolean on){
         switch (traffic){
             case "HTTP":
@@ -128,12 +187,22 @@ public class Model implements IMVP.ModelOps{
                 break;
         }
     }
+    /**
+     * Verifies storage permissions, if failed asks user for permissions. Converts uri to
+     * path. Loads image bytes for replacement into SharedClass and puts path in SharedPreferences
+     * @param uri Uri to the image
+     * @param act Activity that will ask for storage permissions if we don't have them
+     */
     public void onLoadReplaceImg(Uri uri, Activity act){
         verifyStoragePermissions(act);
         String path = getPath(uri);
         setSharedPrefsString(ConfigTags.imgPath.toString(), path);
         mSharedObj.loadImage(path);
     }
+    /**
+     * Adds proper payload (indicated with integer) into payload list. Sets payloads in SharedClass
+     * @param payloads A list of integer string pairs indicating payloads and its options
+     */
     public void onJsPayloadApply(List<Pair<Integer, String>> payloads) {
         ArrayList<String> listP = new ArrayList<>();
         for (Pair<Integer, String> pair: payloads) {
@@ -145,6 +214,13 @@ public class Model implements IMVP.ModelOps{
         }
         mSharedObj.setPayloads(listP);
     }
+    /**
+     *
+     * @param SSID The AP name, if empty default "AP_nomap" is used
+     * @param pass The AP password , if empty default "pa$$word" is used
+     * @param ctx Application context needed to turn hotspot on or off
+     * @return Returns if AP was turned on(true) or turned off (false)
+     */
     public boolean onApToggle(String SSID, String pass, Context ctx){
         if (!mApMan.isApOn(ctx)){
             if( SSID.equals("") || pass.equals("") ) {
@@ -169,10 +245,18 @@ public class Model implements IMVP.ModelOps{
             return false;
         }
     }
-
+    /**
+     * Checks the current state of hotspot
+     * @param ctx Context needed to check hotspot state
+     * @return Boolean indication if hotspot is on (true) or off (false)
+     */
     public boolean isApOn(Context ctx){
         return mApMan.isApOn(ctx);
     }
+    /**
+     * Uses various methods to check whether device is rooted
+     * @return Boolean indicating device is rooted (true) or not (false)
+     */
     public boolean isDeviceRooted(){
         return mRootMan.isDeviceRooted();
     }
