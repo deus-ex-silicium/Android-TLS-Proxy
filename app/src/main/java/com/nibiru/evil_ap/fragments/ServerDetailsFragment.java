@@ -54,6 +54,7 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_server_details, container, false);
         logs_listView = (ListView) rootView.findViewById(R.id.DetailList);
+        logs_listView.setVerticalScrollBarEnabled(true);
         final ListView logs_listView = (ListView) rootView.findViewById(R.id.DetailList);
         logList = getServerDetails(clientLocal);
         customAdapter = new serverDetails_adapter(getContext(),
@@ -75,6 +76,16 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
             le.add(new LogEntry(0,"null","nohost","null"));
         }
         le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
+
         return le;
     }
     // TODO: Rename method, update argument and hook method into UI event

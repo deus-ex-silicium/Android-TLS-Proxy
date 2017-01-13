@@ -21,6 +21,7 @@ import com.nibiru.evil_ap.log.DatabaseManager;
 import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
@@ -67,11 +68,11 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         for (LogEntry e:le
              ) {
             if(!x.contains(e.getHost())) {
-                x.add(e.getHost());
+                x.add(e.getHost() + " Count:"+ Collections.frequency(le,e.getHost()));
             }
         }}
         else {
-            x.add("joemonster.org");
+            x.add("joemonster.org Count:");
         }
         x.add("joemonster.org");
         return x;
