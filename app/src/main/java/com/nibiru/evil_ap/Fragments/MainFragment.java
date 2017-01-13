@@ -70,8 +70,10 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onStart() {
         super.onStart();
         mApChangeReceiver = new ApBroadcastReceiver();
-        getContext().registerReceiver(mApChangeReceiver,
-                new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED"));
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
+        filter.addAction("tap");
+        getContext().registerReceiver(mApChangeReceiver, filter);
     }
 
     @Override
@@ -140,6 +142,10 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             //something about AP changed so update the UI button
             if (mListener == null) return;
             setBtnUI(mListener.isApOn());
+            if (intent.getAction().equals("tap")) {
+                Log.e("Intent", "inside");
+                mListener.onApPressed("", "");
+            }
             //TODO: what about iptables rules and redirection?
         }
     }

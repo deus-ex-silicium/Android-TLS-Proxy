@@ -15,6 +15,8 @@ import android.widget.ListView;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.server_adapter;
 import com.nibiru.evil_ap.log.Client;
+import com.nibiru.evil_ap.log.DatabaseManager;
+import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     private server_adapter customAdapter;
     private View rootView;
     private Client clientLocal;
+    private DatabaseManager db;
     SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<String> serverList;
     /**************************************CLASS METHODS*******************************************/
@@ -56,10 +59,20 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
 
     public ArrayList<String> getClientServers(){
         ArrayList<String> x = new ArrayList<>();
-        x.add("Dec 22, 2016 22:11:18\njoemonster.org");
-        x.add("Dec 22, 2016 23:11:18\npornhub.com");
+        if(db != null){
+        List<LogEntry> le = db.getClientLog(clientLocal);
+        for (LogEntry e:le
+             ) {
+            if(!x.contains(e.getHost())) {
+                x.add(e.getHost());
+            }
+        }}
+        else {
+            x.add("joemonster.org");
+        }
         return x;
     }
+
 
     public void onRefresh() {
         Log.d(TAG, "Refreshing!");

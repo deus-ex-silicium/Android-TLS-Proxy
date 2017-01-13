@@ -8,7 +8,7 @@
                 android:includeFontPadding="false"
                 android:orientation="vertical"
                 android:paddingBottom="2dp"
-    >
+>
 
     <TextView
         android:id="@+id/separator"
@@ -26,34 +26,55 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/opblack"
         android:textStyle="bold"
-        />
+    />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/separator"
+        android:id="@+id/time"
         android:background="@color/opblue">
 
         <com.nibiru.evil_ap.AutoResizeTextView
-            android:id="@+id/text_content_clientsserver"
+            android:id="@+id/details_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:ellipsize="end"
             android:layout_marginStart="20dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="20dp"
+            android:text="DDDDDD SSSSS WWWWWWW"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:scrollHorizontally="false"
+            android:textColor="@color/oplblue"
+            android:layout_weight="1"
+            android:textStyle="bold"
+            android:inputType="textMultiLine"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/time"
+        android:background="@color/opblue"
+    >
+
+        <com.nibiru.evil_ap.AutoResizeTextView
+            android:layout_marginTop="10dp"
+            android:id="@+id/details_det"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:ellipsize="end"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:text="DDDDDD SSSSS WWWWWWW fffffjsjdjS WWWWWWW fffffjsjdjS WWWWWWW fffffjsjdjS WWWWWWW fffffjsjdj"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:scrollHorizontally="false"
             android:textColor="@color/oplblue"
             android:layout_weight="1"
             android:textStyle="bold"
             android:inputType="textMultiLine"/>
-        <Button
-            android:id="@+id/button_details"
-            android:layout_weight=".10"
-            android:layout_gravity="center"
-            android:text="Details"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+
     </LinearLayout>
 </RelativeLayout>

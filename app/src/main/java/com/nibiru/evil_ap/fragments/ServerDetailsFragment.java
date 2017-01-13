@@ -6,13 +6,19 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.adapters.serverDetails_adapter;
+import com.nibiru.evil_ap.log.Client;
+import com.nibiru.evil_ap.log.DatabaseManager;
+import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
 
@@ -22,36 +28,54 @@ public class ServerDetailsFragment extends Fragment {
     private ArrayList<String> server_arrayl = new ArrayList<>();
     private View rootView;
     private TextView displayDetails;
+    private ListView logs_listView;
     private String serverLocal;
-    private String clientLocal;
+    private serverDetails_adapter customAdapter;
+    private Client clientLocal;
+    private ArrayList<LogEntry> logList;
+    private DatabaseManager db;
     LinearLayout ll;
     public ServerDetailsFragment() {
         // Required empty public constructor
     }
-    public ServerDetailsFragment(String server, String client){
+    public ServerDetailsFragment(String server, Client client){
         serverLocal = server;
         clientLocal = client;
     }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
     public void onResume(){
         super.onResume();
         getServerDetails(clientLocal);
-        displayDetails.setText(server_arrayl.get(0));
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_server_details, container, false);
-        displayDetails = (TextView) rootView.findViewById(R.id.displayDetails);
+        logs_listView = (ListView) rootView.findViewById(R.id.DetailList);
+        final ListView logs_listView = (ListView) rootView.findViewById(R.id.DetailList);
+        logList = getServerDetails(clientLocal);
+        customAdapter = new serverDetails_adapter(getContext(),
+                R.layout.fragment_server_details_item, logList,this.getActivity());
+        logs_listView.setAdapter(customAdapter);
         // Inflate the layout for this fragment
         return rootView;
     }
-    void getServerDetails(String client){
-        server_arrayl.add("tempString");
+    public ArrayList<LogEntry> getServerDetails(Client client){
+        ArrayList<LogEntry> le = new ArrayList<>();
+        if(db!=null){
+        for (LogEntry e:db.getClientLog(clientLocal)
+             ) {
+            if(e.getHost().equals(serverLocal)){
+                le.add(e);
+            }
+        }}
+        else{
+            le.add(new LogEntry(0,"null","nohost","null"));
+        }
+        return le;
     }
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

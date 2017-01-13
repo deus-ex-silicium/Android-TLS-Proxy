@@ -1,11 +1,19 @@
 package com.nibiru.evil_ap.proxy;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 
+import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.SharedClass;
 
@@ -57,15 +65,61 @@ public class ProxyService extends Service{
         Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
                 getResources().openRawResource(R.raw.evil_ap), this));
         proxyHTTPS.start();
+        setupNotification();
+    }
+    void setupNotification() {
+        Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
+                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
+                getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
+                true);
+        Intent intent = new Intent("tap");
+        Intent intentShow = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 0);
+        PendingIntent contentIntent =
+                PendingIntent.getActivity(this, 1, intentShow, Intent
+                        .FLAG_ACTIVITY_CLEAR_TOP);
+        NotificationCompat.Action actionOFF = new NotificationCompat.Action.Builder(0,
+                "Toggle AP", pi).build();
+        NotificationCompat.Action actionSHOW = new NotificationCompat.Action.Builder(1, "Bring to" +
+                " front", contentIntent).build();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext
+                ());
+        builder.setContentTitle("Your Proxy is running");
+        builder.setTicker("Evil-AP Notification");
+        builder.setSmallIcon(R.drawable.onoffon);
+        builder.setLargeIcon(bm);
+        builder.setAutoCancel(true);
+        builder.setOngoing(true);
+        builder.addAction(actionOFF);
+        builder.addAction(actionSHOW);
+        Notification notification = builder
+                .setVisibility
+                        (NotificationCompat
+                                .VISIBILITY_PUBLIC)
+                .build();
+        NotificationManager notificationManger =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManger.notify(1, notification);
     }
 
+    public static void cancelNotification(Context ctx, int notifyId) {
+        String ns = Context.NOTIFICATION_SERVICE;
+        NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
+        nMgr.cancel(notifyId);
+    }
     @Override
     public void onDestroy(){
         work = false;
+        cancelNotification(getApplicationContext(), 1);
     }
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+    @Override
+    public boolean onUnbind(Intent intent){
+        cancelNotification(getApplicationContext(),1);
+        return true;
     }
 
     public interface IProxyService {
