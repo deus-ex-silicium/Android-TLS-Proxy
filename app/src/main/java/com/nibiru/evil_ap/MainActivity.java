@@ -93,7 +93,8 @@ public class MainActivity extends AppCompatActivity implements
         };
         doBindService();
 
-        //reset some settings
+        //reset settings
+        mPresenter.resetSharedPrefs();
         mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
                 "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -128,9 +129,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onFragmentInteraction(Uri uri) {
     }
 
-    /********************************
-     * Action Center Fragment
-     ****************************************/
+    /****************************** Action Center Fragment ****************************************/
     public View getView(int x) {
         return this.findViewById(x);
     }
@@ -155,17 +154,13 @@ public class MainActivity extends AppCompatActivity implements
         mPresenter.onTrafficRedirect(traffic, on);
     }
 
-    /**********************************
-     * Clients Fragment
-     ********************************************/
+    /********************************* Clients Fragment *******************************************/
     @Override
     public ArrayList<Client> getCurrentClients() {
         return mPresenter.getCurrentClients();
     }
 
-    /***********************************
-     * Main Fragment
-     *********************************************/
+    /********************************* Main Fragment **********************************************/
     @Override
     public boolean onApPressed(String SSID, String pass) {
         if (!isApOn()) {
@@ -181,9 +176,7 @@ public class MainActivity extends AppCompatActivity implements
         return mPresenter.isApOn(getApplicationContext());
     }
 
-    /**************************************
-     * UI stuff
-     ************************************************/
+    /************************************** UI stuff***********************************************/
 
     private void enableTabLayout() {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
@@ -263,9 +256,7 @@ public class MainActivity extends AppCompatActivity implements
         r.setBackground((getResources().getDrawable(R.drawable.bground)));
     }
 
-    /*************************************
-     * MVP stuff
-     ***********************************************/
+    /************************************ MVP stuff ***********************************************/
     @Override
     public void showToast(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();

@@ -1,14 +1,8 @@
 package com.nibiru.evil_ap.proxy;
 
-import android.os.Environment;
 import android.util.Log;
 
-import com.nibiru.evil_ap.R;
-
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

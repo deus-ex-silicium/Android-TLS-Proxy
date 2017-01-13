@@ -67,6 +67,20 @@ public class ProxyService extends Service{
         proxyHTTPS.start();
         setupNotification();
     }
+    @Override
+    public void onDestroy(){
+        work = false;
+        cancelNotification(getApplicationContext(), 1);
+    }
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        cancelNotification(getApplicationContext(),1);
+        stopSelf();
+    }
     void setupNotification() {
         Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
@@ -76,8 +90,7 @@ public class ProxyService extends Service{
         Intent intentShow = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, 0);
         PendingIntent contentIntent =
-                PendingIntent.getActivity(this, 1, intentShow, Intent
-                        .FLAG_ACTIVITY_CLEAR_TOP);
+                PendingIntent.getActivity(this, 1, intentShow, Intent.FLAG_ACTIVITY_CLEAR_TOP);
         NotificationCompat.Action actionOFF = new NotificationCompat.Action.Builder(0,
                 "Toggle AP", pi).build();
         NotificationCompat.Action actionSHOW = new NotificationCompat.Action.Builder(1, "Bring to" +
@@ -92,11 +105,8 @@ public class ProxyService extends Service{
         builder.setOngoing(true);
         builder.addAction(actionOFF);
         builder.addAction(actionSHOW);
-        Notification notification = builder
-                .setVisibility
-                        (NotificationCompat
-                                .VISIBILITY_PUBLIC)
-                .build();
+        Notification notification =
+                builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC).build();
         NotificationManager notificationManger =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManger.notify(1, notification);
@@ -106,20 +116,6 @@ public class ProxyService extends Service{
         String ns = Context.NOTIFICATION_SERVICE;
         NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
         nMgr.cancel(notifyId);
-    }
-    @Override
-    public void onDestroy(){
-        work = false;
-        cancelNotification(getApplicationContext(), 1);
-    }
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-    @Override
-    public boolean onUnbind(Intent intent){
-        cancelNotification(getApplicationContext(),1);
-        return true;
     }
 
     public interface IProxyService {
