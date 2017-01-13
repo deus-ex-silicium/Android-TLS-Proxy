@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.nibiru.evil_ap.IMVP;
+import com.nibiru.evil_ap.Presenter;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.server_adapter;
 import com.nibiru.evil_ap.log.Client;
@@ -21,16 +23,17 @@ import com.nibiru.evil_ap.log.LogEntry;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
+        IMVP.RequiredViewOps {
 
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
-    private onClientsFragmentInteraction mListener;
     private ListView server_listView;
     private server_adapter customAdapter;
     private View rootView;
     private Client clientLocal;
-    private DatabaseManager db;
+    private onClientsFragmentInteraction mListener;
+    private IMVP.PresenterOps mPresenter;
     SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<String> serverList;
     /**************************************CLASS METHODS*******************************************/
@@ -59,8 +62,8 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
 
     public ArrayList<String> getClientServers(){
         ArrayList<String> x = new ArrayList<>();
-        if(db != null){
-        List<LogEntry> le = db.getClientLog(clientLocal);
+        if(mPresenter.getClientLog(clientLocal)!= null){
+        List<LogEntry> le = mPresenter.getClientLog(clientLocal);
         for (LogEntry e:le
              ) {
             if(!x.contains(e.getHost())) {
@@ -82,6 +85,11 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         server_listView.setAdapter(customAdapter);
         mySwipeRefreshLayout.setRefreshing(false);
     }
+
+    @Override
+    public void showToast(String msg) {
+
+    }
 /******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
@@ -95,12 +103,14 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
      */
     public interface onClientsFragmentInteraction {
         ArrayList<String> getClientServers();
+        IMVP.PresenterOps getPresenter();
     }
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof onClientsFragmentInteraction) {
             mListener = (onClientsFragmentInteraction) context;
+            mPresenter = mListener.getPresenter();
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteraction interface");

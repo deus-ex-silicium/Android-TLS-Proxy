@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.serverDetails_adapter;
 import com.nibiru.evil_ap.log.Client;
@@ -22,18 +23,16 @@ import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
 
-public class ServerDetailsFragment extends Fragment {
+public class ServerDetailsFragment extends Fragment implements IMVP.RequiredViewOps{
 
     private OnFragmentInteractionListener mListener;
-    private ArrayList<String> server_arrayl = new ArrayList<>();
     private View rootView;
-    private TextView displayDetails;
     private ListView logs_listView;
+    private IMVP.PresenterOps mPresenter;
     private String serverLocal;
     private serverDetails_adapter customAdapter;
     private Client clientLocal;
     private ArrayList<LogEntry> logList;
-    private DatabaseManager db;
     LinearLayout ll;
     public ServerDetailsFragment() {
         // Required empty public constructor
@@ -65,8 +64,8 @@ public class ServerDetailsFragment extends Fragment {
     }
     public ArrayList<LogEntry> getServerDetails(Client client){
         ArrayList<LogEntry> le = new ArrayList<>();
-        if(db!=null){
-        for (LogEntry e:db.getClientLog(clientLocal)
+        if(mPresenter.getClientLog(clientLocal)!=null){
+        for (LogEntry e:mPresenter.getClientLog(clientLocal)
              ) {
             if(e.getHost().equals(serverLocal)){
                 le.add(e);
@@ -89,6 +88,8 @@ public class ServerDetailsFragment extends Fragment {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
+            mPresenter = mListener.getPresenter();
+
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -99,6 +100,11 @@ public class ServerDetailsFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void showToast(String msg) {
+
     }
 
     /**
@@ -114,5 +120,6 @@ public class ServerDetailsFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+        IMVP.PresenterOps getPresenter();
     }
 }
