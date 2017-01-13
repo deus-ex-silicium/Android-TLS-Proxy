@@ -26,6 +26,7 @@
             android:focusable="true"
             android:choiceMode="singleChoice"
             android:layout_centerHorizontal="true"
+            android:fastScrollEnabled="true"
             >
         </ListView>
     </android.support.v4.widget.SwipeRefreshLayout>
