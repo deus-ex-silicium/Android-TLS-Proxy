@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements
     protected final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;
     private boolean psIsBound; //?
+    private int selectedTab = 0;
     private ServiceConnection mConnection; //?
     // Responsible for maintaining objects state during changing configuration
     public final StateMaintainer mStateMaintainer =
@@ -107,7 +108,28 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
         doUnbindService();
     }
+    @Override
+    public void onBackPressed() {
 
+        int count = getFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
+            super.onBackPressed();
+            //additional code
+        } else {
+            ServerItemFragment myFragment = (ServerItemFragment) getFragmentManager().findFragmentByTag
+                    ("ServerItem");
+            ServerDetailsFragment myFragment2 = (ServerDetailsFragment) getFragmentManager()
+                    .findFragmentByTag
+                    ("ServerDetails");
+            if ((myFragment != null && myFragment.isVisible() || (myFragment2 != null &&
+                    myFragment2.isVisible())) && selectedTab == 1) {
+                getFragmentManager().popBackStack();
+            }
+
+        }
+
+    }
     void doBindService() {
         // Establish a connection with the service.  We use an explicit
         // class name because we want a specific service implementation that
@@ -163,11 +185,18 @@ public class MainActivity extends AppCompatActivity implements
     /********************************* Main Fragment **********************************************/
     @Override
     public boolean onApPressed(String SSID, String pass) {
-        if (!isApOn()) {
-            enableTabLayout();
-        } else {
-            disableTabLayout();
-        }
+//        if (!isApOn()) {
+//            Handler handler = new Handler();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if(isApOn())
+//                    enableTabLayout();
+//                }
+//            }, 5000);
+//        } else {
+//            disableTabLayout();
+//        }
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
     }
 
@@ -178,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /************************************** UI stuff***********************************************/
 
-    private void enableTabLayout() {
+    public void enableTabLayout() {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
         viewPager.setPagingEnabled(true);
@@ -193,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void disableTabLayout() {
+    public void disableTabLayout() {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
         viewPager.setPagingEnabled(false);
@@ -239,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements
             public void onTabSelected(TabLayout.Tab tab) {
                 if (isApOn()) {
                     viewPager.setCurrentItem(tab.getPosition());
+                    selectedTab = tab.getPosition();
                 } else {
                 }
             }

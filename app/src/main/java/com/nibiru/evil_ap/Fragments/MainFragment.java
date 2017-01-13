@@ -18,6 +18,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
 
 public class MainFragment extends Fragment implements View.OnClickListener {
@@ -92,16 +93,21 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 }
             }
         );
+
         return v;
     }
 
     public void setBtnUI(boolean ApOn) {
         try {
             Button btn = (Button) getView().findViewById(R.id.button);
-            if (ApOn)
+            if (ApOn) {
                 btn.setBackgroundResource(R.drawable.onoffon);
-            else
+                mListener.enableTabLayout();
+            }
+            else {
                 btn.setBackgroundResource(R.drawable.onoff);
+                mListener.disableTabLayout();
+            }
         } catch (NullPointerException e) {
             Log.e(TAG, "findViewById null pointer!");
         }
@@ -116,6 +122,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                     et2.setFocusable(false);
                     setBtnUI(true);
                 } else {
+                    mListener.onApPressed("","");
                     et.setFocusable(true);
                     et2.setFocusable(true);
                     setBtnUI(false);
@@ -147,8 +154,9 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public interface OnMainFragmentInteraction {
         //return true is Ap was turn on, false otherwise
         boolean onApPressed(String SSID, String pass);
-
         boolean isApOn();
+        void enableTabLayout();
+        void disableTabLayout();
     }
 
     @Override

@@ -74,6 +74,7 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
         else{
             le.add(new LogEntry(0,"null","nohost","null"));
         }
+        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
         return le;
     }
     // TODO: Rename method, update argument and hook method into UI event

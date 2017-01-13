@@ -84,7 +84,8 @@ public class DatabaseManager {
         String[] projection = {
                 LogDbContract.LogEntry._ID,
                 LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP,
-                LogDbContract.LogEntry.COLUMN_NAME_HOST
+                LogDbContract.LogEntry.COLUMN_NAME_HOST,
+                LogDbContract.LogEntry.COLUMN_NAME_HEADERS
         };
         // Filter results WHERE "MAC" = client's mac
         String selection = LogDbContract.LogEntry.COLUMN_NAME_MAC + " = ?";

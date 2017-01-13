@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.nibiru.evil_ap.R;
@@ -58,21 +60,6 @@ public class clients_adapter extends ArrayAdapter<Client> {
             final TextView ti = (TextView) v_clients.findViewById(R.id.text_content_clientip);
             if (ti != null) {
                 ti.setText(clientsList.get(position).getIp());
-                final View finalV_clients = v_clients;
-                ti.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        LinearLayout ll = (LinearLayout) ti.getParent();
-                        if (ll.getBackground().equals(finalV_clients.getResources().getColor(R
-                                .color.oplblue))) {
-                            ll.setBackgroundColor(finalV_clients.getResources().getColor(R.color
-                                    .opblue));
-                        } else {
-                            ll.setBackgroundColor(finalV_clients.getResources().getColor(R.color
-                                    .oplblue));
-                        }
-                    }
-                });
             }
             final Button log = (Button) v_clients.findViewById(R.id.button1);
             if (log != null) {
@@ -82,8 +69,8 @@ public class clients_adapter extends ArrayAdapter<Client> {
                         Activity a = clients_activity;
                         FragmentManager fm = a.getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
-                        ft.replace(R.id.activity_main, new ServerItemFragment(clientsList.get(position)),
-                                null);
+                        ft.replace(R.id.fragment_clients, new ServerItemFragment(clientsList.get(position)),
+                                "ServerItem");
                         ft.addToBackStack(null).commit();
                     }
                 });

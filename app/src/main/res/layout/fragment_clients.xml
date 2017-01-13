@@ -5,7 +5,6 @@
                 android:layout_height="match_parent"
                 android:focusable="false"
                 android:background="@color/opblack"
-                android:paddingTop="80dp"
                 android:id="@+id/fragment_clients"
     >
     <!--<ImageView
@@ -20,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:gravity="center"
-        android:paddingTop="0dp"
+        android:paddingTop="80dp"
         android:text="Select clients. Swipe down to refresh."
         android:paddingBottom="20dp"
         android:textColor="@color/white"
@@ -29,7 +28,8 @@
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent">
+        android:layout_width="match_parent"
+    android:layout_below="@id/userName">
     <ListView
         android:id="@+id/listk"
         android:layout_width="fill_parent"
@@ -38,7 +38,6 @@
         android:focusable="true"
         android:choiceMode="singleChoice"
         android:layout_centerHorizontal="true"
-        android:paddingTop="40dp"
         >
     </ListView>
     </android.support.v4.widget.SwipeRefreshLayout>
