@@ -25,7 +25,7 @@ public interface IMVP {
      */
     interface RequiredViewOps {
         void showToast(String msg);
-        void setBtnUI(boolean APon);
+        void dieUI();
     }
 
     /**
@@ -57,6 +57,7 @@ public interface IMVP {
         SharedClass getSharedObj();
         void resetSharedPrefs();
         void onClean();
+        void dieUI();
 
         // any other ops to be called from View
     }
