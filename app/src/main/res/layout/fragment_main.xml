@@ -36,7 +36,7 @@
         android:id="@+id/editText"
         android:layout_marginTop="40dp"
         android:textColor="@android:color/white"
-        android:layout_alignStart="@+id/button"
+        android:layout_centerHorizontal="true"
         android:gravity="bottom"/>
 
     <CheckBox
@@ -53,15 +53,14 @@
 
     <Button
         android:text=""
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:maxWidth="200dp"
+        android:maxHeight="200dp"
         android:id="@+id/button"
-        android:src="@drawable/onoff"
-        android:shadowColor="#ffffff"
+        android:shadowColor="#00ffff"
         android:shadowRadius="20"
-        android:background = "@drawable/onoff"
         android:layout_below="@+id/checkBox"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="45dp"/>
+        android:layout_marginTop="45dp" android:layout_height="200dp"
+        android:layout_width="200dp"/>
 
 </RelativeLayout>

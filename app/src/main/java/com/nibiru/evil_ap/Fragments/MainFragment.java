@@ -75,12 +75,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         try {
             Button btn = (Button) getView().findViewById(R.id.button);
             if (ApOn) {
-                btn.setBackgroundResource(R.drawable.onoffon);
+                btn.setBackgroundResource(R.drawable.greenontest);
                 mListener.enableTabLayout();
                 Log.e(TAG, "Set btn ui on");
             }
             else if(!ApOn){
-                btn.setBackgroundResource(R.drawable.onoff);
+                btn.setBackgroundResource(R.drawable.greenoff);
                 mListener.disableTabLayout();
                 Log.e(TAG, "Set btn ui off");
             }
