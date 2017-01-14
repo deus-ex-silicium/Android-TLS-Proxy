@@ -56,6 +56,7 @@ public interface IMVP {
         String getSharedPrefsString(String tag);
         SharedClass getSharedObj();
         void resetSharedPrefs();
+        void onClean();
 
         // any other ops to be called from View
     }
@@ -95,7 +96,9 @@ public interface IMVP {
         Client getClientByIp(String ip);
         List<LogEntry> getClientLog(Client c);
         void resetSharedPrefs();
+        void onClean();
 
         // Any other data operation
     }
+
 }

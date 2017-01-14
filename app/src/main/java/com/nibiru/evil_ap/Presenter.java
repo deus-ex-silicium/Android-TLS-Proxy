@@ -94,6 +94,11 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
         mModel.resetSharedPrefs();
     }
 
+    @Override
+    public void onClean() {
+        mModel.onClean();
+    }
+
     /**
      * Sent from Activity after a configuration changes
      *

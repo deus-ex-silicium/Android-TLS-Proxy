@@ -60,7 +60,7 @@ public class ProxyService extends Service{
     /*********************************************************************************************/
     @Override
     public void onCreate() {
-
+        //set up proxy receiver and set up filter
         mProxyReceiver = new ProxyReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
@@ -135,28 +135,16 @@ public class ProxyService extends Service{
     private class ProxyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //something about AP changed or notification was pressed
+            //notification was pressed
             if (mPresenter == null) return;
-            String action = intent.getAction();
-            if (action.equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
-                //mPresenter.setBtnUI(mListener.isApOn());
-                Log.e("hej", "weszlo tu");
-            }
-            /*if (action.equals("tap")) {
-                if (mListener.isApOn()) {
-                    mListener.onApPressed("", "");
-                    et.setFocusable(true);
-                    et2.setFocusable(true);
-                    Log.e(TAG, "tap not ui off");
-                } else {
-                    mListener.onApPressed(et.getText().toString(), et2.getText().toString());
-                    et.setFocusable(false);
-                    et2.setFocusable(false);
-                    Log.e(TAG, "tap not ui off");
+            if (intent.getAction().equals("tap")) {
+                mPresenter.onClean();
+                if (mPresenter.isApOn(context)){
+                    mPresenter.apBtnPressed("","", getApplicationContext());
                 }
-            }*/
+                stopSelf();
+            }
         }
-            //TODO: what about iptables rules and redirection?
     }
 
     private void testImgStream() {
