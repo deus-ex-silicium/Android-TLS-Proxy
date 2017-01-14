@@ -37,6 +37,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     private IMVP.PresenterOps mPresenter;
     SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<String> serverList;
+    private ArrayList<String> serverListCount;
     /**************************************CLASS METHODS*******************************************/
     public ServerItemFragment() {
         // Required empty public constructor
@@ -51,9 +52,11 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         rootView = inflater.inflate(R.layout.fragment_serveritem_list, container, false);
         server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
         final ListView server_listView = (ListView) rootView.findViewById(R.id.Serverlist);
+        serverListCount = new ArrayList<>();
         serverList = getClientServers();
         customAdapter = new server_adapter(getActivity().getApplicationContext(),
-                R.layout.fragment_serveritem, serverList, this.getActivity(), clientLocal);
+                R.layout.fragment_serveritem, serverList, serverListCount , this.getActivity(),
+                clientLocal);
         mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         mySwipeRefreshLayout.setOnRefreshListener(this);
         server_listView.setAdapter(customAdapter);
@@ -70,12 +73,14 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         for (LogEntry e:le
              ) {
             if(!distinctHosts.contains(e.getHost())) {
-                distinctHosts.add(e.getHost() + " - Count:"+ Collections.frequency(allHosts,e
+                distinctHosts.add(e.getHost());
+                serverListCount.add("Count:"+ Collections.frequency(allHosts,e
                         .getHost()));
             }
         }}
         else {
             distinctHosts.add("No entries");
+            serverListCount.add("Count: null");
         }
         return distinctHosts;
     }
@@ -93,7 +98,7 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         Log.d(TAG, "Refreshing!");
         serverList = getClientServers();
         customAdapter = new server_adapter(getActivity().getApplicationContext(),
-                R.layout.fragment_serveritem, serverList,this.getActivity(), clientLocal);
+                R.layout.fragment_serveritem, serverList, serverListCount,this.getActivity(), clientLocal);
         server_listView.setAdapter(customAdapter);
         mySwipeRefreshLayout.setRefreshing(false);
     }

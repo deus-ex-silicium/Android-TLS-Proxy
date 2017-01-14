@@ -65,8 +65,8 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
     }
     public ArrayList<LogEntry> getServerDetails(Client client){
         ArrayList<LogEntry> le = new ArrayList<>();
-        if(mPresenter.getClientLog(clientLocal).size()!=0){
-        for (LogEntry e:mPresenter.getClientLog(clientLocal)
+        if(mPresenter.getClientLog(client).size()!=0){
+        for (LogEntry e:mPresenter.getClientLog(client)
              ) {
             if(e.getHost().equals(serverLocal)){
                 le.add(e);
