@@ -29,7 +29,7 @@ import java.util.List;
 import static android.app.Activity.RESULT_OK;
 
 public class ACHTTPFragment extends Fragment implements View.OnClickListener, CompoundButton
-        .OnCheckedChangeListener, IMVP.RequiredViewOps {
+        .OnCheckedChangeListener {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private onAcFragmentInteraction mListener;
@@ -246,10 +246,6 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
             s.setChecked(false);
     }
 
-    @Override
-    public void showToast(String msg) {
-
-    }
 /******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this

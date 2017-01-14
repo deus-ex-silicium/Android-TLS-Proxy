@@ -23,7 +23,7 @@ import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
 
-public class ServerDetailsFragment extends Fragment implements IMVP.RequiredViewOps{
+public class ServerDetailsFragment extends Fragment{
 
     private OnFragmentInteractionListener mListener;
     private View rootView;
@@ -33,11 +33,11 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
     private serverDetails_adapter customAdapter;
     private Client clientLocal;
     private ArrayList<LogEntry> logList;
-    LinearLayout ll;
+
     public ServerDetailsFragment() {
         // Required empty public constructor
     }
-    public ServerDetailsFragment(String server, Client client){
+    public void initialize(String server, Client client){
         serverLocal = server;
         clientLocal = client;
     }
@@ -102,11 +102,6 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void showToast(String msg) {
-
     }
 
     /**

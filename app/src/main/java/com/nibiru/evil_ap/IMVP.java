@@ -25,7 +25,7 @@ public interface IMVP {
      */
     interface RequiredViewOps {
         void showToast(String msg);
-        // any other ops
+        void setBtnUI(boolean APon);
     }
 
     /**

@@ -4,16 +4,21 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
+import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.MainActivity;
+import com.nibiru.evil_ap.Presenter;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.SharedClass;
 
@@ -32,7 +37,8 @@ public class ProxyService extends Service{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     public volatile boolean work;
-    public SharedClass mSharedObj;
+    public IMVP.PresenterOps mPresenter;
+    private BroadcastReceiver mProxyReceiver;
     // Configuration settings
     public SharedPreferences config;
     /**************************************CLASS METHODS*******************************************/
@@ -43,8 +49,8 @@ public class ProxyService extends Service{
      */
     public class LocalBinder extends Binder implements IProxyService{
         @Override
-        public void setSharedObj(SharedClass sharedObj) {
-            mSharedObj = sharedObj;
+        public void setPresenter(IMVP.PresenterOps presenter) {
+            mPresenter = presenter;
         }
     }
     // This is the object that receives interactions from clients.  See
@@ -54,6 +60,13 @@ public class ProxyService extends Service{
     /*********************************************************************************************/
     @Override
     public void onCreate() {
+
+        mProxyReceiver = new ProxyReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
+        filter.addAction("tap");
+        getApplicationContext().registerReceiver(mProxyReceiver, filter);
+
         // Start up the thread running the service.  Note that we create a separate thread because
         // the service normally runs in the process's main thread, which we don't want to block.
         work = true;
@@ -71,16 +84,13 @@ public class ProxyService extends Service{
     public void onDestroy(){
         work = false;
         cancelNotification(getApplicationContext(), 1);
+        getApplicationContext().unregisterReceiver(mProxyReceiver);
     }
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        cancelNotification(getApplicationContext(),1);
-        stopSelf();
-    }
+
     void setupNotification() {
         Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
@@ -119,7 +129,34 @@ public class ProxyService extends Service{
     }
 
     public interface IProxyService {
-        void setSharedObj(SharedClass sharedObj);
+        void setPresenter(IMVP.PresenterOps presenter);
+    }
+
+    private class ProxyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //something about AP changed or notification was pressed
+            if (mPresenter == null) return;
+            String action = intent.getAction();
+            if (action.equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
+                //mPresenter.setBtnUI(mListener.isApOn());
+                Log.e("hej", "weszlo tu");
+            }
+            /*if (action.equals("tap")) {
+                if (mListener.isApOn()) {
+                    mListener.onApPressed("", "");
+                    et.setFocusable(true);
+                    et2.setFocusable(true);
+                    Log.e(TAG, "tap not ui off");
+                } else {
+                    mListener.onApPressed(et.getText().toString(), et2.getText().toString());
+                    et.setFocusable(false);
+                    et2.setFocusable(false);
+                    Log.e(TAG, "tap not ui off");
+                }
+            }*/
+        }
+            //TODO: what about iptables rules and redirection?
     }
 
     private void testImgStream() {
