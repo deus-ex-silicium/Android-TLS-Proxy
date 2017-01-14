@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements
         doBindService();
 
         //reset settings
-        mPresenter.resetSharedPrefs();
+        //mPresenter.resetSharedPrefs(); //TODO: WHAT UP WITH RESETTING ?
         mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
                 "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -117,11 +117,10 @@ public class MainActivity extends AppCompatActivity implements
             super.onBackPressed();
             //additional code
         } else {
-            ServerItemFragment myFragment = (ServerItemFragment) getFragmentManager().findFragmentByTag
-                    ("ServerItem");
+            ServerItemFragment myFragment = (ServerItemFragment) getFragmentManager()
+                    .findFragmentByTag("ServerItem");
             ServerDetailsFragment myFragment2 = (ServerDetailsFragment) getFragmentManager()
-                    .findFragmentByTag
-                    ("ServerDetails");
+                    .findFragmentByTag("ServerDetails");
             if ((myFragment != null && myFragment.isVisible() || (myFragment2 != null &&
                     myFragment2.isVisible())) && selectedTab == 1) {
                 getFragmentManager().popBackStack();

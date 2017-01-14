@@ -21,7 +21,9 @@ import com.nibiru.evil_ap.manager.Routing;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Nibiru on 2016-12-06.
@@ -39,6 +41,7 @@ public class Model implements IMVP.ModelOps{
     //Configuration and shared object
     private SharedPreferences mConfig;
     private SharedClass mSharedObj;
+    private Set<String> mBannedMACs;
     //App context
     private Context ctx;
     // Storage Permissions
@@ -54,6 +57,7 @@ public class Model implements IMVP.ModelOps{
         mApMan = new Ap();
         mRouteMan = new Routing();
         this.mConfig = ctx.getSharedPreferences("Config", 0);
+        this.mBannedMACs = new HashSet<>(5);
         this.ctx = ctx;
         mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,this);
     }
@@ -125,11 +129,20 @@ public class Model implements IMVP.ModelOps{
         return mConfig.getString(tag,"");
     }
     /**
-     * Runs the "ip -4 neigh" command
-     * @return Returns an ArrayList of String lines from the command
+     * Runs the "ip -4 neigh" command, formats output to construct list of Clients
+     * @return Returns an ArrayList of {@link Client}
      */
-    public ArrayList<String> getCurrentClients(){
-        return mRootMan.RunAsRootWithOutput("ip -4 neigh");
+    public ArrayList<Client> getCurrentClients(){
+        ArrayList<String> output = mRootMan.RunAsRootWithOutput("ip -4 neigh");
+        ArrayList<Client> clients = new ArrayList<>(output.size());
+        for (String line : output) {
+            String[] split = line.split(" +");
+            //IP idx = 0 , MAC idx = 4, flags idx = 5
+            if (split.length == 6 && (split[5].equals("REACHABLE") || split[5].equals("STALE"))) {
+                clients.add(new Client(split[0], split[4], isBanned(split[4])));
+            }
+        }
+        return clients;
     }
     /**
      * Accesses database to retrieve requests made by client
@@ -157,18 +170,20 @@ public class Model implements IMVP.ModelOps{
             String[] split = line.split(" +");
             //IP idx = 0 , MAC idx = 4, flags idx = 5
             if (split.length == 6 && (split[0].equals(ip) )) {
-                return new Client(split[0], split[4]);
+
+                return new Client(split[0], split[4], isBanned(split[4]));
             }
         }
         return null;
     }
 
     /**
-     * Resets the SharedSetting when application starts
+     * Resets the SharedSetting used by application
      */
     public void resetSharedPrefs() {
         mConfig.edit().clear().apply();
     }
+
     /**
      * Applies an iptables rule to redirect traffic to our application
      * @param traffic Possible values "HTTP", "HTTPS", "DNS", ports defined in {@link Routing}
@@ -244,6 +259,30 @@ public class Model implements IMVP.ModelOps{
         else{
             return false;
         }
+    }
+    /**
+     * Adds or removes iptables rule to drop client traffic
+     * @param c The client whos ban status is changing
+     * @param ban True if client is to be banned, false if unbanned
+     */
+    public void onBan(Client c, boolean ban){
+        if (ban){
+            mBannedMACs.add(c.getMac());
+            mRouteMan.filterMAC(mRootMan, c.getMac(), true);
+        }
+        else{
+            mBannedMACs.remove(c.getMac());
+            mRouteMan.filterMAC(mRootMan, c.getMac(), false);
+        }
+    }
+
+    /**
+     * Checks if MAC address is banned or not
+     * @param mac The String argument representing MAC address
+     * @return Boolean true if MAC is banned or false if not
+     */
+    private boolean isBanned(String mac) {
+       return mBannedMACs.contains(mac);
     }
     /**
      * Checks the current state of hotspot

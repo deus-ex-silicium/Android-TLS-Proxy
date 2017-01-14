@@ -13,11 +13,15 @@ public class Client {
     private final static String TAG = "Client";
     private final String ip;
     private final String mac;
+    private boolean banned;
+
     /**************************************CLASS METHODS*******************************************/
-    public Client (String ip, String mac){
+    public Client (String ip, String mac, boolean banned){
         this.ip = ip;
         this.mac = mac;
+        this.banned = banned;
     }
     public String getIp(){return ip;}
     public String getMac() {return mac;}
+    public boolean getBanned(){return banned;}
 }

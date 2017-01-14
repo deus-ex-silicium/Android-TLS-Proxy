@@ -83,17 +83,14 @@ public class ThreadSockets implements Runnable {
             //send request
             outToServer.print(sRequest);
 
-            //read headers
-            String headers = readHeaders(inFromServer);
             //read body
-            byte[] body = readStream(inFromServer);
+            byte[] resBytes = readStream(inFromServer);
             //byte[] resBytes = readStream(inFromServer);
-            String response = new String(body, "UTF-8");
+            String response = new String(resBytes, "UTF-8");
             //String headers = response.substring(0, response.indexOf("\r\n\r\n")+4);
             //String body = response.substring(response.indexOf("\r\n\r\n")+4);
             //DEBUG HERE!
-            //sendChunk(headers.getBytes(), outToClient);
-            sendChunk(body, outToClient);
+            sendChunk(response.getBytes(), outToClient);
             //sendChunkToOutStream(body, outToClient);
             //send end chunk
             //sendChunkToOutStream("".getBytes(), outToClient);
@@ -298,6 +295,52 @@ public class ThreadSockets implements Runnable {
         }
         result.append("\r\n");
         return result.toString();
+    }
+
+    private String readHeaders3(InputStream is) throws IOException{
+        //buffer for body bytes
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+
+        // Create a buffer large enough for the response header (and drop exception if it is bigger).
+        byte[] headEnd = {13, 10, 13, 10}; // \r \n \r \n
+        byte[] buffer = new byte[16384];
+        int length = 0;
+        // Read bytes to the buffer until you find `\r\n\r\n` in the buffer.
+        int nRead;
+        int pos;
+        while ((pos = arrayIndexOf(buffer, 0, length, headEnd)) == -1 && (nRead = is.read(buffer,
+                length, buffer.length - length)) > -1) {
+            length += nRead;
+            // buffer is full but have not found end signature
+            if (length == buffer.length)
+                throw new RuntimeException("Response header too long");
+        }
+        // pos contains the starting index of the end signature (\r\n\r\n) so we add 4 bytes
+        pos += 4;
+        // When you encounter the end of header, create a string from the first *n* bytes
+        String headers = new String(buffer, 0, pos);
+
+        // Read body bytes
+        while ((nRead = is.read(buffer, 0, buffer.length)) != -1) {
+            String test = new String(buffer, "UTF-8");
+            body.write(buffer, 0, nRead);
+        }
+
+        return null;
+    }
+
+    private int arrayIndexOf(byte[] haystack, int offset, int length, byte[] needle) {
+        for (int i=offset; i<offset+length-needle.length; i++) {
+            boolean match = false;
+            for (int j=0; j < needle.length; j++) {
+                match = haystack[i + j] == needle[j];
+                if (!match)
+                    break;
+            }
+            if (match)
+                return i;
+        }
+        return -1;
     }
 
     private byte[] readChunk(InputStream is) throws IOException {

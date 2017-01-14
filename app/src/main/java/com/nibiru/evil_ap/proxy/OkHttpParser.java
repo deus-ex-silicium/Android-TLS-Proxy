@@ -112,7 +112,7 @@ class OkHttpParser {
                 break;
         }
         //TODO: testing logging
-        //shrObj.addRequest(c, host, requestLine, headers.toString());
+        shrObj.addRequest(c, host, requestLine, headers.toString());
         return builder.build();
     }
 }
