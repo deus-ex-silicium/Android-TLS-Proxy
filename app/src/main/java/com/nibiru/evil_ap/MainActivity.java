@@ -270,8 +270,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void setBtnUI(boolean APon) {
-        MainFragment fragment = (MainFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_main);
+        MainFragment fragment = (Fragment) getFragmentManager().findFragmentById(0);
     }
 
     public IMVP.PresenterOps getPresenter() {
