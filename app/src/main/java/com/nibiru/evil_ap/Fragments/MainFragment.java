@@ -1,7 +1,9 @@
 package com.nibiru.evil_ap.fragments;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +18,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
+import com.nibiru.evil_ap.proxy.ProxyService;
 
 public class MainFragment extends Fragment implements View.OnClickListener {
     /************************************* CLASS FIELDS *******************************************/
@@ -24,6 +28,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     private OnMainFragmentInteraction mListener;
     private EditText et;
     private EditText et2;
+    private BroadcastReceiver mApReceiver;
 
     /************************************** CLASS METHODS *****************************************/
     public MainFragment() {
@@ -109,6 +114,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    private class ApReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //something about AP changed or notification was pressed
+            if (mListener == null) return;
+            String action = intent.getAction();
+            if (action.equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
+                setBtnUI(mListener.isApOn());
+            }
+        }
+    }
+
 /******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
@@ -131,6 +148,11 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         // the callback interface. If not, it throws an exception
         if (context instanceof OnMainFragmentInteraction) {
             mListener = (OnMainFragmentInteraction) context;
+            // set up broadcast receiver and register filter
+            mApReceiver = new ApReceiver();
+            IntentFilter filter = new IntentFilter();
+            filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
+            getActivity().getApplicationContext().registerReceiver(mApReceiver, filter);
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteraction interface");
@@ -140,6 +162,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onDetach() {
         super.onDetach();
+        getActivity().getApplicationContext().unregisterReceiver(mApReceiver);
         mListener = null;
     }
 

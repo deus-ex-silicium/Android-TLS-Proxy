@@ -184,6 +184,17 @@ public class Model implements IMVP.ModelOps{
         mConfig.edit().clear().apply();
     }
 
+    @Override
+    public void onClean() {
+        onTrafficRedirect("HTTP", false);
+        onTrafficRedirect("HTTPS", false);
+        onTrafficRedirect("DNS", false);
+        for (String mac: mBannedMACs) {
+            mRouteMan.filterMAC(mRootMan, mac, false);
+        }
+        mBannedMACs.clear();
+    }
+
     /**
      * Applies an iptables rule to redirect traffic to our application
      * @param traffic Possible values "HTTP", "HTTPS", "DNS", ports defined in {@link Routing}
