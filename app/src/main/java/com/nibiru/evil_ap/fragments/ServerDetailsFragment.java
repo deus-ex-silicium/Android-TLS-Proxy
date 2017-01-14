@@ -65,7 +65,7 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
     }
     public ArrayList<LogEntry> getServerDetails(Client client){
         ArrayList<LogEntry> le = new ArrayList<>();
-        if(mPresenter.getClientLog(clientLocal)!=null){
+        if(mPresenter.getClientLog(clientLocal).size()!=0){
         for (LogEntry e:mPresenter.getClientLog(clientLocal)
              ) {
             if(e.getHost().equals(serverLocal)){
@@ -73,18 +73,8 @@ public class ServerDetailsFragment extends Fragment implements IMVP.RequiredView
             }
         }}
         else{
-            le.add(new LogEntry(0,"null","nohost","null"));
+            le.add(new LogEntry(0,"No entries","No entries","No entries"));
         }
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
-        le.add(new LogEntry(0,"null","nohost","null null null null null null null null null null null null null null null null null null "));
 
         return le;
     }
