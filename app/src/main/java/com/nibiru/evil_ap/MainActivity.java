@@ -1,25 +1,15 @@
 package com.nibiru.evil_ap;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.util.Pair;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -63,15 +53,14 @@ public class MainActivity extends AppCompatActivity implements
             new StateMaintainer(this.getFragmentManager(), TAG);
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
 
-    /**************************************
-     * CLASS METHODS
-     *******************************************/
+    /************************************ CLASS METHODS *******************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,11 +70,12 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         setUpGUI();
         mPresenter.checkIfDeviceRooted();
+
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
                 mProxyService = ((ProxyService.IProxyService) service);
-                mProxyService.setSharedObj(mPresenter.getSharedObj());
+                mProxyService.setPresenter(mPresenter);
             }
 
             public void onServiceDisconnected(ComponentName className) {
@@ -98,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements
         //mPresenter.resetSharedPrefs(); //TODO: WHAT UP WITH RESETTING ?
         mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
                 "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -110,9 +101,7 @@ public class MainActivity extends AppCompatActivity implements
     }
     @Override
     public void onBackPressed() {
-
         int count = getFragmentManager().getBackStackEntryCount();
-
         if (count == 0) {
             super.onBackPressed();
             //additional code
@@ -129,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
     }
+
     void doBindService() {
         // Establish a connection with the service.  We use an explicit
         // class name because we want a specific service implementation that
@@ -184,18 +174,6 @@ public class MainActivity extends AppCompatActivity implements
     /********************************* Main Fragment **********************************************/
     @Override
     public boolean onApPressed(String SSID, String pass) {
-//        if (!isApOn()) {
-//            Handler handler = new Handler();
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    if(isApOn())
-//                    enableTabLayout();
-//                }
-//            }, 5000);
-//        } else {
-//            disableTabLayout();
-//        }
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
     }
 
@@ -291,10 +269,15 @@ public class MainActivity extends AppCompatActivity implements
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void setBtnUI(boolean APon) {
+        MainFragment fragment = (MainFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_main);
+    }
+
     public IMVP.PresenterOps getPresenter() {
         return mPresenter;
     }
-
     /**
      * Initialize and restart the Presenter.
      * This method should be called after {@link MainActivity#onCreate(Bundle)}
@@ -313,7 +296,6 @@ public class MainActivity extends AppCompatActivity implements
             throw new RuntimeException(e);
         }
     }
-
     /**
      * Initialize relevant MVP Objects.
      * Creates a Presenter instance, saves the presenter in {@link StateMaintainer}
@@ -323,7 +305,6 @@ public class MainActivity extends AppCompatActivity implements
         mPresenter = new Presenter(view, this.getApplicationContext());
         mStateMaintainer.put(IMVP.PresenterOps.class.getSimpleName(), mPresenter);
     }
-
     /**
      * Recovers Presenter and informs Presenter that a config change occurred.
      * If Presenter has been lost, recreates an instance
@@ -339,11 +320,8 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public ArrayList<String> getClientServers() {
-        return null;
-    }
 
+    /*************************************** CO TO JEST? ******************************************/
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -363,7 +341,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStart() {
         super.onStart();
-
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client.connect();
@@ -373,7 +350,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStop() {
         super.onStop();
-
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(client, getIndexApiAction());

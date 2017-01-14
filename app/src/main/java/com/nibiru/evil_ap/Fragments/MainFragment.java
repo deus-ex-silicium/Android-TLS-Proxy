@@ -1,9 +1,7 @@
 package com.nibiru.evil_ap.fragments;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,14 +16,12 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
-import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
 
 public class MainFragment extends Fragment implements View.OnClickListener {
     /************************************* CLASS FIELDS *******************************************/
     protected final String TAG = getClass().getSimpleName();
     private OnMainFragmentInteraction mListener;
-    private BroadcastReceiver mApChangeReceiver;
     private EditText et;
     private EditText et2;
 
@@ -48,28 +44,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             startActivity(intent);
         }
     }
-
-    @Override //unregister broadcast receiver
-    public void onStop() {
-        super.onStop();
-        getContext().unregisterReceiver(mApChangeReceiver);
-    }
-
-    @Override //register broadcast receiver for WIFI_AP_STATE_CHANGED and notification tap
-    public void onStart() {
-        super.onStart();
-        mApChangeReceiver = new ApBroadcastReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
-        filter.addAction("tap");
-        getContext().registerReceiver(mApChangeReceiver, filter);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -135,32 +109,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private class ApBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //something about AP changed so update the UI button
-            if (mListener == null) return;
-            if(intent.getAction().equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
-                setBtnUI(mListener.isApOn());
-                Log.e("hej","weszlo tu");
-            }
-            if (intent.getAction().equals("tap")) {
-                if(mListener.isApOn()) {
-                    mListener.onApPressed("", "");
-                    et.setFocusable(true);
-                    et2.setFocusable(true);
-                    Log.e(TAG, "tap not ui off");
-                }
-                else{
-                    mListener.onApPressed(et.getText().toString(),et2.getText().toString());
-                    et.setFocusable(false);
-                    et2.setFocusable(false);
-                    Log.e(TAG, "tap not ui off");
-                }
-            }
-            //TODO: what about iptables rules and redirection?
-        }
-    }
 /******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this

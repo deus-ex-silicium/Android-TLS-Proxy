@@ -24,8 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
-        IMVP.RequiredViewOps {
+public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
@@ -42,7 +41,8 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     public ServerItemFragment() {
         // Required empty public constructor
     }
-    public ServerItemFragment(Client client) {
+
+    public void initialize(Client client){
         clientLocal = client;
     }
 
@@ -103,10 +103,6 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         mySwipeRefreshLayout.setRefreshing(false);
     }
 
-    @Override
-    public void showToast(String msg) {
-
-    }
 /******************************** Fragment Stuff **************************************************/
     /**
      * This interface must be implemented by activities that contain this
@@ -119,7 +115,6 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface onClientsFragmentInteraction {
-        ArrayList<String> getClientServers();
         IMVP.PresenterOps getPresenter();
     }
     @Override

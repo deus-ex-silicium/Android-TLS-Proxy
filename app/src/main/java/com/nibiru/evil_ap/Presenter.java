@@ -17,9 +17,7 @@ import java.util.List;
  */
 
 public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
+    /************************************ CLASS FIELDS ********************************************/
     protected final String TAG = getClass().getSimpleName();
     // Layer View reference
     private WeakReference<IMVP.RequiredViewOps> mView;
@@ -28,9 +26,7 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     // Configuration change state
     private boolean mIsChangingConfig;
     private Context ctx;
-    /**************************************
-     * CLASS METHODS
-     *******************************************/
+    /************************************* CLASS METHODS ******************************************/
     public Presenter(IMVP.RequiredViewOps mView, Context ctx) {
         this.mView = new WeakReference<>(mView);
         this.mModel = new Model(this, ctx);
