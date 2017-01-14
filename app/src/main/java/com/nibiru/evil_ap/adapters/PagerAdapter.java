@@ -17,11 +17,21 @@ import com.nibiru.evil_ap.fragments.MainFragment;
 public class PagerAdapter extends FragmentStatePagerAdapter {
     int mNumOfTabs;
 
+    /**
+     *
+     * @param fm FragmentManager which helps manage child fragments
+     * @param NumOfTabs Number of tabs in layout
+     */
     public PagerAdapter(FragmentManager fm, int NumOfTabs) {
         super(fm);
         this.mNumOfTabs = NumOfTabs;
     }
 
+    /**
+     *
+     * @param position Position of fragment on which adapter currently operates
+     * @return That fragment
+     */
     @Override
     public Fragment getItem(int position) {
 

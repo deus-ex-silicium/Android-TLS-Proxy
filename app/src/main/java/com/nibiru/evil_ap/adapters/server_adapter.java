@@ -35,6 +35,15 @@ public class server_adapter extends ArrayAdapter<String> {
     /**************************************
      * CLASS METHODS
      *******************************************/
+    /**
+     *
+     * @param context Context passed from Fragment
+     * @param resource View in which this adapter operates
+     * @param items List of String objects (Host names)
+     * @param count List of String objects (Host counts)
+     * @param passed_server_activity Activity passed from fragment
+     * @param c current Client object passed from fragment
+     */
     public server_adapter(Context context, int resource, ArrayList<String> items,
                           ArrayList<String> count,
                           Activity passed_server_activity, Client c) {
@@ -45,6 +54,13 @@ public class server_adapter extends ArrayAdapter<String> {
         client = c;
     }
 
+    /**
+     *
+     * @param position Position of an element of which adapter currently operates
+     * @param convertView View on which adapter currently operates
+     * @param parent Parent view
+     * @return Updated view
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v_server = convertView;
@@ -81,18 +97,4 @@ public class server_adapter extends ArrayAdapter<String> {
         }
         return v_server;
     }
-
-    /** in case we want async client sync, \/ template */
-//    public void updateDisciplines(ArrayList<Discipline> temp) {
-//        Log.e("updateDisciplines","started update: size = "+disciplinesList.size());
-//        disciplinesList.clear();
-//        Log.e("updateDisciplines", "list cleared: size = "+disciplinesList.size());
-//
-//        disciplinesList.addAll(temp);
-//        Log.e("updateDisciplines", "list populated: size = "+disciplinesList.size());
-//
-//        this.notifyDataSetChanged();
-//
-//    }
-
 }

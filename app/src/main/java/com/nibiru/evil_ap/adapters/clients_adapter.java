@@ -37,6 +37,13 @@ public class clients_adapter extends ArrayAdapter<Client> {
     /**************************************
      * CLASS METHODS
      *******************************************/
+    /**
+     *
+     * @param context Context passed from Fragment
+     * @param resource View in which this adapter operates
+     * @param items List of Client objects
+     * @param passed_clients_activity Activity passed from fragment
+     */
     public clients_adapter(Context context, int resource, ArrayList<Client> items,
                            Activity passed_clients_activity) {
         super(context, resource, items);
@@ -45,6 +52,13 @@ public class clients_adapter extends ArrayAdapter<Client> {
         cliList = new ArrayList<>(clientsList);
     }
 
+    /**
+     *
+     * @param position Position of an element of which adapter currently operates
+     * @param convertView View on which adapter currently operates
+     * @param parent Parent view
+     * @return Updated view
+     */
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         View v_clients = convertView;
@@ -93,18 +107,4 @@ public class clients_adapter extends ArrayAdapter<Client> {
         }
         return v_clients;
     }
-
-    /** in case we want async client sync, \/ template */
-//    public void updateDisciplines(ArrayList<Discipline> temp) {
-//        Log.e("updateDisciplines","started update: size = "+disciplinesList.size());
-//        disciplinesList.clear();
-//        Log.e("updateDisciplines", "list cleared: size = "+disciplinesList.size());
-//
-//        disciplinesList.addAll(temp);
-//        Log.e("updateDisciplines", "list populated: size = "+disciplinesList.size());
-//
-//        this.notifyDataSetChanged();
-//
-//    }
-
 }

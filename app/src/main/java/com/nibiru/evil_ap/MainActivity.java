@@ -223,7 +223,6 @@ public class MainActivity extends AppCompatActivity implements
             });
         }
     }
-
     private void setUpGUI() {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
