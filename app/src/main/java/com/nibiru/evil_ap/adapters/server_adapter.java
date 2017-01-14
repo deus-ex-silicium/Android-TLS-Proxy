@@ -28,7 +28,7 @@ public class server_adapter extends ArrayAdapter<String> {
      ********************************************/
     private Activity server_activity;
     private ArrayList<String> serverList;
-    private ArrayList<String> cliList = null;
+    private ArrayList<String> serverListCount;
     private Client client;
     ServerItemFragment Fragment_Server;
 
@@ -36,11 +36,12 @@ public class server_adapter extends ArrayAdapter<String> {
      * CLASS METHODS
      *******************************************/
     public server_adapter(Context context, int resource, ArrayList<String> items,
+                          ArrayList<String> count,
                           Activity passed_server_activity, Client c) {
         super(context, resource, items);
         server_activity = passed_server_activity;
         serverList = items;
-        cliList = new ArrayList<>(serverList);
+        serverListCount = count;
         client = c;
     }
 
@@ -57,9 +58,12 @@ public class server_adapter extends ArrayAdapter<String> {
 
         if (d != null) {
             final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientsserver);
+            final TextView ticount = (TextView) v_server.findViewById(R.id
+                    .text_content_clientsserverCount);
             final Button b = (Button) v_server.findViewById(R.id.button_details);
             if (ti != null) {
                 ti.setText(serverList.get(position));
+                ticount.setText(serverListCount.get(position));
                 final View finalV_clients = v_server;
                 b.setOnClickListener(new View.OnClickListener() {
                     @Override

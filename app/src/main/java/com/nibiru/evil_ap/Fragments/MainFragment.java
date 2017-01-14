@@ -103,10 +103,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             if (ApOn) {
                 btn.setBackgroundResource(R.drawable.onoffon);
                 mListener.enableTabLayout();
+                Log.e(TAG, "Set btn ui on");
             }
-            else {
+            else if(!ApOn){
                 btn.setBackgroundResource(R.drawable.onoff);
                 mListener.disableTabLayout();
+                Log.e(TAG, "Set btn ui off");
             }
         } catch (NullPointerException e) {
             Log.e(TAG, "findViewById null pointer!");
@@ -118,10 +120,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.button:
                 if (mListener.onApPressed(et.getText().toString(), et2.getText().toString())) {
+                    Log.e(TAG, "onclick btn ui on");
                     et.setFocusable(false);
                     et2.setFocusable(false);
                     setBtnUI(true);
-                } else {
+                } else if(mListener.isApOn()){
+                    Log.e(TAG, "onclick btn ui off");
                     mListener.onApPressed("","");
                     et.setFocusable(true);
                     et2.setFocusable(true);
@@ -136,13 +140,22 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         public void onReceive(Context context, Intent intent) {
             //something about AP changed so update the UI button
             if (mListener == null) return;
-            setBtnUI(mListener.isApOn());
+            if(intent.getAction().equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
+                setBtnUI(mListener.isApOn());
+                Log.e("hej","weszlo tu");
+            }
             if (intent.getAction().equals("tap")) {
                 if(mListener.isApOn()) {
                     mListener.onApPressed("", "");
+                    et.setFocusable(true);
+                    et2.setFocusable(true);
+                    Log.e(TAG, "tap not ui off");
                 }
                 else{
                     mListener.onApPressed(et.getText().toString(),et2.getText().toString());
+                    et.setFocusable(false);
+                    et2.setFocusable(false);
+                    Log.e(TAG, "tap not ui off");
                 }
             }
             //TODO: what about iptables rules and redirection?

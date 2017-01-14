@@ -45,6 +45,8 @@
             android:ellipsize="end"
             android:layout_marginStart="20dp"
             android:singleLine="true"
+            android:shadowColor="#ff0000"
+            android:shadowRadius="20"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@color/oplblue"
             android:layout_weight=".80"
