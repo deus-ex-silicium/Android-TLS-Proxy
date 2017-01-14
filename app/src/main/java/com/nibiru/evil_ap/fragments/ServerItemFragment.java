@@ -62,22 +62,32 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
     }
 
     public ArrayList<String> getClientServers(){
-        ArrayList<String> x = new ArrayList<>();
-        if(mPresenter.getClientLog(clientLocal)!= null){
+        ArrayList<String> distinctHosts = new ArrayList<>();
+        ArrayList<String> allHosts = new ArrayList<>();
+        if(mPresenter.getClientLog(clientLocal).size()!= 0){
+            allHosts = createHosts(mPresenter.getClientLog(clientLocal));
         List<LogEntry> le = mPresenter.getClientLog(clientLocal);
         for (LogEntry e:le
              ) {
-            if(!x.contains(e.getHost())) {
-                x.add(e.getHost() + " Count:"+ Collections.frequency(le,e.getHost()));
+            if(!distinctHosts.contains(e.getHost())) {
+                distinctHosts.add(e.getHost() + " - Count:"+ Collections.frequency(allHosts,e
+                        .getHost()));
             }
         }}
         else {
-            x.add("joemonster.org Count:");
+            distinctHosts.add("No entries");
         }
-        x.add("joemonster.org");
-        return x;
+        return distinctHosts;
     }
 
+    private ArrayList<String> createHosts (List<LogEntry> al){
+        ArrayList<String> temp = new ArrayList<>();
+        for (LogEntry le:al
+             ) {
+            temp.add(le.getHost());
+        }
+        return temp;
+    }
 
     public void onRefresh() {
         Log.d(TAG, "Refreshing!");
