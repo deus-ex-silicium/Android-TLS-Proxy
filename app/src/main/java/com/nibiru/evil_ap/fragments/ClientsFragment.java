@@ -53,7 +53,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
     public void onRefresh() {
         Log.d(TAG, "Refreshing!");
         clientsList = getCurrentClients();
-        clientsList.add(new Client("192.168.0.104","sdasd"));
+        clientsList.add(new Client("127.0.0.1","sdasd"));
         customAdapter = new clients_adapter(getActivity().getApplicationContext(),
                 R.layout.list_item_clients, clientsList,this.getActivity());
         clients_listView.setAdapter(customAdapter);

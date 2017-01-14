@@ -17,6 +17,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -177,8 +179,10 @@ public class ThreadProxy implements Runnable{
         }
         //send headers
         resToClient += res.headers().toString() + "\n";
-        //workaround for okhttp transparent gzip
-        resToClient = resToClient.replace("Transfer-Encoding: chunked", "Content-Length: " + len);
+        //put entire content length, replace if chunked encoding, or just update content
+        resToClient = resToClient.replaceFirst("(?i)Transfer-Encoding: chunked",
+                "Content-Length: " + len);
+        resToClient = resToClient.replaceFirst("(?i)Content-Length: .*", "Content-Length: " + len);
         //workaround for 304's not working
         if (resToClient.startsWith("HTTP/1.1 304")) {
             resToClient = resToClient.replaceAll("ETag:.*", "ETag: " + eTag);
@@ -243,6 +247,7 @@ public class ThreadProxy implements Runnable{
         }
         return "\"" + result + "\"";
     }
+
     private static String getStringFromInputStream(InputStream is) {
 
         BufferedReader br = null;

@@ -75,16 +75,7 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     }
 
     public ArrayList<Client> getCurrentClients() {
-        ArrayList<String> output = mModel.getCurrentClients();
-        ArrayList<Client> clients = new ArrayList<>(output.size());
-        for (String line : output) {
-            String[] split = line.split(" +");
-            //IP idx = 0 , MAC idx = 4, flags idx = 5
-            if (split.length == 6 && (split[5].equals("REACHABLE") || split[5].equals("STALE"))) {
-                clients.add(new Client(split[0], split[4]));
-            }
-        }
-        return clients;
+        return mModel.getCurrentClients();
     }
 
     public List<LogEntry> getClientLog(Client c) {

@@ -87,7 +87,7 @@ public interface IMVP {
         void setSharedPrefsBool(String tag, boolean val);
         void setSharedPrefsString(String tag, String val);
 
-        ArrayList<String> getCurrentClients();
+        ArrayList<Client> getCurrentClients();
         int getSharedPrefsInt(String tag);
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
