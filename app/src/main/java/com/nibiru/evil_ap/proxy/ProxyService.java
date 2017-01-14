@@ -80,12 +80,7 @@ public class ProxyService extends Service{
         proxyHTTPS.start();
         setupNotification();
     }
-    @Override
-    public void onDestroy(){
-        work = false;
-        cancelNotification(getApplicationContext(), 1);
-        getApplicationContext().unregisterReceiver(mProxyReceiver);
-    }
+
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -132,17 +127,30 @@ public class ProxyService extends Service{
         void setPresenter(IMVP.PresenterOps presenter);
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent){
+        cleanUp();
+    }
+
+    public void cleanUp(){
+        mPresenter.onClean();
+        if (mPresenter.isApOn(getApplicationContext())){
+            mPresenter.apBtnPressed("","", getApplicationContext());
+        }
+        work = false;
+        cancelNotification(getApplicationContext(), 1);
+        getApplicationContext().unregisterReceiver(mProxyReceiver);
+        mPresenter.dieUI();
+        stopSelf();
+    }
+
     private class ProxyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             //notification was pressed
             if (mPresenter == null) return;
             if (intent.getAction().equals("tap")) {
-                mPresenter.onClean();
-                if (mPresenter.isApOn(context)){
-                    mPresenter.apBtnPressed("","", getApplicationContext());
-                }
-                stopSelf();
+                cleanUp();
             }
         }
     }

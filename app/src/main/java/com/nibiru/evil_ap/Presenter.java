@@ -99,6 +99,11 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
         mModel.onClean();
     }
 
+    @Override
+    public void dieUI() {
+        mView.get().dieUI();
+    }
+
     /**
      * Sent from Activity after a configuration changes
      *
