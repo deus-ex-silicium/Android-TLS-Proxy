@@ -247,18 +247,17 @@ public class Model implements IMVP.ModelOps{
      * @param ctx Application context needed to turn hotspot on or off
      * @return Returns if AP was turned on(true) or turned off (false)
      */
-    public boolean onApToggle(String SSID, String pass, Context ctx){
+    public boolean onApToggle(String SSIDarg, String passarg, Context ctx){
         if (!mApMan.isApOn(ctx)){
-            if( SSID.equals("") || pass.equals("") ) {
-                //error handling
-                if ( !mApMan.turnOnAp("AP_nomap", "pa$$word", ctx) ){
-                    mPresenter.onError("Hotspot error!\n" +
-                            "perhaps app doesn't have necessary permissions?");
-                }
+            //check for default settings
+            String SSID = SSIDarg, pass = passarg;
+            if( SSIDarg.trim().isEmpty() ) {
+                SSID = "AP_nomap";
             }
-            else {
-                mApMan.turnOnAp(SSID, pass, ctx);
+            if( passarg != null  && (passarg.trim().isEmpty() || passarg.length() <= 7)) {
+                pass = "pa$$word";
             }
+            mApMan.turnOnAp(SSID, pass, ctx);
             ctx.startService(new Intent(ctx, ProxyService.class));
             return true;
         }

@@ -26,17 +26,13 @@ import java.util.ArrayList;
  */
 
 public class clients_adapter extends ArrayAdapter<Client> {
-    /**************************************
-     * CLASS FIELDS
-     ********************************************/
+    /************************************ CLASS FIELDS ********************************************/
     private Activity clients_activity;
     private ArrayList<Client> clientsList;
     private ArrayList<Client> cliList = null;
     ClientsFragment Fragment_Clients;
 
-    /**************************************
-     * CLASS METHODS
-     *******************************************/
+    /************************************ CLASS METHODS *******************************************/
     /**
      *
      * @param context Context passed from Fragment
@@ -95,7 +91,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                 ban.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(ban.getText().equals(R.string.ban)) {
+                        if(ban.getText().equals((R.string.ban))) {
                             ban.setText(R.string.unban);
                         }
                         else{

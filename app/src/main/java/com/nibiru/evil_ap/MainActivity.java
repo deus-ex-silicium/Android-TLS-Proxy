@@ -67,9 +67,14 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         startMVPOps();
+
+        //reset settings
+        //mPresenter.resetSharedPrefs(); //TODO: WHAT UP WITH RESETTING ?
+        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
+                "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         setContentView(R.layout.activity_main);
-        setUpGUI();
         mPresenter.checkIfDeviceRooted();
+
 
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
@@ -84,10 +89,7 @@ public class MainActivity extends AppCompatActivity implements
         };
         doBindService();
 
-        //reset settings
-        //mPresenter.resetSharedPrefs(); //TODO: WHAT UP WITH RESETTING ?
-        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
-                "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
+        setUpGUI();
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.

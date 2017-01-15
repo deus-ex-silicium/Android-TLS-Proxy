@@ -38,7 +38,7 @@ class OkHttpParser {
             requestLine = reader.readLine(); // Request-Line ; Section 5.1
             //read header
             String header = reader.readLine();
-            while (header != null && header.length() > 0) {
+            while (header != null && !header.trim().isEmpty() && header.length() > 0) {
                 //skip over HTTPS upgrade header and HSTS header
                 if (!header.startsWith("Upgrade-Insecure-Requests")
                         && !header.startsWith("Strict-Transport-Security")
@@ -113,6 +113,12 @@ class OkHttpParser {
         }
         //TODO: testing logging
         shrObj.addRequest(c, host, requestLine, headers.toString());
+        return builder.build();
+    }
+
+    public Request getReqForUrl(String url){
+        Request.Builder builder = new Request.Builder();
+        builder.url(url);
         return builder.build();
     }
 }

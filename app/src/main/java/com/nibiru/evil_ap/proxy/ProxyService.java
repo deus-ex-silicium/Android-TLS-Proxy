@@ -82,6 +82,11 @@ public class ProxyService extends Service{
     }
 
     @Override
+    public void onTaskRemoved(Intent rootIntent){
+        cleanUp();
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
@@ -125,14 +130,10 @@ public class ProxyService extends Service{
 
     public interface IProxyService {
         void setPresenter(IMVP.PresenterOps presenter);
+
     }
 
-    @Override
-    public void onTaskRemoved(Intent rootIntent){
-        cleanUp();
-    }
-
-    public void cleanUp(){
+    private void cleanUp(){
         mPresenter.onClean();
         if (mPresenter.isApOn(getApplicationContext())){
             mPresenter.apBtnPressed("","", getApplicationContext());
