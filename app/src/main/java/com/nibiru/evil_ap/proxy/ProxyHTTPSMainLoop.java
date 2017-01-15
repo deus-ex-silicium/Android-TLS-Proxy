@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.security.KeyStore;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,6 +34,7 @@ class ProxyHTTPSMainLoop implements Runnable {
     //http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions
     @Override
     public void run() {
+        // don't really care if this ends up in repo...
         char ksPass[] = "KeyStorePass".toCharArray();
         char ctPass[] = "KeyStorePass".toCharArray();
 
@@ -57,8 +59,14 @@ class ProxyHTTPSMainLoop implements Runnable {
             // listen for incoming clients
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             while (ps.work) {
-                executor.execute(new RequestRevEcho(serverSocket.accept()));
-                Log.d(TAG, "Accepted HTTPS client");
+                Socket client = serverSocket.accept();
+
+                if (ps.mPresenter != null && client != null &&
+                        client.getInputStream().available()!=0) {
+                    executor.execute(new ThreadProxy(client, ps.config,
+                            ps.mPresenter.getSharedObj()));
+                    Log.d(TAG, "Accepted HTTPS client");
+                }
             }
         } catch (Exception e ) {
             Log.d(TAG, "Error!");

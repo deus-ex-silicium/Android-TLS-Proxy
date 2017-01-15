@@ -85,6 +85,7 @@ public class DatabaseManager {
                 LogDbContract.LogEntry._ID,
                 LogDbContract.LogEntry.COLUMN_NAME_TIMESTAMP,
                 LogDbContract.LogEntry.COLUMN_NAME_HOST,
+                LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE,
                 LogDbContract.LogEntry.COLUMN_NAME_HEADERS
         };
         // Filter results WHERE "MAC" = client's mac
@@ -112,8 +113,11 @@ public class DatabaseManager {
                     .LogEntry.COLUMN_NAME_TIMESTAMP));
             String itemHost = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
                     .LogEntry.COLUMN_NAME_HOST));
-            String itemDetails = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
-                    .LogEntry.COLUMN_NAME_HEADERS));
+            String itemDetails =
+                    cursor.getString(cursor.getColumnIndexOrThrow
+                            (LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE)) + "\n" +
+                    cursor.getString(cursor.getColumnIndexOrThrow
+                            (LogDbContract.LogEntry.COLUMN_NAME_HEADERS));
             LogEntry entry = new LogEntry(itemId, itemTimestamp, itemHost, itemDetails);
             logEntries.add(entry);
         }

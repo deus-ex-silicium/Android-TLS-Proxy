@@ -17,8 +17,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.net.ssl.SSLProtocolException;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -33,7 +33,7 @@ public class ThreadProxy implements Runnable{
     protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
-    private OkHttpParser rp;
+    private OkHttpParser mParser;
     private OkHttpClient okhttp;
     private SharedPreferences mConfig;
     private SharedClass mSharedObj;
@@ -41,7 +41,7 @@ public class ThreadProxy implements Runnable{
     /**************************************CLASS METHODS*******************************************/
     ThreadProxy(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
         this.sClient = sClient;
-        rp = new OkHttpParser();
+        mParser = new OkHttpParser();
         //make client not follow redirects!
         okhttp = new OkHttpClient().newBuilder().followRedirects(false).followSslRedirects(false)
                 .build();
@@ -49,6 +49,7 @@ public class ThreadProxy implements Runnable{
         mSharedObj = sharedObj;
         //TODO: fucking shit is sometimes null
         c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
+
     }
     @Override
     public void run() {
@@ -65,16 +66,23 @@ public class ThreadProxy implements Runnable{
             if (sRequest == null) {return;}
 
             //parse string request into okhttp request (remove some security headers)
-            Request req;
+            Request req = null;
             if (sRequest.startsWith("GET"))
-               req = rp.parse(sRequest, mSharedObj, c, "GET");
-            else
-                req = rp.parse(sRequest, mSharedObj, c, "POST");
+                req = mParser.parse(sRequest, mSharedObj, c, "GET");
+            else if (sRequest.startsWith("POST"))
+                req = mParser.parse(sRequest, mSharedObj, c, "POST");
             if (req == null) {return;}
 
             //make request and get response
             res = okhttp.newCall(req).execute();
-
+            //if website doesn't support http but https
+            if(res.code() == 301){
+                String url = res.header("Location");
+                if (url.startsWith("https")){
+                    req = mParser.getReqForUrl(url);
+                    res = okhttp.newCall(req).execute();
+                }
+            }
             //prepare response
             byte[] bytesBody = res.body().bytes();
             //prepare proper length for Content-Length response header
@@ -89,15 +97,17 @@ public class ThreadProxy implements Runnable{
             else {
                 bodyLen = bytesBody.length;
             }
+
+
             //prepare response headers
             String headers = getResponseHeaders(res, bodyLen, req.header("Etag"));
             // In order to comply with protocol
             headers = headers.replaceAll("\\n", "\r\n");
 
-            //SEND RESPONSE TO CLIENT, first header then body
-            sendChunk(headers.getBytes(), outToClient);
+
             //if we are sending back image and imgReplace is on then swap img body
             if (imgSwapFlag){
+                sendChunk(headers.getBytes(), outToClient);
                 sendChunk(mSharedObj.getImgData(), outToClient);
             }
             else { //else we are not swapping image or we are not sending image
@@ -107,8 +117,11 @@ public class ThreadProxy implements Runnable{
                     boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
                     if (sslStrip || jsInject) {
                         bytesBody = editBytes(bytesBody, sslStrip, jsInject);
+                        setResponseHeader(headers, "Content-Length",
+                                Integer.toString(bytesBody.length));
                     }
                 }
+                sendChunk(headers.getBytes(), outToClient);
                 sendChunk(bytesBody, outToClient);
             }
 
@@ -117,13 +130,16 @@ public class ThreadProxy implements Runnable{
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException)
                 Log.e(TAG, "TIMEOUT!");
-            else
-                e.printStackTrace();
+            if (e instanceof SSLProtocolException) {
+                Log.e(TAG, "Client doesn't like our self-signed cert");
+            }
+            e.printStackTrace();
         } finally {
             //clean up
             if (res != null) res.body().close();
              try {
                  if (outToClient != null) outToClient.close();
+                 if (inFromClient != null) inFromClient.close();
                  if (sClient != null) sClient.close();
              }
              catch (IOException e) {
@@ -132,12 +148,8 @@ public class ThreadProxy implements Runnable{
         }
     }
 
-    private void sendChunk(byte[] msg, OutputStream out){
-        try {
-            out.write(msg, 0, msg.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void sendChunk(byte[] msg, OutputStream out) throws IOException{
+        out.write(msg, 0, msg.length);
         if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
     }
 
@@ -230,6 +242,9 @@ public class ThreadProxy implements Runnable{
         return request;
     }
 
+    private String setResponseHeader(String res, String header, String val){
+        return res.replaceFirst("(?i)" + header + ".*", header +": " + val + "\n");
+    }
     /*************************************OLD METHODS**********************************************/
     private ByteArrayOutputStream swapImg(String headers, ByteArrayOutputStream streamResponse)
             throws IOException {
@@ -276,6 +291,7 @@ public class ThreadProxy implements Runnable{
         return sb.toString();
 
     }
+
     private void sendInStreamToOutStream(InputStream in, OutputStream out){
         byte[] reply = new byte[4096];
         int bytes_read;

@@ -36,8 +36,8 @@ public class Ap {
         WifiManager wifiMan = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = SSID;
-        //network will be open if password not given
-        if (!PSK.isEmpty()) {
+        //set password if given, open if null
+        if (PSK!=null) {
             wifiConfig.preSharedKey = PSK;
             wifiConfig.hiddenSSID = false;
             wifiConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
@@ -46,6 +46,7 @@ public class Ap {
             wifiConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
             wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
         }
+
         try {
             // if WiFi is on, turn it off
             if(wifiMan.isWifiEnabled()) {
