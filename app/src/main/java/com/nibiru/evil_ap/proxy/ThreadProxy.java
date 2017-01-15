@@ -115,7 +115,7 @@ public class ThreadProxy implements Runnable{
                 if (contentType != null && contentType.contains("text")) {
                     boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
                     boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
-                    if (sslStrip || jsInject) {
+                    if (bytesBody.length > 0 && (sslStrip || jsInject)) {
                         bytesBody = editBytes(bytesBody, sslStrip, jsInject);
                         setResponseHeader(headers, "Content-Length",
                                 Integer.toString(bytesBody.length));

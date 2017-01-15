@@ -72,6 +72,7 @@ class ProxyHTTPSMainLoop implements Runnable {
             Log.d(TAG, "Error!");
             e.printStackTrace();
         } finally {
+            if (ps != null) ps = null;
             if (serverSocket != null) try {
                 serverSocket.close();
             } catch (IOException e) {

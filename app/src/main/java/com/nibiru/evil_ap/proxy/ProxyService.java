@@ -58,12 +58,15 @@ public class ProxyService extends Service{
     private final IBinder mBinder = new LocalBinder();
 
     /*********************************************************************************************/
+    /**
+     * Instance is created on app start, sets up notification and receiver for cleaning up.
+     * Spins two threads with thread pools to handle HTTP and HTTPS connections.
+     */
     @Override
     public void onCreate() {
         //set up proxy receiver and set up filter
         mProxyReceiver = new ProxyReceiver();
         IntentFilter filter = new IntentFilter();
-        filter.addAction("android.net.wifi.WIFI_AP_STATE_CHANGED");
         filter.addAction("tap");
         getApplicationContext().registerReceiver(mProxyReceiver, filter);
 
@@ -81,6 +84,10 @@ public class ProxyService extends Service{
         setupNotification();
     }
 
+    /**
+     * Received to clean up when app is swipe killed from recent apps list
+     * @param rootIntent
+     */
     @Override
     public void onTaskRemoved(Intent rootIntent){
         cleanUp();
@@ -91,6 +98,10 @@ public class ProxyService extends Service{
         return mBinder;
     }
 
+    /**
+     * Sets up app notification.
+     * Is used so user can click to clean up iptables rules among other things
+     */
     void setupNotification() {
         Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
@@ -122,17 +133,21 @@ public class ProxyService extends Service{
         notificationManger.notify(1, notification);
     }
 
+    /**
+     * Turns off app notification
+     * @param ctx
+     * @param notifyId
+     */
     public static void cancelNotification(Context ctx, int notifyId) {
         String ns = Context.NOTIFICATION_SERVICE;
         NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
         nMgr.cancel(notifyId);
     }
 
-    public interface IProxyService {
-        void setPresenter(IMVP.PresenterOps presenter);
-
-    }
-
+    /**
+     * Cleaning done when service is dying, turn off ap, set work to false, cancel notification,
+     * unregister Broadcast receiver and kill activities
+     */
     private void cleanUp(){
         mPresenter.onClean();
         if (mPresenter.isApOn(getApplicationContext())){
@@ -141,10 +156,15 @@ public class ProxyService extends Service{
         work = false;
         cancelNotification(getApplicationContext(), 1);
         getApplicationContext().unregisterReceiver(mProxyReceiver);
+        mProxyReceiver = null;
         mPresenter.dieUI();
+        mPresenter = null;
         stopSelf();
     }
 
+    /**
+     * BroadcastReceiver for catching intents from notification
+     */
     private class ProxyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -154,6 +174,14 @@ public class ProxyService extends Service{
                 cleanUp();
             }
         }
+    }
+
+    /**
+     * Interface for ProxyService, MainActivity -> ProxyService
+     */
+    public interface IProxyService {
+        void setPresenter(IMVP.PresenterOps presenter);
+
     }
 
     private void testImgStream() {

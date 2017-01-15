@@ -242,8 +242,8 @@ public class Model implements IMVP.ModelOps{
     }
     /**
      *
-     * @param SSID The AP name, if empty default "AP_nomap" is used
-     * @param pass The AP password , if empty default "pa$$word" is used
+     * @param SSIDarg The AP name, if empty default "AP_nomap" is used
+     * @param passarg The AP password , if empty default "pa$$word" is used
      * @param ctx Application context needed to turn hotspot on or off
      * @return Returns if AP was turned on(true) or turned off (false)
      */
@@ -275,7 +275,7 @@ public class Model implements IMVP.ModelOps{
      * @param c The client whos ban status is changing
      * @param ban True if client is to be banned, false if unbanned
      */
-    public void onBan(Client c, boolean ban){
+    public void setBan(Client c, boolean ban){
         if (ban){
             mBannedMACs.add(c.getMac());
             mRouteMan.filterMAC(mRootMan, c.getMac(), true);

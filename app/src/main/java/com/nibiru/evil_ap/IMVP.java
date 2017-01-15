@@ -48,6 +48,7 @@ public interface IMVP {
         void setSharedPrefsBool(String tag, boolean val);
         void setSharedPrefsString(String tag, String val);
         void setContext(Context context);
+        void setBan(Client c, boolean banned);
 
         ArrayList<Client> getCurrentClients();
         List<LogEntry> getClientLog(Client c);
@@ -88,6 +89,7 @@ public interface IMVP {
         void setSharedPrefsInt(String tag, int val);
         void setSharedPrefsBool(String tag, boolean val);
         void setSharedPrefsString(String tag, String val);
+        void setBan(Client c, boolean banned);
 
         ArrayList<Client> getCurrentClients();
         int getSharedPrefsInt(String tag);

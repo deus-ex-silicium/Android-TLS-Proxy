@@ -45,9 +45,9 @@ public class MainActivity extends AppCompatActivity implements
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;
-    private boolean psIsBound; //?
+    private boolean psIsBound;
     private int selectedTab = 0;
-    private ServiceConnection mConnection; //?
+    private ServiceConnection mConnection;
     // Responsible for maintaining objects state during changing configuration
     public final StateMaintainer mStateMaintainer =
             new StateMaintainer(this.getFragmentManager(), TAG);
@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mPresenter = null;
         doUnbindService();
     }
     @Override
@@ -173,6 +174,11 @@ public class MainActivity extends AppCompatActivity implements
         return mPresenter.getCurrentClients();
     }
 
+    @Override
+    public void setBan(Client c, boolean banned) {
+        mPresenter.setBan(c, banned);
+    }
+
     /********************************* Main Fragment **********************************************/
     @Override
     public boolean onApPressed(String SSID, String pass) {
@@ -225,6 +231,7 @@ public class MainActivity extends AppCompatActivity implements
             });
         }
     }
+
     private void setUpGUI() {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
