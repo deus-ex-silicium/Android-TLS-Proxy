@@ -85,13 +85,14 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 mListener.enableTabLayout();
                 et.setFocusable(false);
                 et2.setFocusable(false);
+                cb.setEnabled(false);
             }
             else if(!ApOn){
                 et.setFocusable(true);
                 et2.setFocusable(true);
                 et.setFocusableInTouchMode(true);
                 et2.setFocusableInTouchMode(true);
-                Log.e("text",et.isFocusable()?"yes":"no" );
+                cb.setEnabled(true);
                 btn.setBackgroundResource(R.drawable.greenoff);
                 mListener.disableTabLayout();
 
@@ -106,7 +107,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.button:
                 if (!mListener.isApOn()) {
-                    mListener.onApPressed(et.getText().toString(), et2.getText().toString());
+                    if(cb.isChecked()) {
+                        mListener.onApPressed(et.getText().toString(), et2.getText().toString());
+                    }
+                    else{
+                        mListener.onApPressed(et.getText().toString(), null);
+                    }
                     Log.e(TAG, et.getText().toString());
                     setBtnUI(true);
                 } else if(mListener.isApOn()){
