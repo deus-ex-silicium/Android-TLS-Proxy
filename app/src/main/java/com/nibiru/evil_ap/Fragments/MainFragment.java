@@ -28,6 +28,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     private OnMainFragmentInteraction mListener;
     private EditText et;
     private EditText et2;
+    private CheckBox cb;
     private BroadcastReceiver mApReceiver;
 
     /************************************** CLASS METHODS *****************************************/
@@ -59,7 +60,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         bt.setOnClickListener(this);
         et = (EditText) v.findViewById(R.id.editText);
         et2 = (EditText) v.findViewById(R.id.editText2);
-        CheckBox cb = (CheckBox) v.findViewById(R.id.checkBox);
+        cb = (CheckBox) v.findViewById(R.id.checkBox);
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -68,6 +69,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                     }
                     else{
                         et2.setVisibility(View.INVISIBLE);
+                        et2.setText("");
                     }
                 }
             }
