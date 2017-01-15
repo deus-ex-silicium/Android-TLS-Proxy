@@ -72,7 +72,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 }
             }
         );
-
         return v;
     }
 
@@ -82,12 +81,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             if (ApOn) {
                 btn.setBackgroundResource(R.drawable.greenontest);
                 mListener.enableTabLayout();
-                Log.e(TAG, "Set btn ui on");
+                et.setFocusable(false);
+                et2.setFocusable(false);
             }
             else if(!ApOn){
+                et.setFocusable(true);
+                et2.setFocusable(true);
+                et.setFocusableInTouchMode(true);
+                et2.setFocusableInTouchMode(true);
+                Log.e("text",et.isFocusable()?"yes":"no" );
                 btn.setBackgroundResource(R.drawable.greenoff);
                 mListener.disableTabLayout();
-                Log.e(TAG, "Set btn ui off");
+
             }
         } catch (NullPointerException e) {
             Log.e(TAG, "findViewById null pointer!");
@@ -98,16 +103,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                if (mListener.onApPressed(et.getText().toString(), et2.getText().toString())) {
-                    Log.e(TAG, "onclick btn ui on");
-                    et.setFocusable(false);
-                    et2.setFocusable(false);
+                if (!mListener.isApOn()) {
+                    mListener.onApPressed(et.getText().toString(), et2.getText().toString());
+                    Log.e(TAG, et.getText().toString());
                     setBtnUI(true);
                 } else if(mListener.isApOn()){
-                    Log.e(TAG, "onclick btn ui off");
                     mListener.onApPressed("","");
-                    et.setFocusable(true);
-                    et2.setFocusable(true);
                     setBtnUI(false);
                 }
                 break;
