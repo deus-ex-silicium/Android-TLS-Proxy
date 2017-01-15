@@ -49,7 +49,6 @@
             android:shadowRadius="15"
             android:layout_weight="0.5"
             android:textStyle="bold"
-            android:inputType="textMultiLine"
             android:text="Details"/>
         <com.nibiru.evil_ap.AutoResizeTextView
             android:id="@+id/text_content_clientsserverCount"
