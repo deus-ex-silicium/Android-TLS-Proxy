@@ -97,7 +97,7 @@ public class ProxyService extends Service{
         PendingIntent contentIntent =
                 PendingIntent.getActivity(this, 1, intentShow, Intent.FLAG_ACTIVITY_CLEAR_TOP);
         NotificationCompat.Action actionOFF = new NotificationCompat.Action.Builder(0,
-                "Toggle AP", pi).build();
+                "Clean up", pi).build();
         NotificationCompat.Action actionSHOW = new NotificationCompat.Action.Builder(1, "Bring to" +
                 " front", contentIntent).build();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext
