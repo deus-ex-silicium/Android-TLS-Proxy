@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,10 +94,13 @@ public class clients_adapter extends ArrayAdapter<Client> {
             }
             final Button ban = (Button) v_clients.findViewById(R.id.button2);
             if (ban != null) {
+                ban.setText(clientsList.get(position).getBanned()?R.string.unban:R.string.ban);
                 ban.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(ban.getText().equals(R.string.ban)) {
+                        Log.e("Onclick",ban.getText().toString());
+                        if(clientsList.get(position).getBanned() || ban.getText().toString()
+                                .equals("BAN")) {
                             ban.setText(R.string.unban);
                             mListener.setBan(clientsList.get(position), true);
                         }
