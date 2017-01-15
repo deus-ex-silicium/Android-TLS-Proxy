@@ -38,7 +38,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         final ListView clients_listView = (ListView) rootView.findViewById(R.id.listk);
         clientsList = getCurrentClients();
         customAdapter = new clients_adapter(getContext(),
-                R.layout.list_item_clients, clientsList,this.getActivity());
+                R.layout.list_item_clients, clientsList,this.getActivity(), mListener);
         mySwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeLayout);
         mySwipeRefreshLayout.setOnRefreshListener(this);
         clients_listView.setAdapter(customAdapter);
@@ -55,7 +55,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         clientsList = getCurrentClients();
         clientsList.add(new Client("127.0.0.1","sdasd",false));
         customAdapter = new clients_adapter(getActivity().getApplicationContext(),
-                R.layout.list_item_clients, clientsList,this.getActivity());
+                R.layout.list_item_clients, clientsList,this.getActivity(), mListener);
         clients_listView.setAdapter(customAdapter);
         mySwipeRefreshLayout.setRefreshing(false);
     }
@@ -68,6 +68,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
      */
     public interface onClientsFragmentInteraction {
         ArrayList<Client> getCurrentClients();
+        void setBan(Client c, boolean banned);
     }
     @Override
     public void onAttach(Context context) {

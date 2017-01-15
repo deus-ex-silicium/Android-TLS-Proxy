@@ -60,6 +60,11 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     }
 
     public void setContext(Context ctx) { this.ctx = ctx;}
+
+    public void setBan(Client c, boolean banned) {
+        mModel.setBan(c, banned);
+    }
+
     public void setSharedPrefsInt(String tag, int val) {
         mModel.setSharedPrefsInt(tag, val);
     }

@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
@@ -31,6 +32,8 @@ public class clients_adapter extends ArrayAdapter<Client> {
     private ArrayList<Client> clientsList;
     private ArrayList<Client> cliList = null;
     ClientsFragment Fragment_Clients;
+    IMVP.PresenterOps mPresenter;
+    ClientsFragment.onClientsFragmentInteraction mListener;
 
     /************************************ CLASS METHODS *******************************************/
     /**
@@ -41,11 +44,13 @@ public class clients_adapter extends ArrayAdapter<Client> {
      * @param passed_clients_activity Activity passed from fragment
      */
     public clients_adapter(Context context, int resource, ArrayList<Client> items,
-                           Activity passed_clients_activity) {
+                           Activity passed_clients_activity,
+                           ClientsFragment.onClientsFragmentInteraction lis) {
         super(context, resource, items);
         clients_activity = passed_clients_activity;
         clientsList = items;
         cliList = new ArrayList<>(clientsList);
+        mListener = lis;
     }
 
     /**
@@ -91,11 +96,13 @@ public class clients_adapter extends ArrayAdapter<Client> {
                 ban.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(ban.getText().equals((R.string.ban))) {
+                        if(ban.getText().equals(R.string.ban)) {
                             ban.setText(R.string.unban);
+                            mListener.setBan(clientsList.get(position), true);
                         }
                         else{
                             ban.setText(R.string.ban);
+                            mListener.setBan(clientsList.get(position), false);
                         }
                     }
                 });
