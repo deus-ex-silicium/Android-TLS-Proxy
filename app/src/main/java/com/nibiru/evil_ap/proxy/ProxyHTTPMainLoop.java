@@ -25,6 +25,10 @@ class ProxyHTTPMainLoop implements Runnable{
     public ProxyHTTPMainLoop(ProxyService x){
         ps = x;
     }
+
+    /**
+     * Runnable class that uses a thread pool to accept and handle client connection
+     */
     @Override
     public void run() {
         //http://codetheory.in/android-java-executor-framework/

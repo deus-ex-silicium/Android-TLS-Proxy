@@ -276,11 +276,11 @@ public class Model implements IMVP.ModelOps{
      * @param ban True if client is to be banned, false if unbanned
      */
     public void setBan(Client c, boolean ban){
-        if (ban){
+        if ( !mBannedMACs.contains(c.getMac()) && ban ){
             mBannedMACs.add(c.getMac());
             mRouteMan.filterMAC(mRootMan, c.getMac(), true);
         }
-        else{
+        if ( mBannedMACs.contains(c.getMac()) && !ban ){
             mBannedMACs.remove(c.getMac());
             mRouteMan.filterMAC(mRootMan, c.getMac(), false);
         }
