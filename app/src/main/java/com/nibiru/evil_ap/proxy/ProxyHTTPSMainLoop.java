@@ -31,6 +31,10 @@ class ProxyHTTPSMainLoop implements Runnable {
         keyStore = file;
         this.ps = ps;
     }
+    /**
+     * Runnable class that uses a thread pool to accept and handle client connection
+     * This class uses a self-signed certificate during SSL handshake
+     */
     //http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions
     @Override
     public void run() {
@@ -59,11 +63,8 @@ class ProxyHTTPSMainLoop implements Runnable {
             // listen for incoming clients
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             while (ps.work) {
-                Socket client = serverSocket.accept();
-
-                if (ps.mPresenter != null && client != null &&
-                        client.getInputStream().available()!=0) {
-                    executor.execute(new ThreadProxy(client, ps.config,
+                if (ps.mPresenter != null) {
+                    executor.execute(new ThreadProxy(serverSocket.accept(), ps.config,
                             ps.mPresenter.getSharedObj()));
                     Log.d(TAG, "Accepted HTTPS client");
                 }

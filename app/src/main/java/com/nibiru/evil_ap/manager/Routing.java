@@ -21,12 +21,10 @@ public class Routing {
     //TODO: TEST!
     public void filterMAC(Root mRootMan, String MAC, boolean ban){
         if (ban) {
-            mRootMan.RunAsRoot("iptables -t nat -A PREROUTING -p all -m mac --mac-source " +
-                    MAC + " -j DROP");
+            mRootMan.RunAsRoot("iptables -A INPUT -p all -m mac --mac-source " + MAC + " -j DROP");
         }
         else{
-            mRootMan.RunAsRoot("iptables -t nat -D PREROUTING -p all -m mac --mac-source " +
-                    MAC + " -j DROP");
+            mRootMan.RunAsRoot("iptables -D INPUT -p all -m mac --mac-source " + MAC + " -j DROP");
         }
     }
 

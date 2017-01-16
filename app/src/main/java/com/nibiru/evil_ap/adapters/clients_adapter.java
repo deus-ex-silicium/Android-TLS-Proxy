@@ -33,7 +33,6 @@ public class clients_adapter extends ArrayAdapter<Client> {
     private ArrayList<Client> clientsList;
     private ArrayList<Client> cliList = null;
     ClientsFragment Fragment_Clients;
-    IMVP.PresenterOps mPresenter;
     ClientsFragment.onClientsFragmentInteraction mListener;
 
     /************************************ CLASS METHODS *******************************************/
@@ -99,8 +98,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
                     @Override
                     public void onClick(View v) {
                         Log.e("Onclick",ban.getText().toString());
-                        if(clientsList.get(position).getBanned() || ban.getText().toString()
-                                .equals("BAN")) {
+                        if(ban.getText().toString().equals("BAN")) {
                             ban.setText(R.string.unban);
                             mListener.setBan(clientsList.get(position), true);
                         }
