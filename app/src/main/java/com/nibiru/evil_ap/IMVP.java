@@ -56,7 +56,6 @@ public interface IMVP {
         boolean getSharedPrefsBool(String tag);
         String getSharedPrefsString(String tag);
         SharedClass getSharedObj();
-        void resetSharedPrefs();
         void onClean();
         void dieUI();
 
@@ -98,7 +97,6 @@ public interface IMVP {
         SharedClass getSharedObj();
         Client getClientByIp(String ip);
         List<LogEntry> getClientLog(Client c);
-        void resetSharedPrefs();
         void onClean();
 
         // Any other data operation

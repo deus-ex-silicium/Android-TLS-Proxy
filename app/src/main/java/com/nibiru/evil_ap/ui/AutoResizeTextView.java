@@ -1,4 +1,4 @@
-package com.nibiru.evil_ap;
+package com.nibiru.evil_ap.ui;
 
 import android.content.Context;
 import android.text.Layout.Alignment;

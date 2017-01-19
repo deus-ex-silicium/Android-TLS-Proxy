@@ -3,11 +3,9 @@ package com.nibiru.evil_ap.proxy;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.nibiru.evil_ap.ConfigTags;
 import com.nibiru.evil_ap.SharedClass;
 import com.nibiru.evil_ap.log.Client;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,19 +14,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.net.URL;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * Created by Nibiru on 2016-12-30.
@@ -48,11 +39,15 @@ public class ThreadSockets implements Runnable {
         this.sClient = sClient;
         mConfig = config;
         mSharedObj = sharedObj;
-        //TODO: fucking shit is sometimes null
         c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
     }
     //scalable socket programming (2014)
     //http://www.javaworld.com/article/2853780/core-java/socket-programming-for-scalable-systems.html
+
+    /**
+     * UNDER-DEVELOPMENT class that uses raw socket programming and no library dependencies to
+     * handle client requests, difficulties include HTTP chunked trasfer encoding/decoding.
+     */
     @Override
     public void run() {
         //things we will eventually close
@@ -82,37 +77,53 @@ public class ThreadSockets implements Runnable {
 
             //send request
             outToServer.print(sRequest);
+            //read headers
+            String headers = readHeaders2(inFromServer);
 
-            //read body
-            byte[] resBytes = readStream(inFromServer);
-            //byte[] resBytes = readStream(inFromServer);
-            String response = new String(resBytes, "UTF-8");
-            //String headers = response.substring(0, response.indexOf("\r\n\r\n")+4);
-            //String body = response.substring(response.indexOf("\r\n\r\n")+4);
-            //DEBUG HERE!
-            sendChunk(response.getBytes(), outToClient);
-            //sendChunkToOutStream(body, outToClient);
-            //send end chunk
-            //sendChunkToOutStream("".getBytes(), outToClient);
+            byte[] bodyBytes;
+            if (headers.toLowerCase().contains("transfer-encoding: chunked")) {
+                byte[] chunkBytes;
+                ByteArrayOutputStream body = new ByteArrayOutputStream();
+                while ( (chunkBytes = readChunk(inFromServer)) != null) {
+                    body.write(chunkBytes);
+                }
+                bodyBytes = body.toByteArray();
+                headers = replaceTransferEncodingWithContentLength(headers, bodyBytes.length);
+            }
+            else {
+                bodyBytes = readStream(inFromServer);
+            }
+            //send response
+            send(headers.getBytes(), outToClient);
+            send(bodyBytes, outToClient);
 
-            /*while (work) {
+            //HTTP KEEP ALIVE
+            while (work) {
                 //get client request string
                 sRequest = getRequestString(inFromClient);
                 //check if connection is keep-alive and update work
-                work = sRequest.contains("keep-alive");
+                work = sRequest.toLowerCase().contains("keep-alive");
                 //send request
                 outToServer.print(sRequest);
-                if (debug) Log.d(TAG, "[OUT]Sent request to webserver!");
                 //read headers
-                headers = readHeaders(inFromServer);
-                //read body
-                body = readStream(inFromServer);
-                if (debug) Log.d(TAG, "[IN]Got response from webserver!");
+                headers = readHeaders2(inFromServer);
 
-                //send response to client
-                sendChunk(headers.getBytes(), outToClient);
-                sendChunk(body, outToClient);
-            }*/
+                if (headers.toLowerCase().contains("transfer-encoding: chunked")) {
+                    byte[] chunkBytes;
+                    ByteArrayOutputStream body = new ByteArrayOutputStream();
+                    while ( (chunkBytes = readChunk(inFromServer)) != null) {
+                        body.write(chunkBytes);
+                    }
+                    bodyBytes = body.toByteArray();
+                    headers = replaceTransferEncodingWithContentLength(headers, bodyBytes.length);
+                }
+                else {
+                    bodyBytes = readStream(inFromServer);
+                }
+                //send response
+                send(headers.getBytes(), outToClient);
+                send(bodyBytes, outToClient);
+            }
 
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException)
@@ -122,9 +133,9 @@ public class ThreadSockets implements Runnable {
         } finally {
             //clean up
             try {
-                if (inFromServer != null) outToClient.close();
-                if (outToServer != null) outToClient.close();
-                if (inFromClient != null) outToClient.close();
+                if (inFromServer != null) inFromServer.close();
+                if (outToServer != null) outToServer.close();
+                if (inFromClient != null) inFromClient.close();
                 if (outToClient != null) outToClient.close();
                 if (sClient != null) sClient.close();
             }
@@ -134,9 +145,33 @@ public class ThreadSockets implements Runnable {
         }
     }
 
-    private void sendChunk(byte[] msg, OutputStream out){
+    private String replaceTransferEncodingWithContentLength(String headers, int length) {
+        if (headers.toLowerCase().contains("transfer-encoding: chunked")){
+            headers = headers.replaceFirst("(?i)transfer-encoding: chunked",
+                    "Content-Length: "+ length);
+            //headers = headers.replaceAll("(?i)(?m)^keep-alive:.*(?:\\r?\\n)?", "");
+            //headers = headers.replaceAll("(?i)(?m)^connection:.*", "Connection: close");
+        }
+        return headers;
+    }
+
+    private void send(byte[] msg, OutputStream out){
         try {
             out.write(msg, 0, msg.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (debug) Log.d(TAG + "[OUT]", "sent headers!");
+    }
+
+    private void sendChunk(byte[] msg, OutputStream out){
+        String hex = Integer.toHexString(msg.length);
+        byte[] newLine = {13, 10}; // \r \n
+        try {
+            out.write(hex.getBytes());
+            out.write(newLine);
+            out.write(msg, 0, msg.length);
+            out.write(newLine);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -162,35 +197,6 @@ public class ThreadSockets implements Runnable {
             e.printStackTrace();
             return null;
         }
-    }
-
-    private String getResponseHeaders(Response res, int len, String eTag) throws IOException {
-        String resToClient = "";
-        if (debug) Log.d(TAG, "<==================Sending response==================>");
-        //find status line
-        // /n ! not /r/n !
-        switch (res.code()) {
-            case 200: resToClient += "HTTP/1.1 200 OK\n"; break;
-            case 204: resToClient += "HTTP/1.1 204 No Content\n"; break;
-            case 301: resToClient += "HTTP/1.1 301 Moved Permanently\n"; break;
-            case 302: resToClient += "HTTP/1.1 302 Found\n"; break;
-            case 304: resToClient += "HTTP/1.1 304 Not Modified\n"; break;
-            case 403: resToClient += "HTTP/1.1 403 Forbidden\n"; break;
-            case 404: resToClient += "HTTP/1.1 404 Not Found\n"; break;
-            default: Log.e(TAG, "UNKNOWN STATUS CODE = " + res.code());
-        }
-        //send headers
-        resToClient += res.headers().toString() + "\n";
-        //workaround for okhttp transparent gzip
-        resToClient = resToClient.replace("Transfer-Encoding: chunked", "Content-Length: " + len);
-        //workaround for 304's not working
-        if (resToClient.startsWith("HTTP/1.1 304")) {
-            resToClient = resToClient.replaceAll("ETag:.*", "ETag: " + eTag);
-        }
-        //TODO: test preformance
-        //resToClient = resToClient.replaceAll("(?i)Connection: keep-alive", "Connection: close");
-        //resToClient = resToClient.replaceAll("(?i)\\nKeep-Alive.*", "");
-        return resToClient;
     }
 
     private String getRequestString(BufferedReader in) throws IOException {
@@ -287,13 +293,20 @@ public class ThreadSockets implements Runnable {
 
     private String readHeaders2(InputStream is) throws IOException {
         StringBuilder result = new StringBuilder();
-        StringBuilder line = new StringBuilder();
+        String line = "";
         int x;
-        //while ( line.)
-        while ( (x = is.read()) != 10 ){ // 10 = \n
-            result.append((char)x);
+        boolean emptyLineReached = false;
+
+        while (!emptyLineReached) {
+            while ((x = is.read()) != 10) { // 10 = \n and x != -1 (-1 = end of stream)
+                line = line + ((char) x);
+                if (line.trim().isEmpty())
+                    emptyLineReached = true;
+            }
+            //finished reading line
+            result.append(line).append("\n");
+            line = "";
         }
-        result.append("\r\n");
         return result.toString();
     }
 
@@ -306,10 +319,9 @@ public class ThreadSockets implements Runnable {
         byte[] buffer = new byte[16384];
         int length = 0;
         // Read bytes to the buffer until you find `\r\n\r\n` in the buffer.
-        int nRead;
-        int pos;
-        while ((pos = arrayIndexOf(buffer, 0, length, headEnd)) == -1 && (nRead = is.read(buffer,
-                length, buffer.length - length)) > -1) {
+        int nRead, pos;
+        while ((pos = arrayIndexOf(buffer, 0, length, headEnd)) == -1 &&
+                (nRead = is.read(buffer, length, buffer.length - length)) > -1) {
             length += nRead;
             // buffer is full but have not found end signature
             if (length == buffer.length)
@@ -329,6 +341,26 @@ public class ThreadSockets implements Runnable {
         return null;
     }
 
+    private String readHeaders4(InputStream is) throws IOException{
+        ByteArrayOutputStream headersBytes = new ByteArrayOutputStream();
+        ByteArrayOutputStream bodyBytes = new ByteArrayOutputStream();
+        byte[] headEnd = {13, 10, 13, 10}; // \r \n \r \n
+
+        //read headers
+        int readByte;
+        byte[] tmpBuffer = new byte[4];
+        while (true) {
+            readByte = is.read();
+
+        }
+        //read body
+        //int read;
+        //while ((read = in.read()) != -1) {
+        //    body.write(read);
+        //}
+        //return null;
+    }
+
     private int arrayIndexOf(byte[] haystack, int offset, int length, byte[] needle) {
         for (int i=offset; i<offset+length-needle.length; i++) {
             boolean match = false;
@@ -345,14 +377,26 @@ public class ThreadSockets implements Runnable {
 
     private byte[] readChunk(InputStream is) throws IOException {
         //read line to find number of bytes
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String line;
-        int len =0;
-        while ( !(line = br.readLine()).trim().isEmpty() ){
-            len = Integer.parseInt(line.trim(), 16);
+        String line = "";
+        int len, x;
+        while ((x = is.read()) != 10) { // 10 = \n
+            line = line + ((char)x);
+        }
+        line += (char)10;
+        len = Integer.parseInt(line.trim(), 16);
+        if (len == 0) {
+            //consume new line before ending
+            while ((x = is.read()) != 10) {}
+            return null;
         }
         byte[] result = new byte[len];
-        is.read(result, 0, len);
+        int nRead=0, toRead=len;
+        while ( toRead != 0 )  {
+            nRead = is.read(result, nRead, toRead);
+            toRead -= nRead;
+        }
+        //consume new line before reading new chunk
+        while ((x = is.read()) != 10) {}
         return result;
     }
 }

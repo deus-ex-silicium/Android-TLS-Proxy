@@ -21,29 +21,47 @@ import okhttp3.ResponseBody;
 
 public class InterceptorResponse implements Interceptor{
     /**************************************CLASS FIELDS********************************************/
-    private SharedPreferences mConfig;
     private SharedClass mSharedObj;
+    private SharedPreferences mConfig;
     /**************************************CLASS METHODS*******************************************/
-    InterceptorResponse(SharedPreferences config, SharedClass shrObj){
+    public InterceptorResponse(SharedClass shrObj, SharedPreferences config){
         super();
-        mConfig = config;
         mSharedObj = shrObj;
+        mConfig = config;
     }
     @Override
     public Response intercept(Chain chain) throws IOException {
         Response originalResponse = chain.proceed(chain.request());
-        String contentType = originalResponse.header("Content-Type");
-        if (contentType == null || !contentType.contains("text")) return originalResponse;
 
-        MediaType MediaContentType = originalResponse.body().contentType();
-        byte[] bytesBody = originalResponse.body().bytes();
-        boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
-        boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
-        if (sslStrip || jsInject) {
-            bytesBody = editBytes(bytesBody, sslStrip, jsInject);
+        int bodyLen;
+        byte[] bodyBytes;
+        String contentTypeStr = originalResponse.header("Content-Type");
+        boolean imgSwapFlag = contentTypeStr != null && contentTypeStr.contains("image")
+                && mConfig.getBoolean(ConfigTags.imgReplace.toString(), false);
+        if (imgSwapFlag) {
+            bodyBytes = mSharedObj.getImgData();
+            bodyLen = mSharedObj.getImgDataLength();
         }
-        ResponseBody body = ResponseBody.create(MediaContentType, bytesBody);
-        return originalResponse.newBuilder().body(body).build();
+        else{
+            //EDIT RESPONSE HERE (if it is text)
+            bodyBytes = originalResponse.body().bytes();
+            bodyLen = bodyBytes.length;
+            if (contentTypeStr != null && contentTypeStr.contains("html")) {
+                boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
+                boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
+                if (bodyBytes.length > 0  && (sslStrip || jsInject)) {
+                    bodyBytes = editBytes(bodyBytes, sslStrip, jsInject);
+                    bodyLen = bodyBytes.length;
+                }
+            }
+        }
+        //create new body
+        ResponseBody body = ResponseBody.create(originalResponse.body().contentType(), bodyBytes);
+        //create new response
+        return originalResponse.newBuilder()
+                .removeHeader("Transfer-Encoding")
+                .header("Content-Length", Integer.toString(bodyLen))
+                .body(body).build();
     }
 
     private byte[] editBytes(byte[] bytesBody, Boolean sslStrip, Boolean jsInject) {

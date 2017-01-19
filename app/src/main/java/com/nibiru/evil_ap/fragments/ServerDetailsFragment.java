@@ -3,22 +3,16 @@ package com.nibiru.evil_ap.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.serverDetails_adapter;
 import com.nibiru.evil_ap.log.Client;
-import com.nibiru.evil_ap.log.DatabaseManager;
 import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
@@ -57,7 +51,7 @@ public class ServerDetailsFragment extends Fragment{
         logs_listView.setVerticalScrollBarEnabled(true);
         final ListView logs_listView = (ListView) rootView.findViewById(R.id.DetailList);
         logList = getServerDetails(clientLocal);
-        customAdapter = new serverDetails_adapter(getContext(),
+        customAdapter = new serverDetails_adapter(getActivity().getApplicationContext(),
                 R.layout.fragment_server_details_item, logList,this.getActivity());
         logs_listView.setAdapter(customAdapter);
         // Inflate the layout for this fragment

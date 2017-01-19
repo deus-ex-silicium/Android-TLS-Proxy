@@ -59,7 +59,8 @@ public class Model implements IMVP.ModelOps{
         this.mConfig = ctx.getSharedPreferences("Config", 0);
         this.mBannedMACs = new HashSet<>(5);
         this.ctx = ctx;
-        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,this);
+        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,
+                this, mConfig);
     }
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx, boolean flag) {
         this.mPresenter = mPresenter;
@@ -178,12 +179,9 @@ public class Model implements IMVP.ModelOps{
     }
 
     /**
-     * Resets the SharedSetting used by application
+     * Function called when "Clean up" was pressed from notification. It removes any iptables
+     * rules that could have been appended to the default android firewall rules.
      */
-    public void resetSharedPrefs() {
-        mConfig.edit().clear().apply();
-    }
-
     @Override
     public void onClean() {
         onTrafficRedirect("HTTP", false);
@@ -193,6 +191,7 @@ public class Model implements IMVP.ModelOps{
             mRouteMan.filterMAC(mRootMan, mac, false);
         }
         mBannedMACs.clear();
+        mConfig.edit().clear().apply();
     }
 
     /**

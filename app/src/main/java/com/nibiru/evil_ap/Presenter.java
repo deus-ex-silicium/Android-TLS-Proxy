@@ -95,11 +95,6 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     public SharedClass getSharedObj(){ return mModel.getSharedObj();}
 
     @Override
-    public void resetSharedPrefs() {
-        mModel.resetSharedPrefs();
-    }
-
-    @Override
     public void onClean() {
         mModel.onClean();
     }

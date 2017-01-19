@@ -2,9 +2,7 @@ package com.nibiru.evil_ap.fragments;
 
 import android.app.Fragment;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,11 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 
 import com.nibiru.evil_ap.IMVP;
-import com.nibiru.evil_ap.Presenter;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.adapters.server_adapter;
 import com.nibiru.evil_ap.log.Client;
-import com.nibiru.evil_ap.log.DatabaseManager;
 import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;

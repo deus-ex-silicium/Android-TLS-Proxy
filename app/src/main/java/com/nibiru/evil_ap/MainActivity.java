@@ -33,6 +33,7 @@ import com.nibiru.evil_ap.fragments.ServerDetailsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
 import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.proxy.ProxyService;
+import com.nibiru.evil_ap.ui.CustomViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,14 +69,11 @@ public class MainActivity extends AppCompatActivity implements
 
         startMVPOps();
 
-        //reset settings
-        //mPresenter.resetSharedPrefs(); //TODO: WHAT UP WITH RESETTING ?
         mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
                 "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         setContentView(R.layout.activity_main);
         mPresenter.checkIfDeviceRooted();
-
-
+        //start ProxyService and establish connection to it
         startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
@@ -328,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-    /*************************************** CO TO JEST? ******************************************/
+    /****************************************** ??? ***********************************************/
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
