@@ -24,6 +24,7 @@
 
         <TextView
             android:id="@+id/textView1s"
+            android:layout_marginStart="10dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="left"
@@ -35,7 +36,8 @@
             android:id="@+id/switch1s"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
+            android:layout_gravity="right"
+            android:layout_marginEnd="10dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -48,6 +50,7 @@
 
         <TextView
             android:id="@+id/textView2s"
+            android:layout_marginStart="10dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -58,13 +61,15 @@
             android:id="@+id/button_injectHTMLs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Settings"/>
+            android:text="Settings"
+            android:layout_marginEnd="10dp"/>
 
         <Switch
             android:id="@+id/switch2s"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
+            android:layout_gravity="right"
+            android:layout_marginEnd="10dp"/>
     </LinearLayout>
     <LinearLayout
         android:id="@+id/lin2dynamics"
@@ -85,7 +90,7 @@
 
         <TextView
             android:id="@+id/textView3s"
-
+            android:layout_marginStart="10dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="left"
@@ -97,7 +102,8 @@
             android:id="@+id/switch3s"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
+            android:layout_gravity="right"
+            android:layout_marginEnd="10dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -110,6 +116,7 @@
 
         <TextView
             android:id="@+id/textView4s"
+            android:layout_marginStart="10dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -120,13 +127,15 @@
             android:id="@+id/button_replaceImagess"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Settings"/>
+            android:text="Settings"
+            android:layout_marginEnd="10dp"/>
 
         <Switch
             android:id="@+id/switch4s"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"/>
+            android:layout_gravity="right"
+            android:layout_marginEnd="10dp"/>
     </LinearLayout>
     <LinearLayout
         android:id="@+id/lin4dynamics"
