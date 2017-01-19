@@ -23,14 +23,14 @@ import java.util.List;
 public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private ListView server_listView;
     private server_adapter customAdapter;
     private View rootView;
     private Client clientLocal;
     private onClientsFragmentInteraction mListener;
     private IMVP.PresenterOps mPresenter;
-    SwipeRefreshLayout mySwipeRefreshLayout;
+    private SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<String> serverList;
     private ArrayList<String> serverListCount;
     /**************************************CLASS METHODS*******************************************/
@@ -60,9 +60,9 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
         return rootView;
     }
 
-    public ArrayList<String> getClientServers(){
+    private ArrayList<String> getClientServers(){
         ArrayList<String> distinctHosts = new ArrayList<>();
-        ArrayList<String> allHosts = new ArrayList<>();
+        ArrayList<String> allHosts;
         if(mPresenter.getClientLog(clientLocal).size()!= 0){
             allHosts = createHosts(mPresenter.getClientLog(clientLocal));
         List<LogEntry> le = mPresenter.getClientLog(clientLocal);

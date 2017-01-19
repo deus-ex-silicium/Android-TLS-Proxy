@@ -13,7 +13,7 @@ public class Routing {
     /*********************************************************************************************/
     public Routing() {}
 
-    public boolean isPortReceiving(String port, Root mRootMan){
+    private boolean isPortReceiving(String port, Root mRootMan){
         return mRootMan.RunAsRoot("iptables -t nat -L | grep \"redir ports "
                 + port + "\"" );
     }

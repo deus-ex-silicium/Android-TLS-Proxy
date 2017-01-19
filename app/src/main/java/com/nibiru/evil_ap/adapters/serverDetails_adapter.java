@@ -1,21 +1,15 @@
 package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.fragments.ClientsFragment;
-import com.nibiru.evil_ap.fragments.ServerItemFragment;
-import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
@@ -43,8 +37,9 @@ public class serverDetails_adapter extends ArrayAdapter<LogEntry> {
         lList = new ArrayList<>(logList);
     }
 
+    @NonNull
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
         View v_clients = convertView;
         if (v_clients == null) {
             LayoutInflater vid;

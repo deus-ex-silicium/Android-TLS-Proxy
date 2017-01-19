@@ -15,7 +15,7 @@ import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
-    int mNumOfTabs;
+    private int mNumOfTabs;
 
     /**
      *
@@ -37,15 +37,13 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
 
         switch (position) {
             case 0:
-                MainFragment tab1 = new MainFragment();
-                return tab1;
+                return new MainFragment();
             case 1:
-                ClientsFragment tab2 = new ClientsFragment();
-                return tab2;
+                return new ClientsFragment();
             case 2:
                 ACFragment tab3 = new ACFragment();
-                ACHTTPFragment t4 = new ACHTTPFragment();
-                ACHTTPSFragment t5 = new ACHTTPSFragment();
+                //ACHTTPFragment t4 = new ACHTTPFragment();
+                //ACHTTPSFragment t5 = new ACHTTPSFragment();
                 return tab3;
             default:
                 return null;

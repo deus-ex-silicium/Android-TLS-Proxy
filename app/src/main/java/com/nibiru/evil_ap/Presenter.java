@@ -25,7 +25,6 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     private IMVP.ModelOps mModel;
     // Configuration change state
     private boolean mIsChangingConfig;
-    private Context ctx;
     /************************************* CLASS METHODS ******************************************/
     public Presenter(IMVP.RequiredViewOps mView, Context ctx) {
         this.mView = new WeakReference<>(mView);
@@ -58,8 +57,6 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
                     "root permissions.");
         }
     }
-
-    public void setContext(Context ctx) { this.ctx = ctx;}
 
     public void setBan(Client c, boolean banned) {
         mModel.setBan(c, banned);

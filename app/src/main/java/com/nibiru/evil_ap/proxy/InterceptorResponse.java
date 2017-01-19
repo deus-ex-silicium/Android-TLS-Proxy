@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import okhttp3.Interceptor;
-import okhttp3.MediaType;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 

@@ -17,7 +17,7 @@ import javax.net.ssl.SSLProtocolException;
 
 class ThreadRevEcho implements Runnable {
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private Socket client = null;
     /**************************************CLASS METHODS*******************************************/
     ThreadRevEcho(Socket socket) {

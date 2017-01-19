@@ -19,12 +19,12 @@ import javax.net.ssl.SSLServerSocketFactory;
  */
 
 class ProxyHTTPSMainLoop implements Runnable {
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private SSLServerSocket serverSocket;
     private static final int SERVERPORT = 1338;
     private String keyStorePath;
     private InputStream keyStore;
-    ProxyService ps;
+    private ProxyService ps;
     /*********************************************************************************************/
     public ProxyHTTPSMainLoop(InputStream file, ProxyService ps){
         keyStore = file;

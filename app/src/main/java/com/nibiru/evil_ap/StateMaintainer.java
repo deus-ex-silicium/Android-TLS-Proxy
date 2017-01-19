@@ -13,7 +13,7 @@ import java.util.HashMap;
  */
 
 public class StateMaintainer {
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
 
     private final String mStateMaintainerTag;
     private final WeakReference<FragmentManager> mFragmentManager;

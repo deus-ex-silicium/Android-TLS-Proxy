@@ -54,7 +54,7 @@
             android:maxLines="1"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="right"
+            android:gravity="end"
             android:shadowColor="#000f0f"
             android:shadowRadius="15"
             android:layout_marginStart="10dp"

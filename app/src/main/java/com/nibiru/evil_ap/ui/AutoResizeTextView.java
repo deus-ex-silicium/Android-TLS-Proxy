@@ -15,11 +15,11 @@ import android.widget.TextView;
 public class AutoResizeTextView extends TextView {
 
     // Minimum text size for this text view
-    public static final float MIN_TEXT_SIZE = 40;
+    private static final float MIN_TEXT_SIZE = 40;
 
     // Interface for resize notifications
     public interface OnTextResizeListener {
-        public void onTextResize(TextView textView, float oldSize, float newSize);
+        void onTextResize(TextView textView, float oldSize, float newSize);
     }
 
     // Our ellipse string
@@ -176,7 +176,7 @@ public class AutoResizeTextView extends TextView {
     /**
      * Reset the text to the original size
      */
-    public void resetTextSize() {
+    private void resetTextSize() {
         if (mTextSize > 0) {
             super.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
             mMaxTextSize = mTextSize;
@@ -211,7 +211,7 @@ public class AutoResizeTextView extends TextView {
      * @param width
      * @param height
      */
-    public void resizeText(int width, int height) {
+    private void resizeText(int width, int height) {
         CharSequence text = getText();
         // Do not resize if the view does not have dimensions or there is no text
         if (text == null || text.length() == 0 || height <= 0 || width <= 0 || mTextSize == 0) {
@@ -266,6 +266,7 @@ public class AutoResizeTextView extends TextView {
                     while (width < lineWidth + ellipseWidth) {
                         lineWidth = textPaint.measureText(text.subSequence(start, --end + 1).toString());
                     }
+                    //TODO: StringIndexOutOfBoundsException len=7, str= 0, regLen=-1
                     setText(text.subSequence(0, end) + mEllipsis);
                 }
             }

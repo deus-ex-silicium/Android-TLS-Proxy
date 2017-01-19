@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -44,13 +45,13 @@ public class MainActivity extends AppCompatActivity implements
         ACHTTPSFragment.onAcFragmentInteraction, ServerItemFragment.onClientsFragmentInteraction,
         ServerDetailsFragment.OnFragmentInteractionListener, IMVP.RequiredViewOps {
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private ProxyService.IProxyService mProxyService;
     private boolean psIsBound;
     private int selectedTab = 0;
     private ServiceConnection mConnection;
     // Responsible for maintaining objects state during changing configuration
-    public final StateMaintainer mStateMaintainer =
+    private final StateMaintainer mStateMaintainer =
             new StateMaintainer(this.getFragmentManager(), TAG);
     // Presenter operations
     private IMVP.PresenterOps mPresenter;
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    void doBindService() {
+    private void doBindService() {
         // Establish a connection with the service.  We use an explicit
         // class name because we want a specific service implementation that
         // we know will be running in our own process (and thus won't be
@@ -129,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements
         psIsBound = true;
     }
 
-    void doUnbindService() {
+    private void doUnbindService() {
         if (psIsBound) {
             // Detach our existing connection.
             unbindService(mConnection);
@@ -240,19 +241,16 @@ public class MainActivity extends AppCompatActivity implements
         tabLayout.addTab(tabLayout.newTab().setText("Action Center"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
         final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.pager);
-        final PagerAdapter adapter =
-                new PagerAdapter
+        final PagerAdapter adapter = new PagerAdapter
                         (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        disableTabLayout();
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if (isApOn()) {
                     viewPager.setCurrentItem(tab.getPosition());
                     selectedTab = tab.getPosition();
-                } else {
                 }
             }
 
@@ -266,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements
 
         });
         FrameLayout r = (FrameLayout) findViewById(R.id.activity_main);
-        r.setBackground((getResources().getDrawable(R.drawable.bground)));
+        r.setBackground(ContextCompat.getDrawable(this, R.drawable.bground));
     }
 
     /************************************ MVP stuff ***********************************************/
@@ -287,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements
      * Initialize and restart the Presenter.
      * This method should be called after {@link MainActivity#onCreate(Bundle)}
      */
-    public void startMVPOps() {
+    private void startMVPOps() {
         try {
             if (mStateMaintainer.firstTimeIn()) {
                 Log.d(TAG, "onCreate() called for the first time");
@@ -305,8 +303,7 @@ public class MainActivity extends AppCompatActivity implements
      * Initialize relevant MVP Objects.
      * Creates a Presenter instance, saves the presenter in {@link StateMaintainer}
      */
-    private void initialize(IMVP.RequiredViewOps view)
-            throws InstantiationException, IllegalAccessException {
+    private void initialize(IMVP.RequiredViewOps view) {
         mPresenter = new Presenter(view, this.getApplicationContext());
         mStateMaintainer.put(IMVP.PresenterOps.class.getSimpleName(), mPresenter);
     }
@@ -331,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    public Action getIndexApiAction() {
+    private Action getIndexApiAction() {
         Thing object = new Thing.Builder()
                 .setName("Main Page") // TODO: Define a title for the content shown.
                 // TODO: Make sure this auto-generated URL is correct.

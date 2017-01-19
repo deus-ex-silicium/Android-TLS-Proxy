@@ -1,6 +1,5 @@
 package com.nibiru.evil_ap.log;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -105,7 +104,7 @@ public class DatabaseManager {
         );
 
         //read and return results
-        List<LogEntry> logEntries = new ArrayList<LogEntry>();
+        List<LogEntry> logEntries = new ArrayList<>();
         while(cursor.moveToNext()) {
             long itemId = cursor.getLong(
                     cursor.getColumnIndexOrThrow(LogDbContract.LogEntry._ID));

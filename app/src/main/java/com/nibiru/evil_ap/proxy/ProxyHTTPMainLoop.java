@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 class ProxyHTTPMainLoop implements Runnable{
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private ServerSocket serverSocket;
     private static final int SERVERPORT = 1337;
     private ProxyService ps;

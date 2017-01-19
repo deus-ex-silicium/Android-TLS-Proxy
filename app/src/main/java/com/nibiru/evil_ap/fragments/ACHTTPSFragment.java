@@ -21,9 +21,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 
-import com.nibiru.evil_ap.MainActivity;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.manager.Routing;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +48,6 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -81,7 +78,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         switch (view.getId()) {
             case R.id.button_injectHTMLs:
                 if (!l1flag) {
-                    l1flag = !l1flag;
+                    l1flag = true;
                     Log.e("E!", "inject");
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setText("Payload1");
@@ -101,12 +98,12 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                     mLayout.addView(et3);*/
                     break;
                 } else {
-                    l1flag =! l1flag;
+                    l1flag = false;
                     mLayout.removeAllViews();
                 }
             case R.id.button_replaceImagess:
                 if (!l2flag) {
-                    l2flag = !l2flag;
+                    l2flag = true;
                     Log.e("E!", "images");
                     Button b = new Button(view.getContext());
                     Button b2 = new Button(view.getContext());
@@ -185,7 +182,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                     mLayout2.addView(b);
                     mLayout2.addView(b2);
                 } else {
-                    l2flag = !l2flag;
+                    l2flag = false;
                     mLayout2.removeAllViews();
                 }
                 break;
@@ -196,11 +193,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
         switch (requestCode) {
             case 0:
-                if (resultCode == RESULT_OK) {
-
-                }
-
-                break;
+                if (resultCode == RESULT_OK) {} break;
             case 1:
                 if (resultCode == RESULT_OK) {
                     Uri selectedImage = imageReturnedIntent.getData();
@@ -220,8 +213,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
     public static Drawable LoadImageFromWebOperations(String url) {
         try {
             InputStream is = (InputStream) new URL(url).getContent();
-            Drawable d = Drawable.createFromStream(is, "src name");
-            return d;
+            return Drawable.createFromStream(is, "src name");
         } catch (Exception e) {
             return null;
         }
@@ -265,7 +257,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
         }
     }
 
-    public void changeSwitch(Switch s) {
+    private void changeSwitch(Switch s) {
         if (s.isChecked())
             s.setChecked(false);
     }

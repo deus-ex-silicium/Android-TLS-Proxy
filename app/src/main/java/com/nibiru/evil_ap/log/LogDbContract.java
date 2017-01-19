@@ -6,7 +6,7 @@ import android.provider.BaseColumns;
  * Created by Nibiru on 2016-12-21.
  */
 
-public final class LogDbContract {
+final class LogDbContract {
     // To prevent someone from accidentally instantiating the contract class,
     // make the constructor private.
     private LogDbContract() {}
