@@ -15,16 +15,19 @@ import javax.net.ssl.SSLProtocolException;
  * Created by Nibiru on 2016-10-14.
  */
 
-class RequestRevEcho implements Runnable {
+class ThreadRevEcho implements Runnable {
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
     private Socket client = null;
     /**************************************CLASS METHODS*******************************************/
-    RequestRevEcho(Socket socket) {
+    ThreadRevEcho(Socket socket) {
         super();
         this.client = socket;
     }
 
+    /**
+     * Debug class that handles clients by echoing the request they are making
+     */
     public void run() {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));

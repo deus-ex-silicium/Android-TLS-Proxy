@@ -8,13 +8,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 tools:context="com.nibiru.evil_ap.fragments.ACFragment"
                 android:src="@drawable/bground"
                 android:scaleType="centerCrop">
 
-    <!-- TODO: Update blank fragment layout -->
     <LinearLayout
         android:id="@+id/lin1s"
         android:layout_width="match_parent"

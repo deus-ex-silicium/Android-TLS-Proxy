@@ -2,11 +2,8 @@ package com.nibiru.evil_ap.proxy;
 
 import android.util.Log;
 
-import com.nibiru.evil_ap.SharedClass;
-
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -46,9 +43,8 @@ class ProxyHTTPMainLoop implements Runnable{
             Log.d(TAG, "Listening on port: " + SERVERPORT);
             serverSocket = new ServerSocket(SERVERPORT);
             while (ps.work) {
-                Socket client = serverSocket.accept();
-                if (ps.mPresenter != null && client != null) {
-                    executor.execute(new ThreadProxy(client, ps.config,
+                if (ps.mPresenter != null) {
+                    executor.execute(new ThreadProxy(serverSocket.accept(),
                             ps.mPresenter.getSharedObj()));
                     Log.d(TAG, "Accepted HTTP client");
                 }

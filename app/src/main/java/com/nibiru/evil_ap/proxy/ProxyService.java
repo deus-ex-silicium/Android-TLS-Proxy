@@ -14,13 +14,10 @@ import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.MainActivity;
-import com.nibiru.evil_ap.Presenter;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.SharedClass;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -197,7 +194,6 @@ public class ProxyService extends Service{
                 while ((bytes_read = inFromServer.read(reply)) != -1) {
                     outStream.write(reply, 0, bytes_read);
                     outStream.flush();
-                    //TODO CREATE YOUR LOGIC HERE
                 }
             } catch (IOException e) {
                 e.printStackTrace();

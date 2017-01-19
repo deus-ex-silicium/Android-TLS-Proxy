@@ -41,7 +41,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         // only for marshmallow and newer versions, we need user to explicitly grant us
         // WRITE_SETTINGS permissions to be able to change hotspot configuration
-        //TODO: what about other versions ? FIX NEEDED
+        //TODO: what about other versions ?
         //http://stackoverflow.com/questions/32083410/cant-get-write-settings-permission/32083622#32083622
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 !Settings.System.canWrite(getContext())) {

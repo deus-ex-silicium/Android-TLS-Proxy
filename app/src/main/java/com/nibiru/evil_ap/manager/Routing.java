@@ -18,7 +18,6 @@ public class Routing {
                 + port + "\"" );
     }
 
-    //TODO: TEST!
     public void filterMAC(Root mRootMan, String MAC, boolean ban){
         if (ban) {
             mRootMan.RunAsRoot("iptables -A INPUT -p all -m mac --mac-source " + MAC + " -j DROP");

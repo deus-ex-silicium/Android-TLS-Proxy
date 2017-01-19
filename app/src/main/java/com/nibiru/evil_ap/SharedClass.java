@@ -2,14 +2,18 @@ package com.nibiru.evil_ap;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.log.DatabaseManager;
 import com.nibiru.evil_ap.log.LogDbContract;
 import com.nibiru.evil_ap.log.LogDbHelper;
 import com.nibiru.evil_ap.log.LogEntry;
+import com.nibiru.evil_ap.proxy.InterceptorRequest;
+import com.nibiru.evil_ap.proxy.InterceptorResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -17,12 +21,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
 
 /**
  * Created by Nibiru on 2016-12-17.
@@ -35,8 +42,17 @@ public class SharedClass {
     private volatile List<String> payloads;
     private volatile DatabaseManager mDbManager;
     private IMVP.ModelOps mModel;
+    private OkHttpClient okhttp;
     /**************************************CLASS METHODS*******************************************/
-    public SharedClass(InputStream is, Context ctx, IMVP.ModelOps model){
+    public SharedClass(InputStream is, Context ctx, IMVP.ModelOps model, SharedPreferences config){
+        //make client not follow redirects!
+        okhttp = new OkHttpClient().newBuilder().followRedirects(false)
+                .addInterceptor(new InterceptorRequest(this,config))
+                .addInterceptor(new InterceptorResponse(this, config))
+                .followSslRedirects(false).build();
+        //load default payload
+        this.payloads = new ArrayList<>();
+        this.payloads.add("<script type=\"text/javascript\">alert(\"Hi from Evil-AP!\");</script>");
         try {
             loadStream(is);
             DatabaseManager.initializeInstance(new LogDbHelper(ctx));
@@ -55,6 +71,11 @@ public class SharedClass {
     //and log entries will be added in a queue manner
     public void addRequest(Client c, String host, String reqLine, String headers){
         mDbManager.addRequest(c, host, reqLine, headers);
+    }
+
+    //get http client
+    public OkHttpClient getHttpClient(){
+        return okhttp;
     }
 
     //get client log
