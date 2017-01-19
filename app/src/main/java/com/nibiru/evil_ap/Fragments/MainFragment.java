@@ -18,13 +18,11 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
-import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
-import com.nibiru.evil_ap.proxy.ProxyService;
 
 public class MainFragment extends Fragment implements View.OnClickListener {
     /************************************* CLASS FIELDS *******************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private OnMainFragmentInteraction mListener;
     private EditText et;
     private EditText et2;
@@ -77,23 +75,23 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         return v;
     }
 
-    public void setBtnUI(boolean ApOn) {
+    private void setBtnUI(boolean ApOn) {
         try {
             Button btn = (Button) getView().findViewById(R.id.button);
             if (ApOn) {
                 btn.setBackgroundResource(R.drawable.greenontest);
-                mListener.enableTabLayout();
                 et.setFocusable(false);
                 et2.setFocusable(false);
                 cb.setEnabled(false);
+                mListener.enableTabLayout();
             }
-            else if(!ApOn){
+            else{
+                btn.setBackgroundResource(R.drawable.greenoff);
                 et.setFocusable(true);
                 et2.setFocusable(true);
                 et.setFocusableInTouchMode(true);
                 et2.setFocusableInTouchMode(true);
                 cb.setEnabled(true);
-                btn.setBackgroundResource(R.drawable.greenoff);
                 mListener.disableTabLayout();
 
             }
@@ -114,10 +112,11 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                         mListener.onApPressed(et.getText().toString(), null);
                     }
                     Log.e(TAG, et.getText().toString());
+                    //hotspot takes while to launch, we want user to see instantly that button
+                    // has been pressed
                     setBtnUI(true);
                 } else if(mListener.isApOn()){
                     mListener.onApPressed("","");
-                    setBtnUI(false);
                 }
                 break;
         }

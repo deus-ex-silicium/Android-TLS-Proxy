@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
  * Created by Nibiru on 2017-01-13.
  */
 
-public class RunnableAddDbEntry implements Runnable{
+class RunnableAddDbEntry implements Runnable{
     /**************************************CLASS FIELDS********************************************/
     private final Client c;
     private final String host;

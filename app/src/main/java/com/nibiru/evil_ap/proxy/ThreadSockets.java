@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
  * Created by Nibiru on 2016-12-30.
  */
 
-public class ThreadSockets implements Runnable {
+class ThreadSockets implements Runnable {
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
     private SharedPreferences mConfig;
@@ -253,7 +253,7 @@ public class ThreadSockets implements Runnable {
         int nRead;
         byte[] data = new byte[16384];
         while ((nRead = is.read(data, 0, data.length)) != -1) {
-            String test = new String(data, "UTF-8");
+            //String test = new String(data, "UTF-8");
             buffer.write(data, 0, nRead);
         }
         buffer.flush();
@@ -271,7 +271,7 @@ public class ThreadSockets implements Runnable {
         System.arraycopy(delim, 0, chunkArr, chunk.length()+delim.length+msg.length, delim.length);
         try {
             out.write(chunkArr, 0, chunkArr.length);
-            String test  = new String(chunkArr, "UTF-8");
+            //String test  = new String(chunkArr, "UTF-8");
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -330,18 +330,18 @@ public class ThreadSockets implements Runnable {
         // pos contains the starting index of the end signature (\r\n\r\n) so we add 4 bytes
         pos += 4;
         // When you encounter the end of header, create a string from the first *n* bytes
-        String headers = new String(buffer, 0, pos);
+        //String headers = new String(buffer, 0, pos);
 
         // Read body bytes
         while ((nRead = is.read(buffer, 0, buffer.length)) != -1) {
-            String test = new String(buffer, "UTF-8");
+            //String test = new String(buffer, "UTF-8");
             body.write(buffer, 0, nRead);
         }
 
         return null;
     }
 
-    private String readHeaders4(InputStream is) throws IOException{
+    /*private String readHeaders4(InputStream is) throws IOException{
         ByteArrayOutputStream headersBytes = new ByteArrayOutputStream();
         ByteArrayOutputStream bodyBytes = new ByteArrayOutputStream();
         byte[] headEnd = {13, 10, 13, 10}; // \r \n \r \n
@@ -351,15 +351,14 @@ public class ThreadSockets implements Runnable {
         byte[] tmpBuffer = new byte[4];
         while (true) {
             readByte = is.read();
-
         }
         //read body
         //int read;
         //while ((read = in.read()) != -1) {
         //    body.write(read);
         //}
-        //return null;
-    }
+        return null;
+    }*/
 
     private int arrayIndexOf(byte[] haystack, int offset, int length, byte[] needle) {
         for (int i=offset; i<offset+length-needle.length; i++) {

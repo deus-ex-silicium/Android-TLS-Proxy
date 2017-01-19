@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,8 +62,9 @@ public class server_adapter extends ArrayAdapter<String> {
      * @param parent Parent view
      * @return Updated view
      */
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         View v_server = convertView;
         if (v_server == null) {
             LayoutInflater vid;
@@ -80,7 +82,6 @@ public class server_adapter extends ArrayAdapter<String> {
             if (ti != null) {
                 ti.setText(serverList.get(position));
                 ticount.setText(serverListCount.get(position));
-                final View finalV_clients = v_server;
                 b.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

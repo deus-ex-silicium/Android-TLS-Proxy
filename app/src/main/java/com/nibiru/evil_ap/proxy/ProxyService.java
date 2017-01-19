@@ -37,7 +37,7 @@ public class ProxyService extends Service{
     public IMVP.PresenterOps mPresenter;
     private BroadcastReceiver mProxyReceiver;
     // Configuration settings
-    public SharedPreferences config;
+    private SharedPreferences config;
     /**************************************CLASS METHODS*******************************************/
     /**
      * Class for clients to access.  Because we know this service always
@@ -99,7 +99,7 @@ public class ProxyService extends Service{
      * Sets up app notification.
      * Is used so user can click to clean up iptables rules among other things
      */
-    void setupNotification() {
+    private void setupNotification() {
         Bitmap bm = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.onoffon),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
                 getResources().getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
@@ -135,7 +135,7 @@ public class ProxyService extends Service{
      * @param ctx
      * @param notifyId
      */
-    public static void cancelNotification(Context ctx, int notifyId) {
+    private static void cancelNotification(Context ctx, int notifyId) {
         String ns = Context.NOTIFICATION_SERVICE;
         NotificationManager nMgr = (NotificationManager) ctx.getSystemService(ns);
         nMgr.cancel(notifyId);
@@ -183,7 +183,6 @@ public class ProxyService extends Service{
 
     private void testImgStream() {
         InputStream inFromServer = getResources().openRawResource(R.raw.pixel_skull);
-        byte[] buffer = new byte[0];
         try {
             File targetFile = new File(this.getApplicationContext().getFilesDir(), "test.tmp");
             OutputStream outStream = new FileOutputStream(targetFile);

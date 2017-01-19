@@ -11,8 +11,8 @@ import java.net.InetAddress;
  * Created by Nibiru on 2016-10-30.
  */
 
-public class ProxyDNSMainLoop implements Runnable{
-    final static String TAG = "ProxyDNSMainLoop";
+class ProxyDNSMainLoop implements Runnable{
+    private final static String TAG = "ProxyDNSMainLoop";
     private DatagramSocket serverSocket;
     private static final int SERVERPORT = 1339;
     private Boolean work = true;

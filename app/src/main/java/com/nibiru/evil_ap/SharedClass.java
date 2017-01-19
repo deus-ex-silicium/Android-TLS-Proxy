@@ -1,15 +1,10 @@
 package com.nibiru.evil_ap;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.support.v4.util.Pair;
 
 import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.log.DatabaseManager;
-import com.nibiru.evil_ap.log.LogDbContract;
 import com.nibiru.evil_ap.log.LogDbHelper;
 import com.nibiru.evil_ap.log.LogEntry;
 import com.nibiru.evil_ap.proxy.InterceptorRequest;
@@ -20,14 +15,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
@@ -47,7 +36,7 @@ public class SharedClass {
     public SharedClass(InputStream is, Context ctx, IMVP.ModelOps model, SharedPreferences config){
         //make client not follow redirects!
         okhttp = new OkHttpClient().newBuilder().followRedirects(false)
-                .addInterceptor(new InterceptorRequest(this,config))
+                .addInterceptor(new InterceptorRequest())
                 .addInterceptor(new InterceptorResponse(this, config))
                 .followSslRedirects(false).build();
         //load default payload
@@ -116,9 +105,6 @@ public class SharedClass {
     }
     public byte[] getImgData(){
         return imgData;
-    }
-    public byte[] getImgChunk(int start, int end){
-        return Arrays.copyOfRange(imgData, start, end);
     }
     public int getImgDataLength(){
         return imgData.length;

@@ -1,15 +1,12 @@
 package com.nibiru.evil_ap.proxy;
 
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.nibiru.evil_ap.SharedClass;
 import com.nibiru.evil_ap.log.Client;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -26,13 +23,13 @@ import okhttp3.Response;
  * Created by Nibiru on 2016-11-25.
  */
 
-public class ThreadProxy implements Runnable{
+class ThreadProxy implements Runnable{
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
     private SharedClass mSharedObj;
-    private boolean debug = true;
+    private boolean debug = false;
     /**************************************CLASS METHODS*******************************************/
     ThreadProxy(Socket sClient, SharedClass sharedObj) {
         this.sClient = sClient;
@@ -93,12 +90,13 @@ public class ThreadProxy implements Runnable{
         if (debug) Log.d(TAG + "[OUT]", "sent chunk!");
     }
 
-    private String getResponseHeaders(Response res) throws IOException {
+    private String getResponseHeaders(Response res){
         String resToClient = "";
         if (debug) Log.d(TAG, "<==================Sending response==================>");
         //find status line
         // /n ! not /r/n !
         switch (res.code()) {
+            //TODO: sometimes get 303, 307 (redirections) and 400(bad request)
             case 200: resToClient += "HTTP/1.1 200 OK\n"; break;
             case 204: resToClient += "HTTP/1.1 204 No Content\n"; break;
             case 301: resToClient += "HTTP/1.1 301 Moved Permanently\n"; break;
@@ -122,7 +120,7 @@ public class ThreadProxy implements Runnable{
         //we only support GET and POST requests
         if (requestLine == null || !(requestLine.startsWith("GET")||
                 requestLine.startsWith("POST"))) {
-            Log.e(TAG, "UNSUPPORTED HTTP METHOD!");
+            Log.e(TAG, "UNSUPPORTED HTTP METHOD! (or readLine returned null)\n" + requestLine);
             return null;
         }
         String[] requestLineValues = requestLine.split("\\s+");
@@ -168,71 +166,4 @@ public class ThreadProxy implements Runnable{
         mSharedObj.addRequest(c, host, requestLine, headers.toString() + "\n" + body);
         return builder.build();
     }
-
-    /*************************************OLD METHODS**********************************************/
-    private ByteArrayOutputStream swapImg(String headers, ByteArrayOutputStream streamResponse)
-            throws IOException {
-        //add header bytes to stream
-        streamResponse.write(headers.getBytes());
-        //add swapped image bytes to stream
-        streamResponse.write(mSharedObj.getImgData());
-        return streamResponse;
-    }
-
-    private String setResponseHeader(String res, String header, String val){
-        return res.replaceFirst("(?i)" + header + ".*", header +": " + val + "\n");
-    }
-
-    private String getEtag(String sRequest){
-        String result = "";
-        if (sRequest.contains("\"")) {
-            result = sRequest.substring(sRequest.indexOf("\"") + 1);
-            result = result.substring(0, result.indexOf("\""));
-        }
-        return "\"" + result + "\"";
-    }
-
-    private static String getStringFromInputStream(InputStream is) {
-
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-
-        String line;
-        try {
-
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return sb.toString();
-
-    }
-
-    private void sendInStreamToOutStream(InputStream in, OutputStream out){
-        byte[] reply = new byte[4096];
-        int bytes_read;
-        try {
-            while ((bytes_read = in.read(reply)) != -1) {
-                out.write(reply, 0, bytes_read);
-                out.flush();
-            }
-            if (debug) Log.d(TAG + "[OUT]", "sent entire body!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

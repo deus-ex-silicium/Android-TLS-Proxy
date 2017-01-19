@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class Root {
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     /**************************************CLASS METHODS*******************************************/
     public Root(){}
 

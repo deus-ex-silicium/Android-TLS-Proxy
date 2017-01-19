@@ -1,25 +1,17 @@
 package com.nibiru.evil_ap;
 
-import android.content.Context;
-import android.graphics.PorterDuff;
-import android.test.InstrumentationTestCase;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.notification.RunListener;
-
-import java.security.spec.ECField;
 
 import static android.support.test.InstrumentationRegistry.getContext;
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Created by Wobbaf on 17/12/2016.
  */
 public class ModelTest {
-    Model m;
+    private Model m;
 
     @Before
     public void setUp() {

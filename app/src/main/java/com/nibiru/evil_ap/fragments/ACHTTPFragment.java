@@ -88,7 +88,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         switch (view.getId()) {
             case R.id.button_injectHTML:
                 if (!layotPayloadflag) {
-                    layotPayloadflag = !layotPayloadflag;
+                    layotPayloadflag = true;
                     Log.e("E!", "inject");
                     final CheckBox cb = new CheckBox(view.getContext());
                     cb.setText("Payload1 - Alert dialog box message");
@@ -123,13 +123,13 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     mLayout.addView(apply);
                     break;
                 } else {
-                    layotPayloadflag = !layotPayloadflag;
+                    layotPayloadflag = false;
                     mLayout.removeAllViews();
                     break;
                 }
             case R.id.button_replaceImages:
                 if (!layoutImageflag) {
-                    layoutImageflag = !layoutImageflag;
+                    layoutImageflag = true;
                     String imgpath = mPresenter.getSharedPrefsString(ConfigTags.imgPath.toString());
                     if (imgpath == null || imgpath.equals("")) {
                         Log.e("SP is null - ", imgpath);
@@ -154,7 +154,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     mLayout2.addView(chooseImage_button);
                     break;
                 } else {
-                    layoutImageflag = !layoutImageflag;
+                    layoutImageflag = false;
                     mLayout2.removeAllViews();
                     break;
                 }
@@ -176,7 +176,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         }
     }
 
-    public void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
+    private void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
         if(layout.getChildCount() > 1){
             layout.removeViewAt(0);
         }
@@ -188,7 +188,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         iv.setImageURI(image);
     }
 
-    public void checkSwitches() {
+    private void checkSwitches() {
         if (mPresenter == null) return;
             ((Switch) mListener.getView(R.id.switch3)).setChecked(mPresenter.getSharedPrefsBool
                     (ConfigTags.sslStrip.toString()));
@@ -243,7 +243,7 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
         }
     }
 
-    public void changeSwitch(Switch s) {
+    private void changeSwitch(Switch s) {
         if (s.isChecked())
             s.setChecked(false);
     }

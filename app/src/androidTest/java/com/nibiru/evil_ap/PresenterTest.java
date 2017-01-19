@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
  * Created by Wobbaf on 18/12/2016.
  */
 public class PresenterTest {
-    IMVP.ModelOps m;
+    private IMVP.ModelOps m;
     @Before
     public void setUp() {
         IMVP.RequiredPresenterOps mPresenter = new IMVP.RequiredPresenterOps() {

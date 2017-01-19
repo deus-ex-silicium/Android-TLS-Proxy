@@ -4,18 +4,15 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.support.v7.widget.Toolbar;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.nibiru.evil_ap.IMVP;
 import com.nibiru.evil_ap.R;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.ServerItemFragment;
@@ -33,7 +30,7 @@ public class clients_adapter extends ArrayAdapter<Client> {
     private ArrayList<Client> clientsList;
     private ArrayList<Client> cliList = null;
     ClientsFragment Fragment_Clients;
-    ClientsFragment.onClientsFragmentInteraction mListener;
+    private ClientsFragment.onClientsFragmentInteraction mListener;
 
     /************************************ CLASS METHODS *******************************************/
     /**
@@ -60,8 +57,9 @@ public class clients_adapter extends ArrayAdapter<Client> {
      * @param parent Parent view
      * @return Updated view
      */
+    @NonNull
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
         View v_clients = convertView;
         if (v_clients == null) {
             LayoutInflater vid;

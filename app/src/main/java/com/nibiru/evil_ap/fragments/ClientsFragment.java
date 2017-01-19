@@ -19,12 +19,12 @@ import java.util.ArrayList;
 
 public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     /**************************************CLASS FIELDS********************************************/
-    protected final String TAG = getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
     private onClientsFragmentInteraction mListener;
     private ListView clients_listView;
     private clients_adapter customAdapter;
     private View rootView;
-    SwipeRefreshLayout mySwipeRefreshLayout;
+    private SwipeRefreshLayout mySwipeRefreshLayout;
     private ArrayList<Client> clientsList;
     /**************************************CLASS METHODS*******************************************/
     public ClientsFragment() {
@@ -46,7 +46,7 @@ public class ClientsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         return rootView;
     }
 
-    public ArrayList<Client> getCurrentClients(){
+    private ArrayList<Client> getCurrentClients(){
         return mListener.getCurrentClients();
     }
     @Override

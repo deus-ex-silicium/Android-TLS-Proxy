@@ -57,7 +57,7 @@ public class ServerDetailsFragment extends Fragment{
         // Inflate the layout for this fragment
         return rootView;
     }
-    public ArrayList<LogEntry> getServerDetails(Client client){
+    private ArrayList<LogEntry> getServerDetails(Client client){
         ArrayList<LogEntry> le = new ArrayList<>();
         if(mPresenter.getClientLog(client).size()!=0){
         for (LogEntry e:mPresenter.getClientLog(client)
@@ -103,13 +103,8 @@ public class ServerDetailsFragment extends Fragment{
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
         IMVP.PresenterOps getPresenter();
     }
