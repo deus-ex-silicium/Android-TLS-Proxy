@@ -96,12 +96,12 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                     et.setText("Hello from Evil-AP!");
                     mLayout.addView(cb);
                     mLayout.addView(et);
-                    CheckBox cb2 = new CheckBox(view.getContext());
+                    /*CheckBox cb2 = new CheckBox(view.getContext());
                     cb2.setText("Payload2");
                     EditText et2 = new EditText(view.getContext());
                     EditText et3 = new EditText(view.getContext());
                     et2.setHint("IP");
-                    et3.setHint("Port");
+                    et3.setHint("Port");*/
                     Button apply = new Button(view.getContext());
                     apply.setText("Apply");
                     apply.setOnClickListener(new View.OnClickListener() {
@@ -113,11 +113,13 @@ public class ACHTTPFragment extends Fragment implements View.OnClickListener, Co
                                 payloads.add(p1);
                             }
                             mListener.onJsPayloadApply(payloads);
+                            layotPayloadflag = !layotPayloadflag;
+                            mLayout.removeAllViews();
                         }
                     });
-                    mLayout.addView(cb2);
+                    /*mLayout.addView(cb2);
                     mLayout.addView(et2);
-                    mLayout.addView(et3);
+                    mLayout.addView(et3);*/
                     mLayout.addView(apply);
                     break;
                 } else {

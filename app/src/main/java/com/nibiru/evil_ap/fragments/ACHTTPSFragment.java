@@ -87,10 +87,10 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                     cb.setText("Payload1");
                     EditText et = new EditText(view.getContext());
                     et.setText
-                            ("PADSFPSFSDPFSPDFPSDPFDSPFPSDFPSDPFPSDFPDSPFPSDPFPSDFPSDPFPSDFPSAPDFPASPDFPASDPFAPSDFPASPDFPASDPFPSDAFPSDFP");
+                            ("Hello from Evil-AP!");
                     mLayout.addView(cb);
                     mLayout.addView(et);
-                    CheckBox cb2 = new CheckBox(view.getContext());
+                    /*CheckBox cb2 = new CheckBox(view.getContext());
                     cb2.setText("Payload2");
                     EditText et2 = new EditText(view.getContext());
                     EditText et3 = new EditText(view.getContext());
@@ -98,7 +98,7 @@ public class ACHTTPSFragment extends Fragment implements View.OnClickListener, C
                     et3.setHint("Port");
                     mLayout.addView(cb2);
                     mLayout.addView(et2);
-                    mLayout.addView(et3);
+                    mLayout.addView(et3);*/
                     break;
                 } else {
                     l1flag =! l1flag;
