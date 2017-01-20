@@ -26,8 +26,6 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.nibiru.evil_ap.adapters.PagerAdapter;
 import com.nibiru.evil_ap.fragments.ACFragment;
-import com.nibiru.evil_ap.fragments.ACHTTPFragment;
-import com.nibiru.evil_ap.fragments.ACHTTPSFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 import com.nibiru.evil_ap.fragments.ServerDetailsFragment;
@@ -41,8 +39,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
         MainFragment.OnMainFragmentInteraction, ClientsFragment.onClientsFragmentInteraction,
-        ACFragment.OnFragmentInteractionListener, ACHTTPFragment.onAcFragmentInteraction,
-        ACHTTPSFragment.onAcFragmentInteraction, ServerItemFragment.onClientsFragmentInteraction,
+         ACFragment.onAcFragmentInteraction,
+         ServerItemFragment.onClientsFragmentInteraction,
         ServerDetailsFragment.OnFragmentInteractionListener, IMVP.RequiredViewOps {
     /**************************************CLASS FIELDS********************************************/
     private final String TAG = getClass().getSimpleName();
