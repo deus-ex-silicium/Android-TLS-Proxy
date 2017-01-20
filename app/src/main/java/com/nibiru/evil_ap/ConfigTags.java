@@ -9,6 +9,7 @@ public enum ConfigTags {
     sslStrip("sslStrip"),
     jsInject("jsInject"),
     httpRedirect("httpRedirect"),
+    httpsRedirect("httpsRedirect"),
     imgPath("imgPath")
     ;
 

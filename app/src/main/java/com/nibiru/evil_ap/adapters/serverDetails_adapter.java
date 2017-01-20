@@ -2,7 +2,9 @@ package com.nibiru.evil_ap.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,11 +54,15 @@ public class serverDetails_adapter extends ArrayAdapter<LogEntry> {
         if (d != null) {
             final TextView time = (TextView) v_clients.findViewById(R.id.details_time);
             final TextView det = (TextView) v_clients.findViewById(R.id.details_det);
+            String[] sp = logList.get(position).getDetails().split("\n");
+            Log.e(sp[0],sp[1]);
             if (time != null) {
+                time.setTextColor(sp[0].equals("GET")?Color.GREEN:Color.RED);
                 time.setText(logList.get(position).getTimestamp());
             }
             if (det != null) {
-                det.setText(logList.get(position).getDetails());
+                det.setTextColor(sp[0].equals("GET")?Color.GREEN:Color.RED);
+                det.setText(sp[0]+"\n"+sp[1]);
             }
         }
         return v_clients;

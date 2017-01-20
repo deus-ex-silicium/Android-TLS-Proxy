@@ -9,6 +9,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="60dp"
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 tools:context="com.nibiru.evil_ap.fragments.ACFragment"
                 android:src="@drawable/bground"
@@ -28,7 +29,7 @@
             android:layout_gravity="start"
             android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:text="Redirect HTML"
+            android:text="Redirect HTTP"
             android:textSize="25sp"/>
 
         <Switch
@@ -40,10 +41,36 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/lin2"
+        android:id="@+id/lin1s"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/lin1"
+        android:layout_marginTop="40dp"
+        android:background="@color/opblack">
+
+        <TextView
+            android:id="@+id/textView1s"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="Redirect HTTPS"
+            android:textSize="25sp"/>
+
+        <Switch
+            android:id="@+id/switchs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="10dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lin2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lin1s"
         android:layout_marginTop="40dp"
         android:background="@color/opblack">
 

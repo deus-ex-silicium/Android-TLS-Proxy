@@ -1,6 +1,5 @@
 package com.nibiru.evil_ap;
 
-import com.nibiru.evil_ap.fragments.ACFragment;
 import com.nibiru.evil_ap.fragments.ClientsFragment;
 import com.nibiru.evil_ap.fragments.MainFragment;
 
@@ -16,7 +15,6 @@ public class ViewTest {
     IMVP.PresenterOps p;
     private MainActivity mainActivity;
     private MainFragment mainFragment;
-    private ACFragment acFragment;
     private ClientsFragment clientsFragment;
 
     @Test
@@ -27,7 +25,6 @@ public class ViewTest {
     @Test
     public void fragmentsTest(){
         assertNull(mainFragment);
-        assertNull(acFragment);
         assertNull(clientsFragment);
     }
 }
