@@ -68,8 +68,8 @@ public class ServerDetailsFragment extends Fragment{
             }
         }}
         else{
-            le.add(new LogEntry(0,"No entries","No entries","POST bla bla", "details"));
-            le.add(new LogEntry(0,"No entries","No entries","GET bla bla", "details"));
+            le.add(new LogEntry(0,"No entries","No entries","POST", "details"));
+            le.add(new LogEntry(0,"No entries","No entries","GET", "details"));
         }
 
         return le;

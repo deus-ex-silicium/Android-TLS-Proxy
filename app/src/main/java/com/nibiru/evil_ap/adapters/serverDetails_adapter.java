@@ -54,15 +54,15 @@ public class serverDetails_adapter extends ArrayAdapter<LogEntry> {
         if (d != null) {
             final TextView time = (TextView) v_clients.findViewById(R.id.details_time);
             final TextView det = (TextView) v_clients.findViewById(R.id.details_det);
-            String[] sp = logList.get(position).getDetails().split("\n");
-            Log.e(sp[0],sp[1]);
+            String sp = logList.get(position).getMethod();
+            Log.e(sp, "hej");
             if (time != null) {
-                time.setTextColor(sp[0].equals("GET")?Color.GREEN:Color.RED);
+                time.setTextColor(sp.equals("GET")?Color.GREEN:Color.RED);
                 time.setText(logList.get(position).getTimestamp());
             }
             if (det != null) {
-                det.setTextColor(sp[0].equals("GET")?Color.GREEN:Color.RED);
-                det.setText(sp[0]+"\n"+sp[1]);
+                det.setTextColor(sp.equals("GET")?Color.GREEN:Color.RED);
+                det.setText(logList.get(position).getReqLine() + "\n" + logList.get(position).getDetails());
             }
         }
         return v_clients;
