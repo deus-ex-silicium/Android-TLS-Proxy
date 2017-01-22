@@ -5,6 +5,7 @@ import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
 
@@ -267,8 +268,13 @@ public class AutoResizeTextView extends TextView {
                         lineWidth = textPaint.measureText(text.subSequence(start, --end + 1).toString());
                     }
                     //TODO: StringIndexOutOfBoundsException len=7, str= 0, regLen=-1
+                    //try {
                     String temp = text.subSequence(0, end) + mEllipsis;
                     setText(temp);
+                        //setText(text.subSequence(0, end) + mEllipsis);
+                    //}catch (StringIndexOutOfBoundsException e){
+                    //    Log.e("WTF", text.toString());
+                    //}
                 }
             }
         }
