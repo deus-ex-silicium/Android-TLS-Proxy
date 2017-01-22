@@ -25,7 +25,7 @@ public class InterceptorRequest implements Interceptor{
                 .removeHeader("Accept-Encoding")
                 .removeHeader("Upgrade-Insecure-Requests")
                 .removeHeader("Strict-Transport-Security")
-                .removeHeader("User-Agent")
+                //.removeHeader("User-Agent")
                 .method(originalRequest.method(), originalRequest.body())
                 .build();
 

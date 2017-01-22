@@ -16,6 +16,7 @@ import com.nibiru.evil_ap.log.Client;
 import com.nibiru.evil_ap.log.LogEntry;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ServerDetailsFragment extends Fragment{
 
@@ -59,16 +60,16 @@ public class ServerDetailsFragment extends Fragment{
     }
     private ArrayList<LogEntry> getServerDetails(Client client){
         ArrayList<LogEntry> le = new ArrayList<>();
-        if(mPresenter.getClientLog(client).size()!=0){
-        for (LogEntry e:mPresenter.getClientLog(client)
-             ) {
+        List<LogEntry> Log =  mPresenter.getClientLog(client);
+        if(Log.size()!=0){
+        for (LogEntry e:Log) {
             if(e.getHost().equals(serverLocal)){
                 le.add(e);
             }
         }}
         else{
-            le.add(new LogEntry(0,"No entries","No entries","POST\n entries"));
-            le.add(new LogEntry(0,"No entries","No entries","GET\n entries"));
+            le.add(new LogEntry(0,"No entries","No entries","POST bla bla", "details"));
+            le.add(new LogEntry(0,"No entries","No entries","GET bla bla", "details"));
         }
 
         return le;

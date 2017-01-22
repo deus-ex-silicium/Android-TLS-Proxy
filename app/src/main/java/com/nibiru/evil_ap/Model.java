@@ -59,6 +59,7 @@ public class Model implements IMVP.ModelOps{
         this.mConfig = ctx.getSharedPreferences("Config", 0);
         this.mBannedMACs = new HashSet<>(5);
         this.ctx = ctx;
+        //create shared object
         mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,
                 this, mConfig);
     }
@@ -192,6 +193,7 @@ public class Model implements IMVP.ModelOps{
         }
         mBannedMACs.clear();
         mConfig.edit().clear().apply();
+
     }
 
     /**

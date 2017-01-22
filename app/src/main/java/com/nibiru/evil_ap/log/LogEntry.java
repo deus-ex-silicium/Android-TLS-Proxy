@@ -9,13 +9,20 @@ public class LogEntry {
     private long mId;
     private String timestamp;
     private String host;
+    private String reqLine;
     private String details;
+    private String method;
     /**************************************CLASS METHODS*******************************************/
-    public LogEntry(long id, String timestamp, String host, String details){
+    public LogEntry(long id, String timestamp, String host, String reqLine, String details){
         this.mId = id;
         this.timestamp = timestamp;
         this.host = host;
         this.details = details;
+        this.reqLine = reqLine;
+        if (reqLine.startsWith("GET"))
+            method = "GET";
+        else
+            method = "POST";
     }
 
     public long getmId() {
@@ -32,5 +39,13 @@ public class LogEntry {
 
     public String getDetails() {
         return details;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public String getReqLine() {
+        return reqLine;
     }
 }

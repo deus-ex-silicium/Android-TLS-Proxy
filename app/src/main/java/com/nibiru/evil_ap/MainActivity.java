@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         mPresenter.checkIfDeviceRooted();
         //start ProxyService and establish connection to it
-        startService(new Intent(this, ProxyService.class));
+        //startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
                 mProxyService = ((ProxyService.IProxyService) service);
@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /****************************** Action Center Fragment ****************************************/
+
     public View getView(int x) {
         return this.findViewById(x);
     }
@@ -166,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /********************************* Clients Fragment *******************************************/
+
     @Override
     public ArrayList<Client> getCurrentClients() {
         return mPresenter.getCurrentClients();
@@ -177,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /********************************* Main Fragment **********************************************/
+
     @Override
     public boolean onApPressed(String SSID, String pass) {
         return mPresenter.apBtnPressed(SSID, pass, getApplicationContext());
@@ -266,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /************************************ MVP stuff ***********************************************/
+
     @Override
     public void showToast(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
