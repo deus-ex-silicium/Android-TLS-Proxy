@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLProtocolException;
+import javax.net.ssl.SSLSocket;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -143,7 +144,11 @@ class ThreadProxy implements Runnable{
             }
             if (line.startsWith("Host: ")){
                 host = split[1];
-                String url = "http://" + host + requestLineValues[1];
+                String url;
+                if (sClient instanceof SSLSocket)
+                    url = "https://" + host + requestLineValues[1];
+                else
+                    url = "http://" + host + requestLineValues[1];
                 Log.d(TAG, url);
                 builder.url(url);
             }
