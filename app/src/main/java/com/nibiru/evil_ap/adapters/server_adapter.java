@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
@@ -76,6 +78,7 @@ public class server_adapter extends ArrayAdapter<String> {
 
         if (d != null) {
             final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientsserver);
+            ti.startAnimation(AnimationUtils.loadAnimation(server_activity, R.anim.move));
             final TextView ticount = (TextView) v_server.findViewById(R.id
                     .text_content_clientsserverCount);
             final Button b = (Button) v_server.findViewById(R.id.button_details);

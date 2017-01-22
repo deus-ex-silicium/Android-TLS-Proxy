@@ -75,7 +75,11 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
             }
         }}
         else {
-            distinctHosts.add("No entries");
+            distinctHosts.add("1Noentries2Noentries3Noentries4Noentries5Noentries6Noentries");
+            distinctHosts.add("1Noentries");
+            distinctHosts.add("1Noentries2Noentries");
+            serverListCount.add("Count: null");
+            serverListCount.add("Count: null");
             serverListCount.add("Count: null");
         }
         return distinctHosts;

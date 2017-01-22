@@ -33,7 +33,7 @@
         android:layout_below="@id/separator"
         android:background="@color/opblue">
 
-        <com.nibiru.evil_ap.ui.AutoResizeTextView
+        <com.nibiru.evil_ap.ui.ScrollingTextView
             android:id="@+id/text_content_clientsserver"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -41,13 +41,17 @@
             android:layout_gravity="center"
             android:layout_marginEnd="5dp"
             android:layout_marginStart="5dp"
-            android:scrollHorizontally="false"
+            android:scrollHorizontally="true"
             android:textColor="@color/oplblue"
             android:shadowColor="#000f0f"
             android:shadowRadius="15"
-            android:layout_weight="0.5"
+            android:layout_weight="1000"
+            android:ellipsize="marquee"
+            android:lines="1"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textStyle="bold"
-            android:text="Details"/>
+            android:text="DetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsNoentries"/>
         <TextView
             android:id="@+id/text_content_clientsserverCount"
             android:layout_width="wrap_content"
@@ -57,17 +61,16 @@
             android:gravity="end"
             android:shadowColor="#000f0f"
             android:shadowRadius="15"
-            android:layout_marginStart="10dp"
             android:layout_marginEnd="5dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:scrollHorizontally="false"
             android:textColor="@color/oplblue"
-            android:layout_weight="0.5"
+            android:layout_weight="0"
             android:textStyle="bold"
             android:text="Details"/>
         <Button
             android:id="@+id/button_details"
-            android:layout_weight=".10"
+            android:layout_weight="0"
             android:layout_gravity="center"
             android:text="Details"
             android:layout_width="wrap_content"
