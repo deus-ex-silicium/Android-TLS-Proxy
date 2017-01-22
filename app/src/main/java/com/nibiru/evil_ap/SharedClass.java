@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
@@ -33,9 +34,12 @@ public class SharedClass {
     private IMVP.ModelOps mModel;
     private OkHttpClient okhttp;
     /**************************************CLASS METHODS*******************************************/
-    public SharedClass(InputStream is, Context ctx, IMVP.ModelOps model, SharedPreferences config){
+    SharedClass(InputStream is, Context ctx, IMVP.ModelOps model, SharedPreferences config){
         //make client not follow redirects!
         okhttp = new OkHttpClient().newBuilder().followRedirects(false)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(new InterceptorRequest())
                 .addInterceptor(new InterceptorResponse(this, config))
                 .followSslRedirects(false).build();
@@ -49,7 +53,6 @@ public class SharedClass {
             mDbManager.openDatabase();
             mDbManager.cleanDatabase();
             mModel = model;
-            //TODO: close ?
             //DatabaseManager.getInstance().closeDatabase();
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,26 +63,6 @@ public class SharedClass {
     //and log entries will be added in a queue manner
     public void addRequest(Client c, String host, String reqLine, String headers){
         mDbManager.addRequest(c, host, reqLine, headers);
-    }
-
-    //get http client
-    public OkHttpClient getHttpClient(){
-        return okhttp;
-    }
-
-    //get client log
-    public List<LogEntry> getClientLog(Client c){
-        return mDbManager.getClientLog(c);
-    }
-
-    synchronized void loadImage(String path){
-        File file = new File(path);
-        try {
-            InputStream imgStream = new FileInputStream(file);
-            loadStream(imgStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private synchronized void loadStream(InputStream is) throws IOException {
@@ -93,20 +76,34 @@ public class SharedClass {
         imgData = buffer.toByteArray();
     }
 
+    synchronized void loadImage(String path){
+        try {
+            loadStream(new FileInputStream(new File(path)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     synchronized void setPayloads(List<String> p){
         payloads = p;
     }
 
-    public Client getClientByIp(String ip){
+    public OkHttpClient getHttpClient(){
+        return okhttp;
+    }
+    List<LogEntry> getClientLog(Client c){
+        return mDbManager.getClientLog(c);
+    }
+    public synchronized Client getClientByIp(String ip){
         return mModel.getClientByIp(ip);
     }
-    public List<String> getPayloads(){
+    public synchronized List<String> getPayloads(){
         return payloads;
     }
-    public byte[] getImgData(){
+    public synchronized byte[] getImgData(){
         return imgData;
     }
-    public int getImgDataLength(){
+    public synchronized int getImgDataLength(){
         return imgData.length;
     }
 }

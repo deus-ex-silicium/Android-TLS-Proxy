@@ -56,7 +56,8 @@ public class InterceptorResponse implements Interceptor{
         }
         //create new body
         ResponseBody body = ResponseBody.create(originalResponse.body().contentType(), bodyBytes);
-        //create new response
+        //create new response and close old body response
+        originalResponse.close();
         return originalResponse.newBuilder()
                 .removeHeader("Transfer-Encoding")
                 .header("Content-Length", Integer.toString(bodyLen))

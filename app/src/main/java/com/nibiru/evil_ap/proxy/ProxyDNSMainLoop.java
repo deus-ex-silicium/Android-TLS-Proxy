@@ -47,7 +47,7 @@ class ProxyDNSMainLoop implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            //TODO: clean shit up?
+            //TODO: clean up?
         }
     }
 

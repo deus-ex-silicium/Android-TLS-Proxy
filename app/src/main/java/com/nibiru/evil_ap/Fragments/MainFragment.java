@@ -83,7 +83,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 et.setFocusable(false);
                 et2.setFocusable(false);
                 cb.setEnabled(false);
-                mListener.enableTabLayout();
+
             }
             else{
                 btn.setBackgroundResource(R.drawable.greenoff);
@@ -92,7 +92,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 et.setFocusableInTouchMode(true);
                 et2.setFocusableInTouchMode(true);
                 cb.setEnabled(true);
-                mListener.disableTabLayout();
+
 
             }
         } catch (NullPointerException e) {
@@ -129,7 +129,15 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             if (mListener == null) return;
             String action = intent.getAction();
             if (action.equals("android.net.wifi.WIFI_AP_STATE_CHANGED")) {
-                setBtnUI(mListener.isApOn());
+                boolean apOn = mListener.isApOn();
+                if (apOn) {
+                    setBtnUI(true);
+                    mListener.enableTabLayout();
+                }
+                else {
+                    setBtnUI(false);
+                    mListener.disableTabLayout();
+                }
             }
         }
     }

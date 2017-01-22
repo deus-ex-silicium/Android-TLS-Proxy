@@ -112,12 +112,11 @@ public class DatabaseManager {
                     .LogEntry.COLUMN_NAME_TIMESTAMP));
             String itemHost = cursor.getString(cursor.getColumnIndexOrThrow(LogDbContract
                     .LogEntry.COLUMN_NAME_HOST));
-            String itemDetails =
-                    cursor.getString(cursor.getColumnIndexOrThrow
-                            (LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE)) + "\n" +
-                    cursor.getString(cursor.getColumnIndexOrThrow
+            String reqLine = cursor.getString(cursor.getColumnIndexOrThrow
+                    (LogDbContract.LogEntry.COLUMN_NAME_REQUEST_LINE)) + "\n";
+            String itemDetails = cursor.getString(cursor.getColumnIndexOrThrow
                             (LogDbContract.LogEntry.COLUMN_NAME_HEADERS));
-            LogEntry entry = new LogEntry(itemId, itemTimestamp, itemHost, itemDetails);
+            LogEntry entry = new LogEntry(itemId, itemTimestamp, itemHost, reqLine,itemDetails);
             logEntries.add(entry);
         }
         cursor.close();
