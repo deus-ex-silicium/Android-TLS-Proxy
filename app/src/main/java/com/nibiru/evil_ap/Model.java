@@ -53,15 +53,15 @@ public class Model implements IMVP.ModelOps{
     /**************************************CLASS METHODS*******************************************/
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx) {
         this.mPresenter = mPresenter;
+        //create shared object
+        this.mConfig = ctx.getSharedPreferences("Config", 0);
+        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,
+                this, mConfig);
         mRootMan = new Root();
         mApMan = new Ap();
         mRouteMan = new Routing();
-        this.mConfig = ctx.getSharedPreferences("Config", 0);
         this.mBannedMACs = new HashSet<>(5);
         this.ctx = ctx;
-        //create shared object
-        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,
-                this, mConfig);
     }
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx, boolean flag) {
         this.mPresenter = mPresenter;
@@ -79,6 +79,7 @@ public class Model implements IMVP.ModelOps{
     @Override
     public void onDestroy() {
         // destroying actions
+        this.mPresenter = null;
     }
 
     /**
