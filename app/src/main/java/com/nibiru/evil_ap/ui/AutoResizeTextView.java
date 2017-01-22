@@ -267,7 +267,8 @@ public class AutoResizeTextView extends TextView {
                         lineWidth = textPaint.measureText(text.subSequence(start, --end + 1).toString());
                     }
                     //TODO: StringIndexOutOfBoundsException len=7, str= 0, regLen=-1
-                    setText(text.subSequence(0, end) + mEllipsis);
+                    String temp = text.subSequence(0, end) + mEllipsis;
+                    setText(temp);
                 }
             }
         }
