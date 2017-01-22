@@ -48,7 +48,7 @@
             android:layout_weight="0.5"
             android:textStyle="bold"
             android:text="Details"/>
-        <com.nibiru.evil_ap.ui.AutoResizeTextView
+        <TextView
             android:id="@+id/text_content_clientsserverCount"
             android:layout_width="wrap_content"
             android:maxLines="1"
