@@ -78,6 +78,8 @@ public class ServerItemFragment extends Fragment implements SwipeRefreshLayout.O
             distinctHosts.add("1Noentries2Noentries3Noentries4Noentries5Noentries6Noentries");
             distinctHosts.add("1Noentries");
             distinctHosts.add("1Noentries2Noentries");
+            distinctHosts.add("1Noentries2Noentries1Noentries2Noentries");
+            serverListCount.add("Count: null");
             serverListCount.add("Count: null");
             serverListCount.add("Count: null");
             serverListCount.add("Count: null");
