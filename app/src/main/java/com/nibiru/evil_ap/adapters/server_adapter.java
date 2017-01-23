@@ -78,7 +78,6 @@ public class server_adapter extends ArrayAdapter<String> {
 
         if (d != null) {
             final TextView ti = (TextView) v_server.findViewById(R.id.text_content_clientsserver);
-            ti.startAnimation(AnimationUtils.loadAnimation(server_activity, R.anim.move));
             final TextView ticount = (TextView) v_server.findViewById(R.id
                     .text_content_clientsserverCount);
             final Button b = (Button) v_server.findViewById(R.id.button_details);
