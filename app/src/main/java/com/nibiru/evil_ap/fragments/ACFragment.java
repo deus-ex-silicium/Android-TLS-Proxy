@@ -133,17 +133,11 @@ public class ACFragment extends Fragment implements View.OnClickListener, Compou
                 if (!layoutImageflag) {
                     layoutImageflag = true;
                     String imgpath = mPresenter.getSharedPrefsString(ConfigTags.imgPath.toString());
-                    if (imgpath == null || imgpath.equals("")) {
-                        Log.e("SP is null - ", imgpath);
-
-                    } else {
-                        applyToImageView(mLayout2, iv, Uri.parse(imgpath));
-                    }
 
                     Log.e("E!", "images");
                     Button chooseImage_button = new Button(view.getContext());
                     iv = new ImageView(view.getContext());
-
+                    mLayout2.addView(chooseImage_button);
                     chooseImage_button.setText("choose image");
                     chooseImage_button.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -153,7 +147,13 @@ public class ACFragment extends Fragment implements View.OnClickListener, Compou
                             startActivityForResult(pickPhoto, 1);//one can be replaced with any action code
                         }
                     });
-                    mLayout2.addView(chooseImage_button);
+                    if (imgpath == null || imgpath.equals("")) {
+                        Log.e("SP is null - ", imgpath);
+
+                    } else {
+                        applyToImageView(mLayout2, iv, Uri.parse(imgpath));
+                    }
+
                     break;
                 } else {
                     layoutImageflag = false;
@@ -180,9 +180,9 @@ public class ACFragment extends Fragment implements View.OnClickListener, Compou
 
     private void applyToImageView(LinearLayout layout, ImageView iv, Uri image) {
         if(layout.getChildCount() > 1){
-            layout.removeViewAt(0);
+            layout.removeViewAt(1);
         }
-        layout.addView(iv, 0);
+        layout.addView(iv);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) iv.getLayoutParams();
         lp.width = 500;
         lp.height = 500;
