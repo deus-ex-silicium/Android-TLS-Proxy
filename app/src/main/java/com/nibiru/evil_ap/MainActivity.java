@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements
         });
         FrameLayout r = (FrameLayout) findViewById(R.id.activity_main);
         r.setBackground(ContextCompat.getDrawable(this, R.drawable.bground));
+        disableTabLayout();
     }
 
     /************************************ MVP stuff ***********************************************/
