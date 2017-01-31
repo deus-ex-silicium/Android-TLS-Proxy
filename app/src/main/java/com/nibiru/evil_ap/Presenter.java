@@ -89,7 +89,6 @@ public class Presenter implements IMVP.PresenterOps, IMVP.RequiredPresenterOps {
     public String getSharedPrefsString(String tag) {
         return mModel.getSharedPrefsString(tag);
     }
-    public SharedClass getSharedObj(){ return mModel.getSharedObj();}
 
     @Override
     public void onClean() {

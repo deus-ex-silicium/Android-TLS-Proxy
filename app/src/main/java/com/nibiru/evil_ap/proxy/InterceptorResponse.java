@@ -58,9 +58,11 @@ public class InterceptorResponse implements Interceptor{
         ResponseBody body = ResponseBody.create(originalResponse.body().contentType(), bodyBytes);
         //create new response and close old body response
         originalResponse.close();
+        //update response with proper Content-Lenght, don't use chunked encoding
         return originalResponse.newBuilder()
                 .removeHeader("Transfer-Encoding")
                 .header("Content-Length", Integer.toString(bodyLen))
+                .header("Connection", "Close")
                 .body(body).build();
     }
 

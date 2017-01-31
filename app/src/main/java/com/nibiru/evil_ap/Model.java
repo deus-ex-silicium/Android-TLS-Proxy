@@ -20,6 +20,9 @@ import com.nibiru.evil_ap.manager.Root;
 import com.nibiru.evil_ap.manager.Routing;
 import com.nibiru.evil_ap.proxy.ProxyService;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +43,7 @@ public class Model implements IMVP.ModelOps{
     private Routing mRouteMan;
     //Configuration and shared object
     private SharedPreferences mConfig;
-    private SharedClass mSharedObj;
+    //private SharedClass mSharedObj;
     private Set<String> mBannedMACs;
     //App context
     private Context ctx;
@@ -55,13 +58,13 @@ public class Model implements IMVP.ModelOps{
         this.mPresenter = mPresenter;
         //create shared object
         this.mConfig = ctx.getSharedPreferences("Config", 0);
-        mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull), ctx,
-                this, mConfig);
-        mRootMan = new Root();
-        mApMan = new Ap();
-        mRouteMan = new Routing();
+        //this.mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull),ctx, this, mConfig);
+        this.mRootMan = new Root();
+        this.mApMan = new Ap();
+        this.mRouteMan = new Routing();
         this.mBannedMACs = new HashSet<>(5);
         this.ctx = ctx;
+        SharedClass.getInstance().setModel(this);
     }
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx, boolean flag) {
         this.mPresenter = mPresenter;
@@ -153,14 +156,7 @@ public class Model implements IMVP.ModelOps{
      * @return A list of {@link LogEntry} variables
      */
     public List<LogEntry> getClientLog(Client c){
-        return mSharedObj.getClientLog(c);
-    }
-    /**
-     * Getter for the object shared between proxy threads handling clients
-     * @return {@link SharedClass}
-     */
-    public SharedClass getSharedObj(){
-        return mSharedObj;
+        return SharedClass.getInstance().getClientLog(c);
     }
     /**
      * Using "ip -4 neigh" command retrieves the client by his IP
@@ -194,7 +190,6 @@ public class Model implements IMVP.ModelOps{
         }
         mBannedMACs.clear();
         mConfig.edit().clear().apply();
-
     }
 
     /**
@@ -225,7 +220,11 @@ public class Model implements IMVP.ModelOps{
         verifyStoragePermissions(act);
         String path = getPath(uri);
         setSharedPrefsString(ConfigTags.imgPath.toString(), path);
-        mSharedObj.loadImage(path);
+        try {
+            SharedClass.getInstance().setImage(new FileInputStream(new File(path)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     /**
      * Adds proper payload (indicated with integer) into payload list. Sets payloads in SharedClass
@@ -240,7 +239,7 @@ public class Model implements IMVP.ModelOps{
                 listP.add(p);
             }
         }
-        mSharedObj.setPayloads(listP);
+        SharedClass.getInstance().setPayloads(listP);
     }
     /**
      *

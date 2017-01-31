@@ -49,7 +49,6 @@
             android:ellipsize="marquee"
             android:lines="1"
             android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
             android:textStyle="bold"
             android:text="DetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsDetailsNoentries"/>
         <TextView
