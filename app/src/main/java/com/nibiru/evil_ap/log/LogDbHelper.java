@@ -11,8 +11,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class LogDbHelper extends SQLiteOpenHelper{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "ClientLog.db";
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "ClientLog.db";
     /**************************************CLASS METHODS*******************************************/
     public LogDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -23,7 +23,7 @@ public class LogDbHelper extends SQLiteOpenHelper{
         db.execSQL(LogDbContract.SQL_CREATE_ENTRIES);
     }
 
-    public void onClear(SQLiteDatabase db){
+    void onClear(SQLiteDatabase db){
         db.execSQL(LogDbContract.SQL_CLEAR);
     }
 

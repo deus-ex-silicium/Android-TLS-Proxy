@@ -19,7 +19,7 @@ public class DatabaseManager {
     protected final String TAG = getClass().getSimpleName();
     private AtomicInteger  mOpenCounter = new AtomicInteger();
     private static DatabaseManager instance;
-    private static LogDbHelper mDatabaseHelper;
+            private static LogDbHelper mDatabaseHelper;
     private SQLiteDatabase mDatabase;
     private ThreadPoolExecutor executor;
     /**************************************CLASS METHODS*******************************************/

@@ -67,13 +67,17 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         startMVPOps();
+        //mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
+        //        "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
+        //initialize fields in SharedClass
+        SharedClass.getInstance().setDatabase(this);
+        SharedClass.getInstance().setImage(getResources().openRawResource(R.raw.pixel_skull));
+        SharedClass.getInstance().setClient(getSharedPreferences("Config",0));
 
-        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
-                "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         setContentView(R.layout.activity_main);
         mPresenter.checkIfDeviceRooted();
         //start ProxyService and establish connection to it
-        //startService(new Intent(this, ProxyService.class));
+        startService(new Intent(this, ProxyService.class));
         mConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder service) {
                 mProxyService = ((ProxyService.IProxyService) service);

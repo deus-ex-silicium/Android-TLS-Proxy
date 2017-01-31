@@ -22,9 +22,9 @@ public class InterceptorRequest implements Interceptor{
         }*/
 
         Request editedReq = originalRequest.newBuilder()
-                .removeHeader("Accept-Encoding")
-                .removeHeader("Upgrade-Insecure-Requests")
-                .removeHeader("Strict-Transport-Security")
+                .removeHeader("Accept-Encoding") //no compression
+                .removeHeader("Upgrade-Insecure-Requests") //stay in http
+                .removeHeader("Strict-Transport-Security") //DON'T DO HSTS!
                 //.removeHeader("User-Agent")
                 .method(originalRequest.method(), originalRequest.body())
                 .build();

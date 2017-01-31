@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -25,6 +24,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.security.KeyStore;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 
 /**
  * Created by Nibiru on 2016-10-14.
@@ -33,11 +39,14 @@ import java.io.OutputStream;
 public class ProxyService extends Service{
     /**************************************CLASS FIELDS********************************************/
     protected final String TAG = getClass().getSimpleName();
-    public volatile boolean work;
+    private ServerSocket mSocketHTTP;
+    private SSLServerSocket mSocketHTTPS;
     public IMVP.PresenterOps mPresenter;
     private BroadcastReceiver mProxyReceiver;
+    // don't really care if this ends up in repo...
+    private static char ksPass[] = "KeyStorePass".toCharArray();
+    private static char ctPass[] = "KeyStorePass".toCharArray();
     // Configuration settings
-    private SharedPreferences config;
     /**************************************CLASS METHODS*******************************************/
     /**
      * Class for clients to access.  Because we know this service always
@@ -67,18 +76,35 @@ public class ProxyService extends Service{
         filter.addAction("tap");
         getApplicationContext().registerReceiver(mProxyReceiver, filter);
 
-        // Start up the thread running the service.  Note that we create a separate thread because
+        // Start up the thread running the servers.  Note that we create a separate thread because
         // the service normally runs in the process's main thread, which we don't want to block.
-        work = true;
-        config = getSharedPreferences("Config", 0);
+
+        // create server sockets
+        try {
+            mSocketHTTP = new ServerSocket();
+            mSocketHTTPS = getSSLSocket(getResources().openRawResource(R.raw.evil_ap));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //start the HTTP proxy socket thread
-        Thread proxyHTTP = new Thread(new ProxyHTTPMainLoop(this));
+        Thread proxyHTTP = new Thread(new ProxyHTTPMainLoop(mSocketHTTP));
         proxyHTTP.start();
         //start the HTTPS proxy socket thread
-        Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(
-                getResources().openRawResource(R.raw.evil_ap), this));
+        Thread proxyHTTPS = new Thread(new ProxyHTTPSMainLoop(mSocketHTTPS));
         proxyHTTPS.start();
+
         setupNotification();
+    }
+
+    @Override
+    public void onDestroy() {
+        mPresenter = null;
+        try {
+            if (mSocketHTTP != null) mSocketHTTP.close();
+            if (mSocketHTTPS != null) mSocketHTTPS.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -150,12 +176,10 @@ public class ProxyService extends Service{
         if (mPresenter.isApOn(getApplicationContext())){
             mPresenter.apBtnPressed("","", getApplicationContext());
         }
-        work = false;
         cancelNotification(getApplicationContext(), 1);
         getApplicationContext().unregisterReceiver(mProxyReceiver);
         mProxyReceiver = null;
         mPresenter.dieUI();
-        mPresenter = null;
         stopSelf();
     }
 
@@ -179,6 +203,17 @@ public class ProxyService extends Service{
     public interface IProxyService {
         void setPresenter(IMVP.PresenterOps presenter);
 
+    }
+
+    private SSLServerSocket getSSLSocket(InputStream keyStore) throws Exception{
+        KeyStore ks = KeyStore.getInstance("BKS"); //Bouncy Castle Key Store
+        ks.load(keyStore, ksPass); //authenticate with keystore
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(ks, ctPass); //authenticate with certificate
+        SSLContext sc = SSLContext.getInstance("TLS");
+        sc.init(kmf.getKeyManagers(), null, null);
+        SSLServerSocketFactory ssf = sc.getServerSocketFactory();
+        return (SSLServerSocket) ssf.createServerSocket();
     }
 
     private void testImgStream() {

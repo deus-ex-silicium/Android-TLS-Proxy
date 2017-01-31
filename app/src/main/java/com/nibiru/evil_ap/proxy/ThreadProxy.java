@@ -29,13 +29,11 @@ class ThreadProxy implements Runnable{
     private final String TAG = getClass().getSimpleName();
     private Socket sClient;
     private Client c;
-    private SharedClass mSharedObj;
     private boolean debug = false;
     /**************************************CLASS METHODS*******************************************/
-    ThreadProxy(Socket sClient, SharedClass sharedObj) {
+    ThreadProxy(Socket sClient) {
         this.sClient = sClient;
-        mSharedObj = sharedObj;
-        c = mSharedObj.getClientByIp(sClient.getInetAddress().toString().substring(1));
+        c = SharedClass.getInstance().getClientByIp(sClient.getInetAddress().toString().substring(1));
     }
     @Override
     public void run() {
@@ -52,7 +50,7 @@ class ThreadProxy implements Runnable{
             if (req == null) return;
 
             //make request and get okhttp response
-            res = mSharedObj.getHttpClient().newCall(req).execute();
+            res = SharedClass.getInstance().getHttpClient().newCall(req).execute();
 
             //get and send response headers
             String headers = getResponseHeaders(res);
@@ -64,14 +62,13 @@ class ThreadProxy implements Runnable{
             sendBytes(bytesBody, outToClient);
             if (debug) Log.d(TAG + "[OUT]", headers);
             outToClient.flush();
-
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException)
                 Log.e(TAG, "TIMEOUT!");
-            if (e instanceof SSLProtocolException) {
-                Log.e(TAG, "Client doesn't like our self-signed cert");
+            else if (e instanceof SSLProtocolException) {
+                Log.e(TAG, "Client doesn't like our self-signed cert xD");
             }
-            e.printStackTrace();
+            else e.printStackTrace();
         } finally {
             //clean up
             if (res != null) res.body().close();
@@ -168,7 +165,7 @@ class ThreadProxy implements Runnable{
             builder.post(RequestBody.create(MediaType.parse(contentType), body));
         }
         //LOG REQUEST BEING MADE
-        mSharedObj.addRequest(c, host, requestLine, headers.toString() + "\n" + body);
+        SharedClass.getInstance().addRequest(c, host, requestLine, headers.toString() + "\n" + body);
         return builder.build();
     }
 }
