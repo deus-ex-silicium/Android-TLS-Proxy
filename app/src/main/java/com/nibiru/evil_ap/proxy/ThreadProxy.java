@@ -45,23 +45,25 @@ class ThreadProxy implements Runnable{
             inFromClient = new BufferedReader(new InputStreamReader(sClient.getInputStream()));
             outToClient = sClient.getOutputStream();
 
-            //get client request string
-            Request req = getRequest(inFromClient, c);
-            if (req == null) return;
+            //HTTP KEEP ALIVE LOOP!
+            while (true){
+                //get client request string
+                Request req = getRequest(inFromClient, c);
+                if (req == null) return;
 
-            //make request and get okhttp response
-            res = SharedClass.getInstance().getHttpClient().newCall(req).execute();
+                //make request and get okhttp response
+                res = SharedClass.getInstance().getHttpClient().newCall(req).execute();
 
-            //get and send response headers
-            String headers = getResponseHeaders(res);
-            //in order to comply with protocol
-            headers = headers.replaceAll("\\n", "\r\n");
-            sendBytes(headers.getBytes(), outToClient);
-            //get and send response bytes
-            byte[] bytesBody = res.body().bytes();
-            sendBytes(bytesBody, outToClient);
-            if (debug) Log.d(TAG + "[OUT]", headers);
-            outToClient.flush();
+                //get and send response headers
+                String headers = getResponseHeaders(res);
+                //send headers
+                sendBytes(headers.getBytes(), outToClient);
+                //get and send response bytes
+                byte[] bytesBody = res.body().bytes();
+                sendBytes(bytesBody, outToClient);
+                if (debug) Log.d(TAG + "[OUT]", headers);
+                outToClient.flush();
+            }
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException)
                 Log.e(TAG, "TIMEOUT!");
@@ -104,8 +106,10 @@ class ThreadProxy implements Runnable{
             case 404: resToClient += "HTTP/1.1 404 Not Found\n"; break;
             default: Log.e(TAG, "UNKNOWN STATUS CODE = " + res.code());
         }
-        //send headers
+        //add newline
         resToClient += res.headers().toString() + "\n";
+        //in order to comply with protocol
+        resToClient = resToClient.replaceAll("\\n", "\r\n");
         return resToClient;
     }
 

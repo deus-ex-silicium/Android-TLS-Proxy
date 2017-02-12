@@ -47,7 +47,7 @@ class ProxyHTTPSMainLoop implements Runnable {
             serverSocket.bind(new InetSocketAddress(SERVERPORT));
             while (true) {
                 executor.execute(new ThreadProxy(serverSocket.accept()));
-                Log.d(TAG, "Accepted HTTPS client");
+                Log.d(TAG, "Accepted HTTPS connection");
             }
         } catch (IOException e ) {
             //SocketException means ProxyServer closed socket and we should quit

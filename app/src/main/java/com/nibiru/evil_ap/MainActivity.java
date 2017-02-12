@@ -67,11 +67,12 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         startMVPOps();
-        //mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
-        //        "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
+        //set default skull pixel image
+        SharedClass.getInstance().setImage(getResources().openRawResource(R.raw.pixel_skull));
+        mPresenter.setSharedPrefsString(ConfigTags.imgPath.toString(),
+                "android.resource://" + getPackageName() + "/" + R.raw.pixel_skull);
         //initialize fields in SharedClass
         SharedClass.getInstance().setDatabase(this);
-        SharedClass.getInstance().setImage(getResources().openRawResource(R.raw.pixel_skull));
         SharedClass.getInstance().setClient(getSharedPreferences("Config",0));
 
         setContentView(R.layout.activity_main);
