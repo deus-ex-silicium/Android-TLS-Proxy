@@ -27,6 +27,7 @@ android {
     }
     defaultConfig {
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+        multiDexEnabled true
     }
     productFlavors {
     }
@@ -46,5 +47,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.1.4'
     compile 'com.google.android.gms:play-services-appindexing:9.8.0'
-    compile 'com.google.android.gms:play-services:10.0.1'
+    compile 'com.google.android.gms:play-services:9.8.0'
 }

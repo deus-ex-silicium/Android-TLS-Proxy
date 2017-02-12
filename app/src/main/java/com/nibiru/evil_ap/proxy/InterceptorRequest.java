@@ -17,15 +17,10 @@ public class InterceptorRequest implements Interceptor{
     public Response intercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
 
-        /*if (originalRequest.body() == null) {
-            return chain.proceed(originalRequest);
-        }*/
-
         Request editedReq = originalRequest.newBuilder()
-                .removeHeader("Accept-Encoding") //no compression
+                .removeHeader("Accept-Encoding") //no compression, okhttp does it transparently
                 .removeHeader("Upgrade-Insecure-Requests") //stay in http
                 .removeHeader("Strict-Transport-Security") //DON'T DO HSTS!
-                //.removeHeader("User-Agent")
                 .method(originalRequest.method(), originalRequest.body())
                 .build();
 

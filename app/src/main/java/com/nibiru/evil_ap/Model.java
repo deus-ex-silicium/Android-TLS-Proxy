@@ -56,9 +56,7 @@ public class Model implements IMVP.ModelOps{
     /**************************************CLASS METHODS*******************************************/
     public Model(IMVP.RequiredPresenterOps mPresenter, Context ctx) {
         this.mPresenter = mPresenter;
-        //create shared object
         this.mConfig = ctx.getSharedPreferences("Config", 0);
-        //this.mSharedObj = new SharedClass(ctx.getResources().openRawResource(R.raw.pixel_skull),ctx, this, mConfig);
         this.mRootMan = new Root();
         this.mApMan = new Ap();
         this.mRouteMan = new Routing();

@@ -35,6 +35,7 @@ public class InterceptorResponse implements Interceptor{
         int bodyLen;
         byte[] bodyBytes;
         String contentTypeStr = originalResponse.header("Content-Type");
+        //check if we should swap image bytes
         boolean imgSwapFlag = contentTypeStr != null && contentTypeStr.contains("image")
                 && mConfig.getBoolean(ConfigTags.imgReplace.toString(), false);
         if (imgSwapFlag) {
@@ -62,7 +63,6 @@ public class InterceptorResponse implements Interceptor{
         return originalResponse.newBuilder()
                 .removeHeader("Transfer-Encoding")
                 .header("Content-Length", Integer.toString(bodyLen))
-                .header("Connection", "Close")
                 .body(body).build();
     }
 
