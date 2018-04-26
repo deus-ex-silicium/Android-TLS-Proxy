@@ -9,6 +9,10 @@
             android:id="@+id/client_mode"
             android:icon="@drawable/icon"
             android:title="Client Mode" />
+        <item
+            android:id="@+id/scanner"
+            android:icon="@drawable/icon"
+            android:title="Scanner" />
 
     </group>
 </menu>

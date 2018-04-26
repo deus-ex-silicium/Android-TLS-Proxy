@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
+import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
+import kotlinx.android.synthetic.main.fragment_scanner.view.*
 
 
 class FragmentScanner: android.support.v4.app.Fragment(){
@@ -33,6 +35,14 @@ class FragmentScanner: android.support.v4.app.Fragment(){
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_client_mode, container, false)
+        val v = inflater.inflate(R.layout.fragment_scanner, container, false)
+        v.bPingSweep.setOnClickListener { _ ->
+            Log.d(TAG, "PING SWEEP")
+            val executeIntent = Intent(EvilApService.ACTION_PING_SWEEP)
+            executeIntent.setClass(context, EvilApService::class.java)
+            context?.startService(executeIntent)
+        }
+        return v
     }
+
 }
