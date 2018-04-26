@@ -1,45 +1,26 @@
-# Sets the minimum version of CMake required to build the native
-# library. You should either keep the default value or only pass a
-# value of 3.4.0 or lower.
-
 cmake_minimum_required(VERSION 3.4.1)
 
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds it for you.
-# Gradle automatically packages shared libraries with your APK.
+# Make executables
+add_executable(arp-spoof src/main/cpp/arp-spoof.cpp )
+add_executable(dns-sniff src/main/cpp/dns-sniff.cpp )
 
-add_library( # Sets the name of the library.
-             native-lib
+# Not a shared object but android studio only packages native components
+# into apk if their name is lib.*so
+set_target_properties( dns-sniff PROPERTIES OUTPUT_NAME "libdnssniff.so" )
+set_target_properties( arp-spoof PROPERTIES OUTPUT_NAME "libarpspoof.so" )
 
-             # Sets the library as a shared library.
-             SHARED
+###################### LIBTINS ######################
+add_library(tins SHARED IMPORTED)
 
-             # Provides a relative path to your source file(s).
-             # Associated headers in the same location as their source
-             # file are automatically included.
-             src/main/cpp/native-lib.cpp )
+set_target_properties( tins PROPERTIES IMPORTED_LOCATION
+                       # Provides the path to the library you want to import.
+                       /home/nibiru/repos/Evil-AP/app/src/main/jniLibs/armeabi/libtins.so)
 
-# Searches for a specified prebuilt library and stores the path as a
-# variable. Because system libraries are included in the search path by
-# default, you only need to specify the name of the public NDK library
-# you want to add. CMake verifies that the library exists before
-# completing its build.
+include_directories( /home/nibiru/repos/Evil-AP/app/src/main/cpp/include/ )
 
-find_library( # Sets the name of the path variable.
-              log-lib
+###################### NATIVE-LIB ######################
+# Include libraries needed for native component
+target_link_libraries(arp-spoof android log tins )
+target_link_libraries(dns-sniff android log tins )
 
-              # Specifies the name of the NDK library that
-              # you want CMake to locate.
-              log )
 
-# Specifies libraries CMake should link to your target library. You
-# can link multiple libraries, such as libraries you define in the
-# build script, prebuilt third-party libraries, or system libraries.
-
-target_link_libraries( # Specifies the target library.
-                       native-lib
-
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib} )
