@@ -2,20 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/ap_mode"
             android:icon="@drawable/icon"
-            android:title="TEST 1" />
+            android:title="AP Mode" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/client_mode"
             android:icon="@drawable/icon"
-            android:title="TEST 2" />
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/icon"
-            android:title="Test 3" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/icon"
-            android:title="TEST $" />
+            android:title="Client Mode" />
+
     </group>
 </menu>

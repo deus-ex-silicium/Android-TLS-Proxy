@@ -17,6 +17,9 @@ import com.nibiru.evilap.fragments.FragmentClientMode
 import kotlinx.android.synthetic.main.activity_main.*
 import android.support.v4.view.GravityCompat
 import android.view.MenuItem
+import android.support.design.widget.NavigationView
+import com.nibiru.evilap.R.id.ap_mode
+import com.nibiru.evilap.R.id.client_mode
 
 
 // https://developer.android.com/training/appbar/
@@ -46,6 +49,16 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
             override fun onPageScrollStateChanged(state: Int) {}
         })
+        nav_view.setNavigationItemSelectedListener { menuItem ->
+            menuItem.isChecked = true // set item as selected to persist highlight
+            drawer_layout.closeDrawers() // close drawer when item is tapped
+            when(menuItem.itemId){
+                ap_mode -> viewPager.currentItem = 0
+                client_mode -> viewPager.currentItem = 1
+            }
+            true
+        }
+
         //mCurrentContent = if(savedInstanceState!=null)
         // supportFragmentManager.getFragment(savedInstanceState, "mCurrentContent") else
 
