@@ -15,6 +15,8 @@ import android.view.Menu
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentClientMode
 import kotlinx.android.synthetic.main.activity_main.*
+import android.support.v4.view.GravityCompat
+import android.view.MenuItem
 
 
 // https://developer.android.com/training/appbar/
@@ -31,14 +33,15 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu);
+        supportActionBar?.title = "AP Mode" //Set default title
         viewPager.adapter = MyPagerAdapter(supportFragmentManager)
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageSelected(position: Int) {
-                when(position){
-                    0 -> supportActionBar?.setTitle("AP Mode")
-                    1 -> supportActionBar?.setTitle("Client Mode")
-                    else -> supportActionBar?.setTitle("AP Mode")
-                }
+            override fun onPageSelected(position: Int) = when(position){
+                    0 -> supportActionBar?.title = "AP Mode"
+                    1 -> supportActionBar?.title = "Client Mode"
+                    else -> supportActionBar?.title = "AP Mode"
             }
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
             override fun onPageScrollStateChanged(state: Int) {}
@@ -70,11 +73,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         override fun getCount(): Int = 2
     }
 
-    // Menu icons are inflated just as they were with actionbar
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.drawer_view, menu)
-        return true
+    override fun onOptionsItemSelected(item: MenuItem): Boolean =  when(item.itemId) {
+            android.R.id.home -> {
+                drawer_layout.openDrawer(GravityCompat.START)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
     }
 
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {

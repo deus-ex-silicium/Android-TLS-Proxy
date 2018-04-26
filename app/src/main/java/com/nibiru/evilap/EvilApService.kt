@@ -14,11 +14,10 @@ class EvilApService: Service() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private val NOTIFICATION_ID = 666
-    private val NOTIFICATION_CHANNEL_ID = "evil_ap_notification_channel"
-    private val ACTION_STOP_SERVICE = "com.nibiru.evil_ap_kotlin.service_stop"
+    private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
+    private val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
     private var mShells: List<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
-
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
         val service = this@EvilApService
