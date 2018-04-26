@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Evil-AP</string>
-    <string name="unban">UNBAN</string>
-    <string name="ban">BAN</string>
+    <string name="app_name">Evil-AP-Kotlin</string>
+    <string name="notification_action_exit">Exit</string>
 </resources>
