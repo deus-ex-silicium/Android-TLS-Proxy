@@ -7,7 +7,11 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.util.Patterns
 import eu.chainfire.libsuperuser.Shell
+import android.app.NotificationManager
+
+
 
 
 class EvilApService: Service() {
@@ -15,8 +19,11 @@ class EvilApService: Service() {
     private val TAG = javaClass.simpleName
     private val NOTIFICATION_ID = 666
     private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
-    private val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
-    private var mShells: List<Shell.Interactive> = ArrayList()
+    companion object {
+        const val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
+        const val ACTION_PING_SWEEP = "com.nibiru.evilap.service_ping_sweep"
+    }
+    private var mShells: MutableList<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
@@ -31,6 +38,7 @@ class EvilApService: Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val action = intent.action
+        Log.d(TAG, "got action = $action")
         when(action) {
             ACTION_STOP_SERVICE -> {
                 mWantsToStop = true
@@ -38,8 +46,11 @@ class EvilApService: Service() {
                     shell.kill()
                 stopSelf()
             }
+            ACTION_PING_SWEEP -> {
+                startShellScanActive("192.168.0.1")
+            }
             else -> {
-                Log.e(TAG, "Unknown EvilApService action: '${action}'")
+                Log.e(TAG, "Unknown EvilApService action: '$action'")
             }
         }
         // If this service really do get killed, there is no point restarting it automatically
@@ -79,5 +90,49 @@ class EvilApService: Service() {
         manager.createNotificationChannel(channel)
     }
 
+    private fun updateNotification() {
+        // Update the shown foreground service notification after making any changes that affect it.
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                .notify(NOTIFICATION_ID, buildNotification())
+    }
+
     override fun onBind(intent: Intent?): IBinder = mBinder
+
+    private fun startShellScanActive(ip: String) {
+        if (!Patterns.IP_ADDRESS.matcher(ip).matches()){
+            Log.e(TAG, "BAD IP!")
+            return
+        }
+        val shell = openRootShell()
+        val path = applicationInfo.dataDir
+        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $ip"
+        shell?.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+                    override fun onCommandResult(commandCode: Int, exitCode: Int) {
+                        Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
+                    }
+                    override fun onLine(line: String) {
+                        Log.d("ROOT", line)
+                    }
+                })
+    }
+
+    private fun openRootShell(): Shell.Interactive {
+        // start the shell in the background and keep it alive as long as the app is running
+        val shell = Shell.Builder().useSU().setWantSTDERR(true)
+                .setWatchdogTimeout(0).setMinimalLogging(true).open { commandCode, exitCode, output ->
+            // Callback to report whether the shell was successfully started up
+            if (exitCode != Shell.OnCommandResultListener.SHELL_RUNNING) {
+                Log.e(TAG,"Error opening root shell: exitCode=$exitCode")
+            }
+            else {
+                Log.d(TAG,"Root shell opened")
+            }
+        }
+        if(shell != null && shell.isRunning){
+            mShells.add(shell)
+            updateNotification()
+        }
+        return shell
+    }
+
 }

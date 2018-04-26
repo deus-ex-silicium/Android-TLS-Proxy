@@ -8,24 +8,24 @@ import android.os.IBinder
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.Menu
+import android.view.MenuItem
+import com.nibiru.evilap.R.id.*
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentClientMode
+import com.nibiru.evilap.fragments.FragmentScanner
 import kotlinx.android.synthetic.main.activity_main.*
-import android.support.v4.view.GravityCompat
-import android.view.MenuItem
-import android.support.design.widget.NavigationView
-import com.nibiru.evilap.R.id.ap_mode
-import com.nibiru.evilap.R.id.client_mode
 
 
 // https://developer.android.com/training/appbar/
 // https://developer.android.com/training/implementing-navigation/nav-drawer
 // https://guides.codepath.com/android/Using-the-App-ToolBar
 // https://stackoverflow.com/questions/18413309/how-to-implement-a-viewpager-with-different-fragments-layouts/18413437#18413437
+// https://developer.android.com/training/animation/screen-slide
+// https://www.raywenderlich.com/169885/android-fragments-tutorial-introduction-2
 class MainActivity : AppCompatActivity(), ServiceConnection {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             override fun onPageSelected(position: Int) = when(position){
                     0 -> supportActionBar?.title = "AP Mode"
                     1 -> supportActionBar?.title = "Client Mode"
+                    2 -> supportActionBar?.title = "Scanner"
                     else -> supportActionBar?.title = "AP Mode"
             }
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
@@ -55,12 +56,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             when(menuItem.itemId){
                 ap_mode -> viewPager.currentItem = 0
                 client_mode -> viewPager.currentItem = 1
+                scanner -> viewPager.currentItem = 2
             }
             true
         }
-
-        //mCurrentContent = if(savedInstanceState!=null)
-        // supportFragmentManager.getFragment(savedInstanceState, "mCurrentContent") else
 
         // Start the service and make it run regardless of who is bound to it
         val serviceIntent = Intent(this, EvilApService::class.java)
@@ -73,17 +72,18 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
         unbindService(this)
-    };
+    }
 
     private inner class MyPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
         override fun getItem(pos: Int): Fragment {
-            when (pos) {
-                0 -> return FragmentApMode.newInstance()
-                1 -> return FragmentClientMode.newInstance()
-                else -> return FragmentApMode.newInstance()
+            return when (pos) {
+                0 -> FragmentApMode.newInstance()
+                1 -> FragmentClientMode.newInstance()
+                2 -> FragmentScanner.newInstance()
+                else -> FragmentApMode.newInstance()
             }
         }
-        override fun getCount(): Int = 2
+        override fun getCount(): Int = 3
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean =  when(item.itemId) {
