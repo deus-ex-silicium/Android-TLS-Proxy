@@ -13,6 +13,10 @@
             android:id="@+id/scanner"
             android:icon="@drawable/icon"
             android:title="Scanner" />
+        <item
+            android:id="@+id/action_center"
+            android:icon="@drawable/icon"
+            android:title="Action Center" />
 
     </group>
 </menu>

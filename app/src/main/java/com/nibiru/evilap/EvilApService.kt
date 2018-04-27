@@ -1,5 +1,6 @@
 package com.nibiru.evilap
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
@@ -41,8 +42,9 @@ class EvilApService: Service() {
         when(action) {
             ACTION_STOP_SERVICE -> {
                 mWantsToStop = true
+                getIdleShell().addCommand("pkill -f ${applicationInfo.dataDir}/lib/")
                 for (shell in mShells)
-                    shell.kill()
+                    shell.close()
                 stopSelf()
             }
             ACTION_SCAN_ACTIVE -> {
@@ -152,7 +154,17 @@ class EvilApService: Service() {
             Log.e(TAG, "startDnsSniff: bad interface!")
             return
         }
-
+        val shell = getIdleShell()
+        val path = applicationInfo.dataDir
+        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libdnssniff.so $iface"
+        shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+            override fun onCommandResult(commandCode: Int, exitCode: Int) {
+                Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
+            }
+            override fun onLine(line: String) {
+                Log.d("ROOT", line)
+            }
+        })
 
     }
 

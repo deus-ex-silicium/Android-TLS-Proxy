@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
 import com.nibiru.evilap.R.id.*
+import com.nibiru.evilap.fragments.FragmentActionCenter
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentClientMode
 import com.nibiru.evilap.fragments.FragmentScanner
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                     0 -> supportActionBar?.title = "AP Mode"
                     1 -> supportActionBar?.title = "Client Mode"
                     2 -> supportActionBar?.title = "Scanner"
+                    3 -> supportActionBar?.title = "Action Center"
                     else -> supportActionBar?.title = "AP Mode"
             }
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
@@ -57,6 +59,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                 ap_mode -> viewPager.currentItem = 0
                 client_mode -> viewPager.currentItem = 1
                 scanner -> viewPager.currentItem = 2
+                action_center -> viewPager.currentItem = 3
             }
             true
         }
@@ -79,10 +82,11 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                 0 -> FragmentApMode.newInstance()
                 1 -> FragmentClientMode.newInstance()
                 2 -> FragmentScanner.newInstance()
+                3 -> FragmentActionCenter.newInstance()
                 else -> FragmentApMode.newInstance()
             }
         }
-        override fun getCount(): Int = 3
+        override fun getCount(): Int = 4
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean =  when(item.itemId) {
