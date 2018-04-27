@@ -38,7 +38,7 @@ class FragmentScanner: android.support.v4.app.Fragment(){
         val v = inflater.inflate(R.layout.fragment_scanner, container, false)
         v.bPingSweep.setOnClickListener { _ ->
             Log.d(TAG, "PING SWEEP")
-            val executeIntent = Intent(EvilApService.ACTION_PING_SWEEP)
+            val executeIntent = Intent(EvilApService.ACTION_SCAN_ACTIVE)
             executeIntent.setClass(context, EvilApService::class.java)
             context?.startService(executeIntent)
         }

@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
+import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
+import kotlinx.android.synthetic.main.fragment_action_center.view.*
 
 
 class FragmentActionCenter: android.support.v4.app.Fragment(){
@@ -33,6 +35,13 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_client_mode, container, false)
+        val v= inflater.inflate(R.layout.fragment_action_center, container, false)
+        v.bDnsSniff.setOnClickListener { _ ->
+            Log.d(TAG, "DNS SNIFF")
+            val executeIntent = Intent(EvilApService.ACTION_DNS_SNIFF)
+            executeIntent.setClass(context, EvilApService::class.java)
+            context?.startService(executeIntent)
+        }
+        return v
     }
 }

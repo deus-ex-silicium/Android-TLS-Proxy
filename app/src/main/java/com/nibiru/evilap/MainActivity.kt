@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu);
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
         supportActionBar?.title = "AP Mode" //Set default title
         viewPager.adapter = MyPagerAdapter(supportFragmentManager)
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
@@ -67,7 +67,6 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         if (!bindService(serviceIntent, this, 0))
             throw RuntimeException("bindService() failed")
     }
-
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
@@ -93,11 +92,9 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             }
             else -> super.onOptionsItemSelected(item)
     }
-
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         mService = (service as EvilApService.LocalBinder).service
     }
-
     override fun onServiceDisconnected(name: ComponentName?) {
         // Respect being stopped from notification action.
         finish()

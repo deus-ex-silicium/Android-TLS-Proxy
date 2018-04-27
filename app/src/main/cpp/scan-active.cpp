@@ -50,13 +50,11 @@ Scanner::Scanner(const NetworkInterface& interface,
         : iface(interface), host_to_scan(address), sniffer(interface.name()) {
     sniffer.set_filter("icmp");
 }
-
 void* Scanner::thread_proc(void* param) {
     Scanner* data = (Scanner*)param;
     data->launch_sniffer();
     return 0;
 }
-
 void Scanner::launch_sniffer() {
     sniffer.sniff_loop(make_sniffer_handler(this, &Scanner::callback));
 }
@@ -68,10 +66,9 @@ bool Scanner::callback(PDU& pdu) {
     // Find the layers we want.
     const IP& ip = pdu.rfind_pdu<IP>();
     const ICMP& icmp = pdu.rfind_pdu<ICMP>();
-    cout << "IP: " << ip.src_addr() << " ICMP:" << icmp.type() ;
+    cout << "IP: " << ip.src_addr() << " ICMP:" << icmp.type() << endl ;
     return !(icmp.type() == ICMP::PARAM_PROBLEM);
 }
-
 void Scanner::run() {
     pthread_t thread;
     // Launch our sniff thread.
@@ -83,7 +80,6 @@ void Scanner::run() {
     void* dummy;
     pthread_join(thread, &dummy);
 }
-
 void Scanner::ping_sweep(const NetworkInterface& iface, IPv4Address dest_ip) {
     // Retrieve the addresses.
     NetworkInterface::Info info = iface.addresses();
@@ -112,7 +108,6 @@ void Scanner::ping_sweep(const NetworkInterface& iface, IPv4Address dest_ip) {
     EthernetII eth = EthernetII(info.hw_addr, info.hw_addr) / ip;
     sender.send(eth, iface);
 }
-
 void scan(int argc, char* argv[]) {
     IPv4Address ip(argv[1]);
     // Resolve the interface which will be our gateway
@@ -121,7 +116,6 @@ void scan(int argc, char* argv[]) {
     Scanner scanner(iface, ip);
     scanner.run();
 }
-
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         cout << "Usage: " <<* argv << " <IPADDR>" << endl;

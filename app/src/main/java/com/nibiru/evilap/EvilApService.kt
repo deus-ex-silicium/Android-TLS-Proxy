@@ -21,7 +21,8 @@ class EvilApService: Service() {
     private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
     companion object {
         const val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
-        const val ACTION_PING_SWEEP = "com.nibiru.evilap.service_ping_sweep"
+        const val ACTION_SCAN_ACTIVE = "com.nibiru.evilap.service_scan_active"
+        const val ACTION_DNS_SNIFF = "com.nibiru.evilap.service_dns_sniff"
     }
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
@@ -46,8 +47,11 @@ class EvilApService: Service() {
                     shell.kill()
                 stopSelf()
             }
-            ACTION_PING_SWEEP -> {
-                startShellScanActive("192.168.0.1")
+            ACTION_SCAN_ACTIVE -> {
+                startActiveScan("192.168.0.1")
+            }
+            ACTION_DNS_SNIFF -> {
+                startDnsSniff("wlan0")
             }
             else -> {
                 Log.e(TAG, "Unknown EvilApService action: '$action'")
@@ -98,15 +102,43 @@ class EvilApService: Service() {
 
     override fun onBind(intent: Intent?): IBinder = mBinder
 
-    private fun startShellScanActive(ip: String) {
+    private fun openRootShell(): Shell.Interactive {
+        // start the shell in the background and keep it alive as long as the app is running
+        val shell = Shell.Builder().useSU().setWantSTDERR(true)
+                .setWatchdogTimeout(0).setMinimalLogging(true).open { commandCode, exitCode, output ->
+                    // Callback to report whether the shell was successfully started up
+                    if (exitCode != Shell.OnCommandResultListener.SHELL_RUNNING) {
+                        Log.e(TAG,"Error opening root shell: exitCode=$exitCode")
+                    }
+                    else {
+                        Log.d(TAG,"Root shell opened")
+                    }
+                }
+        mShells.add(shell)
+        updateNotification()
+        return shell
+    }
+
+    private fun getIdleShell(): Shell.Interactive {
+        for(shell in mShells){
+            if(shell.isIdle) return shell
+            if(!shell.isRunning) {
+                mShells.remove(shell)
+                updateNotification()
+            }
+        }
+        return openRootShell()
+    }
+
+    private fun startActiveScan(ip: String) {
         if (!Patterns.IP_ADDRESS.matcher(ip).matches()){
-            Log.e(TAG, "BAD IP!")
+            Log.e(TAG, "startActiveScan(): bad ip!")
             return
         }
-        val shell = openRootShell()
+        val shell = getIdleShell()
         val path = applicationInfo.dataDir
         val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $ip"
-        shell?.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+        shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
                         Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
                     }
@@ -116,23 +148,14 @@ class EvilApService: Service() {
                 })
     }
 
-    private fun openRootShell(): Shell.Interactive {
-        // start the shell in the background and keep it alive as long as the app is running
-        val shell = Shell.Builder().useSU().setWantSTDERR(true)
-                .setWatchdogTimeout(0).setMinimalLogging(true).open { commandCode, exitCode, output ->
-            // Callback to report whether the shell was successfully started up
-            if (exitCode != Shell.OnCommandResultListener.SHELL_RUNNING) {
-                Log.e(TAG,"Error opening root shell: exitCode=$exitCode")
-            }
-            else {
-                Log.d(TAG,"Root shell opened")
-            }
+    private fun startDnsSniff(iface: String) {
+        val whitelist = listOf("wlan0")
+        if(!whitelist.contains(iface)){
+            Log.e(TAG, "startDnsSniff: bad interface!")
+            return
         }
-        if(shell != null && shell.isRunning){
-            mShells.add(shell)
-            updateNotification()
-        }
-        return shell
+
+
     }
 
 }
