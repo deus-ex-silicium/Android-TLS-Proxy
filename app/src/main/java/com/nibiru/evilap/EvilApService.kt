@@ -12,8 +12,6 @@ import eu.chainfire.libsuperuser.Shell
 import android.app.NotificationManager
 
 
-
-
 class EvilApService: Service() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
