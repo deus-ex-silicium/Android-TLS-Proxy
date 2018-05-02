@@ -4,12 +4,13 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R.layout.rv_host_item_row
 import com.nibiru.evilap.inflate
 import kotlinx.android.synthetic.main.rv_host_item_row.view.*
 
 // https://www.raywenderlich.com/170075/android-recyclerview-tutorial-kotlin
-class HostsAdapter(private val hosts: ArrayList<Pair<String, String>>) : RecyclerView.Adapter<HostsAdapter.HostHolder>()  {
+class HostsAdapter(private val hosts: ArrayList<EvilApService.Host>) : RecyclerView.Adapter<HostsAdapter.HostHolder>()  {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HostHolder{
         val inflatedView = parent.inflate(rv_host_item_row, false)
         return HostHolder(inflatedView)
@@ -24,7 +25,7 @@ class HostsAdapter(private val hosts: ArrayList<Pair<String, String>>) : Recycle
 
     class HostHolder(v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
         private var view: View = v
-        private var host: Pair<String, String>? = null
+        private var host: EvilApService.Host? = null
 
         init {
             v.setOnClickListener(this)
@@ -34,14 +35,10 @@ class HostsAdapter(private val hosts: ArrayList<Pair<String, String>>) : Recycle
             Log.d("HostsAdapter", "CLICK!")
         }
 
-        fun bindHost(host: Pair<String, String>) {
+        fun bindHost(host: EvilApService.Host) {
             this.host = host
-            view.rvHostIP.text = host.first
-            view.rvHostMAC.text = host.second
-        }
-
-        companion object {
-            private val PHOTO_KEY = "PHOTO"
+            view.rvHostIP.text = host.ip
+            view.rvHostMAC.text = host.mac
         }
     }
 

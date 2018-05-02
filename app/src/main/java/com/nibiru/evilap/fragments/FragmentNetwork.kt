@@ -1,33 +1,28 @@
 package com.nibiru.evilap.fragments
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.*
+import com.nibiru.evilap.EventBusRx
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
 import com.nibiru.evilap.adapters.HostsAdapter
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_network.view.*
 
-
+// https://www.toptal.com/android/functional-reactive-android-rxjava
+// https://stackoverflow.com/questions/26140026/service-fragment-communication
 class FragmentNetwork: android.support.v4.app.Fragment(){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var mListener: OnFragmentInteractionListener? = null
-    private var lbm: LocalBroadcastManager? = null
-    private val ClientModeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i(TAG, "Got intent, action = " + intent?.action)
-        }
-    }
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: HostsAdapter
-    private var mHostList: ArrayList<Pair<String,String>> = ArrayList()
+    private var mHostList: ArrayList<EvilApService.Host> = ArrayList()
+    private lateinit var disposable: Disposable
     /**************************************CLASS METHODS*******************************************/
     companion object { // never use fragment constructors with args, AOS will not use them
         fun newInstance(): FragmentNetwork = FragmentNetwork()
@@ -38,13 +33,17 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         if(context == null) return
         if(context is OnFragmentInteractionListener)
             mListener = context
-        lbm = LocalBroadcastManager.getInstance(context)
-
+        disposable = EventBusRx.INSTANCE.toObserverable().subscribe({
+            Log.d(TAG, "$it")
+            mHostList.add(it)
+            mAdapter.notifyItemChanged(mHostList.size)
+        })
     }
 
     override fun onDetach() {
         super.onDetach()
         mListener = null
+        disposable.dispose()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -57,14 +56,6 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         return view
     }
 
-    override fun onStart() {
-        super.onStart()
-        if(mHostList.size!=0) return
-        val fu = mListener?.getCurrentClients() ?: return
-        mHostList.addAll(fu)
-        mAdapter.notifyItemInserted(mHostList.size)
-    }
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.network, menu)
         super.onCreateOptionsMenu(menu, inflater)
@@ -75,19 +66,13 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
             val executeIntent = Intent(EvilApService.ACTION_SCAN_ACTIVE)
             executeIntent.setClass(context, EvilApService::class.java)
             context?.startService(executeIntent)
-
             true
         }
         else -> super.onOptionsItemSelected(item)
     }
 
-    private fun runOnUiThread(f: () -> Unit){
-        val handler = Handler()
-        val r = Runnable { f() }
-        handler.post(r)
-    }
-
     interface OnFragmentInteractionListener {
         fun getCurrentClients(): List<Pair<String,String>>
     }
+
 }

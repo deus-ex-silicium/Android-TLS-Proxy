@@ -8,9 +8,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import android.util.Patterns
 import eu.chainfire.libsuperuser.Shell
-import android.app.NotificationManager
 
 
 class EvilApService: Service() {
@@ -22,6 +20,7 @@ class EvilApService: Service() {
         const val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
         const val ACTION_SCAN_ACTIVE = "com.nibiru.evilap.service_scan_active"
         const val ACTION_DNS_SNIFF = "com.nibiru.evilap.service_dns_sniff"
+        const val ACTION_UPDATE_HOSTS = "com.nibiru.evilap.ui_update_hosts"
     }
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
@@ -48,7 +47,7 @@ class EvilApService: Service() {
                 stopSelf()
             }
             ACTION_SCAN_ACTIVE -> {
-                startActiveScan("wlan0")
+                startActiveScan("wlan0") //TODO: check wifi connectivity
             }
             ACTION_DNS_SNIFF -> {
                 startDnsSniff("wlan0")
@@ -142,10 +141,13 @@ class EvilApService: Service() {
         val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $iface"
         shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                        Log.i("[native]scanactive", "\n$cmd \n(exit code: $exitCode)")
+                        Log.i("[native]scanactive", "$cmd \n(exit code: $exitCode)")
                     }
                     override fun onLine(line: String) {
-                        Log.d("[native]scanactive", "\n$line")
+                        Log.d("[native]scanactive", line)
+                        if(!line.contains("=>")) return
+                        val elements = line.split("=>")
+                        EventBusRx.INSTANCE.send(Host(elements[0],elements[1],true))
                     }
                 })
     }
@@ -170,4 +172,5 @@ class EvilApService: Service() {
 
     }
 
+    data class Host(val ip: String, val mac: String, val present: Boolean)
 }

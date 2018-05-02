@@ -32,9 +32,6 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
         FragmentNetwork.OnFragmentInteractionListener,
         FragmentScanner.OnFragmentInteractionListener,
         FragmentActionCenter.OnFragmentInteractionListener{
-
-
-
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var mService: EvilApService? = null
