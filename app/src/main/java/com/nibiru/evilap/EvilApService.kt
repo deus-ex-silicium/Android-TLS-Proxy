@@ -48,7 +48,7 @@ class EvilApService: Service() {
                 stopSelf()
             }
             ACTION_SCAN_ACTIVE -> {
-                startActiveScan("192.168.0.1")
+                startActiveScan("wlan0")
             }
             ACTION_DNS_SNIFF -> {
                 startDnsSniff("wlan0")
@@ -85,9 +85,10 @@ class EvilApService: Service() {
         return builder.build()
     }
 
+    @SuppressLint("WrongConstant")
     private fun setupNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val importance = NotificationManager.IMPORTANCE_LOW
+        val importance = android.app.NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, "Evil-AP", importance)
         channel.description = "Notifications from Evil-AP"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -130,20 +131,21 @@ class EvilApService: Service() {
         return openRootShell()
     }
 
-    private fun startActiveScan(ip: String) {
-        if (!Patterns.IP_ADDRESS.matcher(ip).matches()){
-            Log.e(TAG, "startActiveScan(): bad ip!")
+    private fun startActiveScan(iface: String) {
+        val whitelist = listOf("wlan0")
+        if(!whitelist.contains(iface)){
+            Log.e(TAG, "startActiveScan: bad interface!")
             return
         }
         val shell = getIdleShell()
         val path = applicationInfo.dataDir
-        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $ip"
+        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $iface"
         shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                        Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
+                        Log.i("[native]scanactive", "\n$cmd \n(exit code: $exitCode)")
                     }
                     override fun onLine(line: String) {
-                        Log.d("ROOT", line)
+                        Log.d("[native]scanactive", "\n$line")
                     }
                 })
     }

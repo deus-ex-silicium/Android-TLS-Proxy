@@ -16,6 +16,7 @@ class FragmentApMode: android.support.v4.app.Fragment(){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var lbm: LocalBroadcastManager? = null
+    private var mListener: OnFragmentInteractionListener? = null
     private val ClientModeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.i(TAG, "Got intent, action = " + intent?.action)
@@ -29,12 +30,24 @@ class FragmentApMode: android.support.v4.app.Fragment(){
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         if(context == null) return
+        if(context is OnFragmentInteractionListener)
+            mListener = context
         lbm = LocalBroadcastManager.getInstance(context)
-
     }
+
+    override fun onDetach() {
+        super.onDetach()
+        mListener = null
+    }
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_ap_mode, container, false)
         return view
+    }
+
+
+    interface OnFragmentInteractionListener {
+
     }
 }

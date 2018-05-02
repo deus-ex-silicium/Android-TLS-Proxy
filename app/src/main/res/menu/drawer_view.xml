@@ -6,7 +6,7 @@
             android:icon="@drawable/icon"
             android:title="AP Mode" />
         <item
-            android:id="@+id/client_mode"
+            android:id="@+id/network"
             android:icon="@drawable/icon"
             android:title="Client Mode" />
         <item

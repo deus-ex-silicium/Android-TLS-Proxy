@@ -16,7 +16,7 @@ import android.view.MenuItem
 import com.nibiru.evilap.R.id.*
 import com.nibiru.evilap.fragments.FragmentActionCenter
 import com.nibiru.evilap.fragments.FragmentApMode
-import com.nibiru.evilap.fragments.FragmentClientMode
+import com.nibiru.evilap.fragments.FragmentNetwork
 import com.nibiru.evilap.fragments.FragmentScanner
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -27,7 +27,14 @@ import kotlinx.android.synthetic.main.activity_main.*
 // https://stackoverflow.com/questions/18413309/how-to-implement-a-viewpager-with-different-fragments-layouts/18413437#18413437
 // https://developer.android.com/training/animation/screen-slide
 // https://www.raywenderlich.com/169885/android-fragments-tutorial-introduction-2
-class MainActivity : AppCompatActivity(), ServiceConnection {
+class MainActivity : AppCompatActivity(), ServiceConnection,
+        FragmentApMode.OnFragmentInteractionListener,
+        FragmentNetwork.OnFragmentInteractionListener,
+        FragmentScanner.OnFragmentInteractionListener,
+        FragmentActionCenter.OnFragmentInteractionListener{
+
+
+
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var mService: EvilApService? = null
@@ -38,16 +45,15 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
-        supportActionBar?.title = "AP Mode" //Set default title
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp)
         viewPager.adapter = MyPagerAdapter(supportFragmentManager)
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) = when(position){
-                    0 -> supportActionBar?.title = "AP Mode"
-                    1 -> supportActionBar?.title = "Client Mode"
-                    2 -> supportActionBar?.title = "Scanner"
-                    3 -> supportActionBar?.title = "Action Center"
-                    else -> supportActionBar?.title = "AP Mode"
+                0 -> supportActionBar?.title = "AP Mode"
+                1 -> supportActionBar?.title = "Network"
+                2 -> supportActionBar?.title = "Scanner"
+                3 -> supportActionBar?.title = "Action Center"
+                else -> supportActionBar?.title = "AP Mode"
             }
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
             override fun onPageScrollStateChanged(state: Int) {}
@@ -57,13 +63,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             drawer_layout.closeDrawers() // close drawer when item is tapped
             when(menuItem.itemId){
                 ap_mode -> viewPager.currentItem = 0
-                client_mode -> viewPager.currentItem = 1
+                network -> viewPager.currentItem = 1
                 scanner -> viewPager.currentItem = 2
                 action_center -> viewPager.currentItem = 3
             }
             true
         }
-
         // Start the service and make it run regardless of who is bound to it
         val serviceIntent = Intent(this, EvilApService::class.java)
         startService(serviceIntent)
@@ -80,7 +85,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         override fun getItem(pos: Int): Fragment {
             return when (pos) {
                 0 -> FragmentApMode.newInstance()
-                1 -> FragmentClientMode.newInstance()
+                1 -> FragmentNetwork.newInstance()
                 2 -> FragmentScanner.newInstance()
                 3 -> FragmentActionCenter.newInstance()
                 else -> FragmentApMode.newInstance()
@@ -99,9 +104,15 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         mService = (service as EvilApService.LocalBinder).service
     }
+
     override fun onServiceDisconnected(name: ComponentName?) {
         // Respect being stopped from notification action.
         finish()
+    }
+
+    /******************************** Fragment Stuff **********************************************/
+    override fun getCurrentClients(): List<Pair<String, String>> {
+        return listOf(Pair("192.168.8.1","deadbeef"), Pair("192.168.8.53","deadbeef2"))
     }
 
 }
