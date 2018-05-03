@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu_24dp)
         viewPager.adapter = MyPagerAdapter(supportFragmentManager)
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) = when(position){

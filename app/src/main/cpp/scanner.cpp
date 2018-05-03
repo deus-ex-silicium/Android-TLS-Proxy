@@ -116,7 +116,7 @@ void scan(int argc, char* argv[]) {
 }
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cout << "Usage: " <<* argv << " <interface>" << endl;
+        cout << "Usage: " <<* argv << " <interface> <scan type>" << endl;
         return 1;
     }
     try {

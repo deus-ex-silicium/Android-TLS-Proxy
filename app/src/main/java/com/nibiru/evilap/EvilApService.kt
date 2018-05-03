@@ -41,22 +41,22 @@ class EvilApService: Service() {
         when(intent.action){
             service.ACTION_STOP_SERVICE.action -> exit()
         }
-        setupSubscriber()
+        setupEventBus()
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY
     }
 
-    private fun setupSubscriber(){
-        if (mDisposable == null || mDisposable!!.isDisposed) {
-            mDisposable = RxEventBus.INSTANCE.busService.subscribe({
-                Log.d(TAG, "got event = $it")
-                when (it) {
-                    service.ACTION_STOP_SERVICE -> exit()
-                    service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
-                    service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
-                }
-            })
-        }
+    private fun setupEventBus(){
+        if (mDisposable != null && !mDisposable!!.isDisposed) return
+
+        mDisposable = RxEventBus.INSTANCE.busService.subscribe({
+            Log.d(TAG, "got event = $it")
+            when (it) {
+                service.ACTION_STOP_SERVICE -> exit()
+                service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
+                service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
+            }
+        })
     }
 
     private fun buildNotification(): Notification {
@@ -139,20 +139,15 @@ class EvilApService: Service() {
     }
 
     private fun startActiveScan(iface: String) {
-        val whitelist = listOf("wlan0")
-        if(!whitelist.contains(iface)){
-            Log.e(TAG, "startActiveScan: bad interface!")
-            return
-        }
         val shell = getIdleShell()
         val path = applicationInfo.dataDir
-        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanactive.so $iface"
+        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanner.so wlan0 active-arp"
         shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                        Log.i("[native]scanactive", "$cmd \n(exit code: $exitCode)")
+                        Log.i("[native]SCANNER", "$cmd \n(exit code: $exitCode)")
                     }
                     override fun onLine(line: String) {
-                        Log.d("[native]scanactive", line)
+                        Log.d("[native]SCANNER", line)
                         if(!line.contains("=>")) return
                         val elements = line.split("=>")
                         RxEventBus.INSTANCE.send(Host(elements[0],elements[1],true))
