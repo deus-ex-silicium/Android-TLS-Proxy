@@ -5,4 +5,5 @@
     <color name="colorAccent">#ff5131</color>
 
     <color name="menuIcons">#BDBDBD</color>
+    <color name="textLight">#ffffff</color>
 </resources>

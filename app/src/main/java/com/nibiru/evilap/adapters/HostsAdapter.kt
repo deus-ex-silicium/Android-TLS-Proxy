@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R.layout.rv_host_item_row
+import com.nibiru.evilap.RxEventBus
 import com.nibiru.evilap.inflate
 import kotlinx.android.synthetic.main.rv_host_item_row.view.*
 
@@ -25,7 +26,7 @@ class HostsAdapter(private val hosts: ArrayList<EvilApService.Host>) : RecyclerV
 
     class HostHolder(v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
         private var view: View = v
-        private var host: EvilApService.Host? = null
+        private lateinit var host: EvilApService.Host
 
         init {
             v.setOnClickListener(this)
@@ -33,6 +34,9 @@ class HostsAdapter(private val hosts: ArrayList<EvilApService.Host>) : RecyclerV
 
         override fun onClick(v: View) {
             Log.d("HostsAdapter", "CLICK!")
+            view.rvCheckBox.isChecked = !view.rvCheckBox.isChecked
+            host.present = view.rvCheckBox.isChecked
+            RxEventBus.INSTANCE.busCheckedHosts.onNext(host)
         }
 
         fun bindHost(host: EvilApService.Host) {

@@ -46,11 +46,11 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
         viewPager.adapter = MyPagerAdapter(supportFragmentManager)
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) = when(position){
-                0 -> supportActionBar?.title = "AP Mode"
-                1 -> supportActionBar?.title = "Network"
-                2 -> supportActionBar?.title = "Scanner"
-                3 -> supportActionBar?.title = "Action Center"
-                else -> supportActionBar?.title = "AP Mode"
+                //0 -> supportActionBar?.title = "AP Mode"
+                0 -> supportActionBar?.title = "Network"
+                //2 -> supportActionBar?.title = "Scanner"
+                1 -> supportActionBar?.title = "Action Center"
+                else -> supportActionBar?.title = "Network"
             }
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
             override fun onPageScrollStateChanged(state: Int) {}
@@ -59,10 +59,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
             menuItem.isChecked = true // set item as selected to persist highlight
             drawer_layout.closeDrawers() // close drawer when item is tapped
             when(menuItem.itemId){
-                ap_mode -> viewPager.currentItem = 0
-                network -> viewPager.currentItem = 1
-                scanner -> viewPager.currentItem = 2
-                action_center -> viewPager.currentItem = 3
+                //ap_mode -> viewPager.currentItem = 0
+                network -> viewPager.currentItem = 0
+                //scanner -> viewPager.currentItem = 2
+                action_center -> viewPager.currentItem = 1
             }
             true
         }
@@ -81,14 +81,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
     private inner class MyPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
         override fun getItem(pos: Int): Fragment {
             return when (pos) {
-                0 -> FragmentApMode.newInstance()
-                1 -> FragmentNetwork.newInstance()
-                2 -> FragmentScanner.newInstance()
-                3 -> FragmentActionCenter.newInstance()
+                0 -> FragmentNetwork.newInstance()
+                1 -> FragmentActionCenter.newInstance()
                 else -> FragmentApMode.newInstance()
             }
         }
-        override fun getCount(): Int = 4
+        override fun getCount(): Int = 2
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean =  when(item.itemId) {

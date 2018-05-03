@@ -22,7 +22,9 @@ class EvilApService: Service() {
         ACTION_SCAN_ACTIVE("com.nibiru.evilap.service_scan_active"),
         ACTION_DNS_SNIFF("com.nibiru.evilap.service_dns_sniff"),
     }
-    private var mDisposable: Disposable? = null
+    private var mDispService: Disposable? = null
+    private var mDispCheckedHosts: Disposable? = null
+    private var mCheckedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
     // This service is only bound from inside the same process and never uses IPC.
@@ -47,15 +49,22 @@ class EvilApService: Service() {
     }
 
     private fun setupEventBus(){
-        if (mDisposable != null && !mDisposable!!.isDisposed) return
-
-        mDisposable = RxEventBus.INSTANCE.busService.subscribe({
+        if (mDispService != null && !mDispService!!.isDisposed) return
+        mDispService = RxEventBus.INSTANCE.busService.subscribe({
             Log.d(TAG, "got event = $it")
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
                 service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
                 service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
             }
+        })
+        if (mDispCheckedHosts != null && !mDispCheckedHosts!!.isDisposed) return
+        mDispCheckedHosts = RxEventBus.INSTANCE.busCheckedHosts.subscribe({
+            Log.d(TAG, "got event = $it")
+            if(it.present)
+                mCheckedHosts.add(it)
+            else
+                mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.mac == el.mac })
         })
     }
 
@@ -103,7 +112,8 @@ class EvilApService: Service() {
 
     private fun exit(){
         mWantsToStop = true
-        if (mDisposable!=null && !mDisposable!!.isDisposed) mDisposable!!.dispose()
+        if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
+        if (mDispCheckedHosts!=null && !mDispCheckedHosts!!.isDisposed) mDispCheckedHosts!!.dispose()
         getIdleShell().addCommand("pkill -f ${applicationInfo.dataDir}/lib/")
         for (shell in mShells)
             shell.close()
@@ -150,7 +160,7 @@ class EvilApService: Service() {
                         Log.d("[native]SCANNER", line)
                         if(!line.contains("=>")) return
                         val elements = line.split("=>")
-                        RxEventBus.INSTANCE.send(Host(elements[0],elements[1],true))
+                        RxEventBus.INSTANCE.busScannedHosts.onNext(Host(elements[0],elements[1],true))
                     }
                 })
     }
@@ -175,5 +185,5 @@ class EvilApService: Service() {
 
     }
 
-    data class Host(val ip: String, val mac: String, val present: Boolean)
+    data class Host(val ip: String, val mac: String, var present: Boolean)
 }

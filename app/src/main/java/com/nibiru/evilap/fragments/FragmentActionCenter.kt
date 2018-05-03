@@ -41,7 +41,7 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         val v= inflater.inflate(R.layout.fragment_action_center, container, false)
         v.bDnsSniff.setOnClickListener { _ ->
             Log.d(TAG, "DNS SNIFF")
-            RxEventBus.INSTANCE.send(EvilApService.service.ACTION_DNS_SNIFF)
+            RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_DNS_SNIFF)
         }
         return v
     }

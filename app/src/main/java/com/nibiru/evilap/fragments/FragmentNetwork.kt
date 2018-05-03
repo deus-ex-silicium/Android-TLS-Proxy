@@ -31,7 +31,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
 
     private fun setupEventBus(){
         if (disposable != null && !disposable!!.isDisposed) return
-        disposable = RxEventBus.INSTANCE.busHosts.subscribe({
+        disposable = RxEventBus.INSTANCE.busScannedHosts.subscribe({
             Log.d(TAG, "$it")
             mHostList.add(it)
             mAdapter.notifyItemChanged(mHostList.size)
@@ -99,7 +99,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         R.id.menu_scan -> {
             mAdapter.notifyItemRangeChanged(0, mHostList.size)
             mHostList.clear()
-            RxEventBus.INSTANCE.send(EvilApService.service.ACTION_SCAN_ACTIVE)
+            RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_SCAN_ACTIVE)
             true
         }
         R.id.menu_settings -> {
