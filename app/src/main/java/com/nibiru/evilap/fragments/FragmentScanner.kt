@@ -11,19 +11,14 @@ import android.view.LayoutInflater
 import android.view.View
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
+import com.nibiru.evilap.RxEventBus
 import kotlinx.android.synthetic.main.fragment_scanner.view.*
 
 
 class FragmentScanner: android.support.v4.app.Fragment(){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private var lbm: LocalBroadcastManager? = null
     private var mListener: OnFragmentInteractionListener? = null
-    private val ClientModeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i(TAG, "Got intent, action = " + intent?.action)
-        }
-    }
     /**************************************CLASS METHODS*******************************************/
     companion object { // never use fragment constructors with args, AOS will not use them
         fun newInstance(): FragmentScanner = FragmentScanner()
@@ -34,7 +29,6 @@ class FragmentScanner: android.support.v4.app.Fragment(){
         if(context == null) return
         if(context is OnFragmentInteractionListener)
             mListener = context
-        lbm = LocalBroadcastManager.getInstance(context)
     }
 
     override fun onDetach() {
@@ -46,10 +40,8 @@ class FragmentScanner: android.support.v4.app.Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fragment_scanner, container, false)
         v.bPingSweep.setOnClickListener { _ ->
-            Log.d(TAG, "PING SWEEP")
-            val executeIntent = Intent(EvilApService.ACTION_SCAN_ACTIVE)
-            executeIntent.setClass(context, EvilApService::class.java)
-            context?.startService(executeIntent)
+            Log.d(TAG, "ACTIVE SCAN")
+            RxEventBus.INSTANCE.send(EvilApService.service.ACTION_SCAN_ACTIVE)
         }
         return v
     }

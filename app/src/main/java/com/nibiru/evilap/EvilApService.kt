@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import eu.chainfire.libsuperuser.Shell
+import io.reactivex.disposables.Disposable
 
 
 class EvilApService: Service() {
@@ -16,12 +17,12 @@ class EvilApService: Service() {
     private val TAG = javaClass.simpleName
     private val NOTIFICATION_ID = 666
     private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
-    companion object {
-        const val ACTION_STOP_SERVICE = "com.nibiru.evilap.service_stop"
-        const val ACTION_SCAN_ACTIVE = "com.nibiru.evilap.service_scan_active"
-        const val ACTION_DNS_SNIFF = "com.nibiru.evilap.service_dns_sniff"
-        const val ACTION_UPDATE_HOSTS = "com.nibiru.evilap.ui_update_hosts"
+    enum class service(val action: String) {
+        ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop"),
+        ACTION_SCAN_ACTIVE("com.nibiru.evilap.service_scan_active"),
+        ACTION_DNS_SNIFF("com.nibiru.evilap.service_dns_sniff"),
     }
+    private var mDisposable: Disposable? = null
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     var mWantsToStop = false
     // This service is only bound from inside the same process and never uses IPC.
@@ -36,28 +37,26 @@ class EvilApService: Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val action = intent.action
-        Log.d(TAG, "got action = $action")
-        when(action) {
-            ACTION_STOP_SERVICE -> {
-                mWantsToStop = true
-                getIdleShell().addCommand("pkill -f ${applicationInfo.dataDir}/lib/")
-                for (shell in mShells)
-                    shell.close()
-                stopSelf()
-            }
-            ACTION_SCAN_ACTIVE -> {
-                startActiveScan("wlan0") //TODO: check wifi connectivity
-            }
-            ACTION_DNS_SNIFF -> {
-                startDnsSniff("wlan0")
-            }
-            else -> {
-                Log.e(TAG, "Unknown EvilApService action: '$action'")
-            }
+        Log.d(TAG, "got intent = ${intent.action}")
+        when(intent.action){
+            service.ACTION_STOP_SERVICE.action -> exit()
         }
+        setupSubscriber()
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY
+    }
+
+    private fun setupSubscriber(){
+        if (mDisposable == null || mDisposable!!.isDisposed) {
+            mDisposable = RxEventBus.INSTANCE.busService.subscribe({
+                Log.d(TAG, "got event = $it")
+                when (it) {
+                    service.ACTION_STOP_SERVICE -> exit()
+                    service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
+                    service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
+                }
+            })
+        }
     }
 
     private fun buildNotification(): Notification {
@@ -66,21 +65,21 @@ class EvilApService: Service() {
         // activity, so you must use the Intent.FLAG_ACTIVITY_NEW_TASK launch flag in the Intent":
         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, 0)
+        val exitIntent = Intent(this, EvilApService::class.java)
+                .setAction(service.ACTION_STOP_SERVICE.action)
         val builder = Notification.Builder(this)
         builder.setContentTitle(getText(R.string.app_name))
-        builder.setContentText("${mShells.size} shell")
-        builder.setSmallIcon(R.drawable.notification_icon_background)
-        builder.setContentIntent(pendingIntent)
-        builder.setOngoing(true)
-        builder.setPriority(Notification.PRIORITY_LOW)
-        builder.setShowWhen(false) // No need to show a timestamp
-        builder.setColor(-0x1000000) // Background color for small notification icon
+                .setContentText("${mShells.size} active shells")
+                .setSmallIcon(R.drawable.ic_evilap)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setShowWhen(false) // No need to show a timestamp
+                .setColor(-0x1000000) // Background color for small notification ic_evilap
+                .addAction(R.drawable.ic_exit_black_24dp, resources.getString(R.string.notification_action_exit),
+                        PendingIntent.getService(this, 0, exitIntent, 0))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId(NOTIFICATION_CHANNEL_ID)
         }
-        val exitIntent = Intent(this, EvilApService::class.java).setAction(ACTION_STOP_SERVICE)
-        builder.addAction(android.R.drawable.ic_delete, resources.getString(R.string.notification_action_exit),
-                PendingIntent.getService(this, 0, exitIntent, 0))
         return builder.build()
     }
 
@@ -101,6 +100,15 @@ class EvilApService: Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder = mBinder
+
+    private fun exit(){
+        mWantsToStop = true
+        if (mDisposable!=null && !mDisposable!!.isDisposed) mDisposable!!.dispose()
+        getIdleShell().addCommand("pkill -f ${applicationInfo.dataDir}/lib/")
+        for (shell in mShells)
+            shell.close()
+        stopSelf()
+    }
 
     private fun openRootShell(): Shell.Interactive {
         // start the shell in the background and keep it alive as long as the app is running
@@ -147,7 +155,7 @@ class EvilApService: Service() {
                         Log.d("[native]scanactive", line)
                         if(!line.contains("=>")) return
                         val elements = line.split("=>")
-                        EventBusRx.INSTANCE.send(Host(elements[0],elements[1],true))
+                        RxEventBus.INSTANCE.send(Host(elements[0],elements[1],true))
                     }
                 })
     }

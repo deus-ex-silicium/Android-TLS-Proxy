@@ -1,12 +1,11 @@
 package com.nibiru.evilap.fragments
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.*
-import com.nibiru.evilap.EventBusRx
+import com.nibiru.evilap.RxEventBus
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
 import com.nibiru.evilap.adapters.HostsAdapter
@@ -33,7 +32,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         if(context == null) return
         if(context is OnFragmentInteractionListener)
             mListener = context
-        disposable = EventBusRx.INSTANCE.toObserverable().subscribe({
+        disposable = RxEventBus.INSTANCE.busHosts.subscribe({
             Log.d(TAG, "$it")
             mHostList.add(it)
             mAdapter.notifyItemChanged(mHostList.size)
@@ -63,16 +62,14 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.menu_scan -> {
-            val executeIntent = Intent(EvilApService.ACTION_SCAN_ACTIVE)
-            executeIntent.setClass(context, EvilApService::class.java)
-            context?.startService(executeIntent)
+            RxEventBus.INSTANCE.send(EvilApService.service.ACTION_SCAN_ACTIVE)
             true
         }
         else -> super.onOptionsItemSelected(item)
     }
 
     interface OnFragmentInteractionListener {
-        fun getCurrentClients(): List<Pair<String,String>>
+
     }
 
 }

@@ -108,8 +108,5 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
     }
 
     /******************************** Fragment Stuff **********************************************/
-    override fun getCurrentClients(): List<Pair<String, String>> {
-        return listOf(Pair("192.168.8.1","deadbeef"), Pair("192.168.8.53","deadbeef2"))
-    }
 
 }

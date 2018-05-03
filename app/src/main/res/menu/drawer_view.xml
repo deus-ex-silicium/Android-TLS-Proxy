@@ -3,19 +3,19 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/ap_mode"
-            android:icon="@drawable/icon"
+            android:icon="@drawable/ic_evilap"
             android:title="AP Mode" />
         <item
             android:id="@+id/network"
-            android:icon="@drawable/icon"
+            android:icon="@drawable/ic_evilap"
             android:title="Client Mode" />
         <item
             android:id="@+id/scanner"
-            android:icon="@drawable/icon"
+            android:icon="@drawable/ic_evilap"
             android:title="Scanner" />
         <item
             android:id="@+id/action_center"
-            android:icon="@drawable/icon"
+            android:icon="@drawable/ic_evilap"
             android:title="Action Center" />
 
     </group>

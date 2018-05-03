@@ -93,12 +93,12 @@ void Scanner::arp_sweep(const IPv4Range &v4Range) {
     PacketSender sender;
     auto info = iface.info();
     ip2mac.insert({ info.ip_addr, info.hw_addr });
-    for(int _ = 0; _ < 3; _++ ){
+    for(int _ = 0; _ < 2; _++ ){
         for(const auto &addr : v4Range){
             EthernetII eth = ARP::make_arp_request(addr, info.ip_addr, info.hw_addr);
             sender.send(eth, iface);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(333));
     }
     // Special packet to indicate that we're done. This will be sniffed
     // by our function, which will in turn return false.
