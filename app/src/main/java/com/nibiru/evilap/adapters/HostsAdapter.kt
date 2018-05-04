@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import com.nibiru.evilap.EvilApService
+import com.nibiru.evilap.R
 import com.nibiru.evilap.R.layout.rv_host_item_row
 import com.nibiru.evilap.RxEventBus
 import com.nibiru.evilap.inflate
@@ -41,8 +42,15 @@ class HostsAdapter(private val hosts: ArrayList<EvilApService.Host>) : RecyclerV
 
         fun bindHost(host: EvilApService.Host) {
             this.host = host
-            view.rvHostIP.text = host.ip
-            view.rvHostMAC.text = host.mac
+            with(view){
+                rvHostIP.text = host.ip
+                rvHostMAC.text = host.mac
+                when(host.type){
+                    "this" -> rvHostIcon.setImageResource(R.drawable.ic_phone_white_24dp)
+                    "gateway" -> rvHostIcon.setImageResource(R.drawable.ic_router_white_24dp)
+                    "host" -> rvHostIcon.setImageResource(R.drawable.ic_laptop_white_24dp)
+                }
+            }
         }
     }
 

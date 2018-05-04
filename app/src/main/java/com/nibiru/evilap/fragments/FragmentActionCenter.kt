@@ -36,12 +36,15 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         mListener = null
     }
 
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v= inflater.inflate(R.layout.fragment_action_center, container, false)
-        v.bDnsSniff.setOnClickListener { _ ->
-            Log.d(TAG, "DNS SNIFF")
-            RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_DNS_SNIFF)
+        with(v.sArpSpoof){
+            setOnClickListener{
+                if(isChecked)
+                    RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_ARP_SPOOF_ON)
+                else
+                    RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_ARP_SPOOF_OFF)
+            }
         }
         return v
     }

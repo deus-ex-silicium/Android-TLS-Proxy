@@ -61,8 +61,10 @@ void Scanner::launch_sniffer() {
 
 // Scan packet handler
 bool Scanner::callback(PDU& pdu) {
+    // Parse it as a DHCP PDU.
     const ARP* arp = pdu.find_pdu<ARP>();
     const ICMP* icmp = pdu.find_pdu<ICMP>();
+
     if(arp != 0 && arp->opcode() == ARP::REPLY){
         // Check if we have seen this address
         auto iter = ip2mac.find(arp->sender_ip_addr());
