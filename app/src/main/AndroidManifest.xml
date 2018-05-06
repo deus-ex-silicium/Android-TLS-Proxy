@@ -25,6 +25,9 @@
         <service
             android:name="com.nibiru.evilap.EvilApService"
             android:exported="false" />
+        <service
+            android:name="com.nibiru.evilap.proxy.ProxyService"
+            android:exported="false" />
 
     </application>
 

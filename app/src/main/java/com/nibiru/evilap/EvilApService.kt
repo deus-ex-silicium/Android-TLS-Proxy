@@ -63,10 +63,10 @@ class EvilApService: Service() {
             Log.d(TAG, "got event = $it")
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
-                service.ACTION_SCAN_ACTIVE -> startActiveScan("wlan0") //TODO: check wifi connectivity
-                service.ACTION_DNS_SNIFF -> startDnsSniff("wlan0")
-                service.ACTION_ARP_SPOOF_ON -> arpSpoof(true)
-                service.ACTION_ARP_SPOOF_OFF -> arpSpoof(false)
+                service.ACTION_SCAN_ACTIVE -> nativeActiveScan("wlan0") //TODO: check wifi connectivity
+                service.ACTION_DNS_SNIFF -> nativeDnsSniff("wlan0")
+                service.ACTION_ARP_SPOOF_ON -> nativeArpSpoof(true)
+                service.ACTION_ARP_SPOOF_OFF -> nativeArpSpoof(false)
             }
         })
         if (mDispCheckedHosts != null && !mDispCheckedHosts!!.isDisposed) return
@@ -126,7 +126,7 @@ class EvilApService: Service() {
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
         if (mDispCheckedHosts!=null && !mDispCheckedHosts!!.isDisposed) mDispCheckedHosts!!.dispose()
         getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
-        arpSpoof(false)
+        nativeArpSpoof(false)
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -160,7 +160,7 @@ class EvilApService: Service() {
         return openRootShell()
     }
 
-    private fun startActiveScan(iface: String) {
+    private fun nativeActiveScan(iface: String) {
         val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
         myIp = int2ip(manager.dhcpInfo.ipAddress)
         gateway = int2ip(manager.dhcpInfo.gateway)
@@ -187,17 +187,10 @@ class EvilApService: Service() {
                 })
     }
 
-    private fun int2ip(int: Int): String{
-        val myIPAddress = BigInteger.valueOf(int.toLong()).toByteArray()
-        myIPAddress.reverse()
-        val myInetIP = InetAddress.getByAddress(myIPAddress)
-        return myInetIP.hostAddress
-    }
-
-    private fun startDnsSniff(iface: String) {
+    private fun nativeDnsSniff(iface: String) {
         val whitelist = listOf("wlan0")
         if(!whitelist.contains(iface)){
-            Log.e(TAG, "startDnsSniff: bad interface!")
+            Log.e(TAG, "nativeDnsSniff: bad interface!")
             return
         }
         val shell = getIdleShell()
@@ -214,7 +207,7 @@ class EvilApService: Service() {
 
     }
 
-    private fun arpSpoof(spoofing: Boolean){
+    private fun nativeArpSpoof(spoofing: Boolean){
         val path = applicationInfo.dataDir
         if(spoofing){
             val allIp = mCheckedHosts.map{ it.ip }
@@ -257,6 +250,14 @@ class EvilApService: Service() {
             getIdleShell().addCommand(cmds)
         }
     }
+
+    private fun int2ip(int: Int): String{
+        val myIPAddress = BigInteger.valueOf(int.toLong()).toByteArray()
+        myIPAddress.reverse()
+        val myInetIP = InetAddress.getByAddress(myIPAddress)
+        return myInetIP.hostAddress
+    }
+
 
     data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
 }
