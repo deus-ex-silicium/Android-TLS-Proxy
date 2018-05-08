@@ -99,7 +99,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         R.id.menu_scan -> {
             mAdapter.notifyItemRangeChanged(0, mHostList.size)
             mHostList.clear()
-            RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_SCAN_ACTIVE)
+            RxEventBus.INSTANCE.send(EvilApService.EventActiveScan("ARP"))
             true
         }
         R.id.menu_settings -> {

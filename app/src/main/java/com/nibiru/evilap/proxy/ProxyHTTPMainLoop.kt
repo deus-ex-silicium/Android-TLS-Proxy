@@ -1,10 +1,9 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import com.nibiru.evilap.EvilApService
 import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.ServerSocket
-import java.net.SocketException
+import java.net.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -32,7 +31,7 @@ internal class ProxyHTTPMainLoop(private val serverSocket: ServerSocket) : Runna
             serverSocket.reuseAddress = true
             serverSocket.bind(InetSocketAddress(SERVERPORT))
             while (true) {
-                executor.execute(ThreadProxy(serverSocket.accept()))
+                executor.execute(ThreadHandleHTTPClient(serverSocket.accept()))
                 Log.d(TAG, "Accepted HTTP connection")
             }
         } catch (e: IOException) {

@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import com.nibiru.evilap.proxy.ProxyService
 import eu.chainfire.libsuperuser.Shell
 import io.reactivex.disposables.Disposable
 import java.io.Serializable
@@ -59,14 +60,28 @@ class EvilApService: Service() {
 
     private fun setupEventBus(){
         if (mDispService != null && !mDispService!!.isDisposed) return
-        mDispService = RxEventBus.INSTANCE.busService.subscribe({
+        mDispService = RxEventBus.INSTANCE.getObservable().subscribe({
             Log.d(TAG, "got event = $it")
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
-                service.ACTION_SCAN_ACTIVE -> nativeActiveScan("wlan0") //TODO: check wifi connectivity
-                service.ACTION_DNS_SNIFF -> nativeDnsSniff("wlan0")
-                service.ACTION_ARP_SPOOF_ON -> nativeArpSpoof(true)
-                service.ACTION_ARP_SPOOF_OFF -> nativeArpSpoof(false)
+                is EventActiveScan -> {
+                    nativeActiveScan("wlan0")
+                } //TODO: check wifi connectivity
+                is EventArpSpoof -> {
+                    nativeArpSpoof(it.state)
+                }
+                is EventHttpProxy -> {
+                    lateinit var cmds: List<String>
+                    if(it.state)
+                        cmds = listOf(
+                                "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
+                                "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
+                    else
+                        cmds = listOf(
+                                "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
+                                "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
+                    getIdleShell().addCommand(cmds)
+                }
             }
         })
         if (mDispCheckedHosts != null && !mDispCheckedHosts!!.isDisposed) return
@@ -125,6 +140,8 @@ class EvilApService: Service() {
         mWantsToStop = true
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
         if (mDispCheckedHosts!=null && !mDispCheckedHosts!!.isDisposed) mDispCheckedHosts!!.dispose()
+        // notify other components
+        RxEventBus.INSTANCE.send(EventExit())
         getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
         for (shell in mShells)
@@ -260,4 +277,8 @@ class EvilApService: Service() {
 
 
     data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
+    class EventExit()
+    data class EventActiveScan(val type: String)
+    data class EventArpSpoof(val state: Boolean)
+    data class EventHttpProxy(val state: Boolean)
 }

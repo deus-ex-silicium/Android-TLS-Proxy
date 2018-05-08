@@ -17,7 +17,7 @@ import com.nibiru.evilap.R.id.*
 import com.nibiru.evilap.fragments.FragmentActionCenter
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentNetwork
-import com.nibiru.evilap.fragments.FragmentScanner
+import com.nibiru.evilap.proxy.ProxyService
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -30,7 +30,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), ServiceConnection,
         FragmentApMode.OnFragmentInteractionListener,
         FragmentNetwork.OnFragmentInteractionListener,
-        FragmentScanner.OnFragmentInteractionListener,
         FragmentActionCenter.OnFragmentInteractionListener{
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
@@ -67,10 +66,13 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
             true
         }
         // Start the service and make it run regardless of who is bound to it
-        val serviceIntent = Intent(this, EvilApService::class.java)
-        startService(serviceIntent)
-        if (!bindService(serviceIntent, this, 0))
+        val EvilAPServiceIntent = Intent(this, EvilApService::class.java)
+        startService(EvilAPServiceIntent)
+        if (!bindService(EvilAPServiceIntent, this, 0))
             throw RuntimeException("bindService() failed")
+        val ProxyServiceIntent = Intent(this, ProxyService::class.java)
+        startService(ProxyServiceIntent)
+
     }
     override fun onDestroy() {
         super.onDestroy()

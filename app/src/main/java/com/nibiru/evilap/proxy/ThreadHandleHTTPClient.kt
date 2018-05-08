@@ -2,10 +2,7 @@ package com.nibiru.evilap.proxy
 
 import android.util.Log
 import okhttp3.*
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.io.OutputStream
+import java.io.*
 import java.net.Socket
 import java.net.SocketTimeoutException
 
@@ -15,17 +12,19 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
 
     override fun run() {
         //things we will eventually close
-        var inFromClient: BufferedReader? = null
-        var outToClient: OutputStream? = null
+        var inReader: BufferedReader? = null
+        var inStream: InputStream? = null
+        var outStream: OutputStream? = null
         var res: Response? = null
         try {
-            inFromClient = BufferedReader(InputStreamReader(sClient.getInputStream()))
-            outToClient = sClient.getOutputStream()
+            inStream = sClient.getInputStream()
+            inReader = BufferedReader(InputStreamReader(inStream))
+            outStream = sClient.getOutputStream()
 
             //HTTP KEEP ALIVE LOOP!
             while (true) {
                 //get client request string as okhttp request
-                val req = getOkhttpRequest(inFromClient) ?: return
+                val req = makeOkhttpRequest(inReader, inStream) ?: return
                 //make request and get okhttp response
                 res = SharedClass.INSTANCE.httpClient.newCall(req).execute()
 
@@ -33,12 +32,12 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
                 //get and send response headers
                 val headers = getResponseHeaders(res)
                 //send headers
-                sendBytes(headers.toByteArray(), outToClient)
+                sendBytes(headers.toByteArray(), outStream)
                 //get and send response bytes
                 val bytesBody = res.body()?.bytes()
-                sendBytes(bytesBody!!, outToClient)
+                sendBytes(bytesBody!!, outStream)
                 if (DEBUG) Log.d("$TAG[OUT]", headers)
-                outToClient.flush()
+                outStream.flush()
                 */
             }
         } catch (e: IOException) {
@@ -48,10 +47,11 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
                 e.printStackTrace()
         } finally {
             //clean up
-            if (res != null) res.body()?.close()
             try {
-                if (outToClient != null) outToClient.close()
-                if (inFromClient != null) inFromClient.close()
+                if (res != null) res.body()?.close()
+                if (inStream != null) inStream.close()
+                if (inReader != null) inReader.close()
+                if (outStream != null) outStream.close()
                 sClient.close()
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -66,10 +66,41 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     }
 
     @Throws(IOException::class)
-    private fun getOkhttpRequest(inR: BufferedReader): Request? {
+    private fun makeOkhttpRequest(inR: BufferedReader, inS: InputStream): Request? {
         val builder = Request.Builder()
+        var offset = 0
         val requestLine = inR.readLine()
+        offset += requestLine.length
+        val requestLineValues = requestLine.split("\\s+".toRegex())
 
+        var host: String? = null
+        var mime: String? = null
+        var len: Int = 0
+
+        inR.useLines {
+            it.map { line ->
+                Log.d("LINE", line)
+                val header = line.split(": ")
+                when(header[0]) {
+                    "" -> return@map
+                    "Host" -> host = header[1]
+                    "Content-Type" -> mime = header[1]
+                    "Content-Length" -> len = header[1].toInt()
+                    else -> builder.addHeader(header[0], header[1])
+                }
+            }
+        }
+        val url = "http://$host${requestLineValues[1]}"
+        Log.d(TAG, url)
+        builder.url(url)
+
+        var reqBody: RequestBody? = null
+        // if there is Message body, read it
+        if(len > 0){
+            val buf = inR.readText()
+            reqBody = RequestBody.create(MediaType.parse(mime), buf)
+        }
+        builder.method(requestLineValues[0], reqBody)
         return builder.build()
     }
 }

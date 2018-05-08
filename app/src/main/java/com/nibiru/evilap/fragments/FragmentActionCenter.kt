@@ -38,13 +38,11 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v= inflater.inflate(R.layout.fragment_action_center, container, false)
-        with(v.sArpSpoof){
-            setOnClickListener{
-                if(isChecked)
-                    RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_ARP_SPOOF_ON)
-                else
-                    RxEventBus.INSTANCE.busService.onNext(EvilApService.service.ACTION_ARP_SPOOF_OFF)
-            }
+        v.sArpSpoof.setOnClickListener {
+            RxEventBus.INSTANCE.send(EvilApService.EventArpSpoof(v.sArpSpoof.isChecked))
+        }
+        v.sHttpProxy.setOnClickListener {
+            RxEventBus.INSTANCE.send(EvilApService.EventHttpProxy(v.sHttpProxy.isChecked))
         }
         return v
     }
