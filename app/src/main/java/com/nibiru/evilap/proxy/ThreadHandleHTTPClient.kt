@@ -6,9 +6,11 @@ import java.io.*
 import java.net.Socket
 import java.net.SocketTimeoutException
 
+
 internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     private val TAG = javaClass.simpleName
-    private val DEBUG = false
+    private var keepAlive = true
+    private val DEBUG = true
 
     override fun run() {
         //things we will eventually close
@@ -20,25 +22,23 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
             inStream = sClient.getInputStream()
             inReader = BufferedReader(InputStreamReader(inStream))
             outStream = sClient.getOutputStream()
+            //outStream = ByteArrayOutputStream()
 
             //HTTP KEEP ALIVE LOOP!
-            while (true) {
+            while (keepAlive) {
                 //get client request string as okhttp request
-                val req = makeOkhttpRequest(inReader, inStream) ?: return
+                val req = getOkhttpRequest(inReader, inStream) ?: return
                 //make request and get okhttp response
                 res = SharedClass.INSTANCE.httpClient.newCall(req).execute()
 
-                /*
-                //get and send response headers
-                val headers = getResponseHeaders(res)
-                //send headers
-                sendBytes(headers.toByteArray(), outStream)
-                //get and send response bytes
-                val bytesBody = res.body()?.bytes()
-                sendBytes(bytesBody!!, outStream)
-                if (DEBUG) Log.d("$TAG[OUT]", headers)
+                sendResponseHeaders(res, outStream)
+                //val b = res.body()?.bytes()
+                res.body()?.apply { outStream.write(this.bytes()) }
+                outStream.write("WTF".toByteArray())
+                //outStream.write(0x0d)
+                outStream.write(0x0a)
                 outStream.flush()
-                */
+                Log.d(TAG, "[SEND]")
             }
         } catch (e: IOException) {
             if (e is SocketTimeoutException)
@@ -60,47 +60,58 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     }
 
     @Throws(IOException::class)
-    private fun sendBytes(msg: ByteArray, out: OutputStream) {
-        out.write(msg, 0, msg.size)
-        if (DEBUG) Log.d("$TAG[OUT]", "sent chunk!")
-    }
-
-    @Throws(IOException::class)
-    private fun makeOkhttpRequest(inR: BufferedReader, inS: InputStream): Request? {
+    private fun getOkhttpRequest(inR: BufferedReader, inS: InputStream): Request? {
         val builder = Request.Builder()
         var offset = 0
         val requestLine = inR.readLine()
+        if(DEBUG && requestLine != null) Log.d("$TAG[LINE]", requestLine)
         offset += requestLine.length
         val requestLineValues = requestLine.split("\\s+".toRegex())
 
         var host: String? = null
         var mime: String? = null
-        var len: Int = 0
+        var len = 0
 
-        inR.useLines {
-            it.map { line ->
-                Log.d("LINE", line)
-                val header = line.split(": ")
-                when(header[0]) {
-                    "" -> return@map
-                    "Host" -> host = header[1]
-                    "Content-Type" -> mime = header[1]
-                    "Content-Length" -> len = header[1].toInt()
-                    else -> builder.addHeader(header[0], header[1])
-                }
+        loop@ for(line in inR.lineSequence().iterator()){
+            if(DEBUG) Log.d("$TAG[LINE]", line)
+            offset += line.length + 2 //CRLF
+            val header = line.split(": ")
+            when(header[0]) {
+                "" -> break@loop
+                "Host" -> host = header[1]
+                "Content-Type" -> mime = header[1]
+                "Content-Length" -> len = header[1].toInt()
+                "Connection" -> keepAlive = header[1] != "close"
+                else -> builder.addHeader(header[0], header[1])
             }
         }
-        val url = "http://$host${requestLineValues[1]}"
+        // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
+        val url =  if(host!! in requestLineValues[1])
+            requestLineValues[1]
+        else
+            "http://$host${requestLineValues[1]}"
         Log.d(TAG, url)
         builder.url(url)
 
-        var reqBody: RequestBody? = null
         // if there is Message body, read it
+        var reqBody: RequestBody? = null
         if(len > 0){
-            val buf = inR.readText()
+            val buf = ByteArray(len)
+            val tmp = inS.read(buf, offset, len)
             reqBody = RequestBody.create(MediaType.parse(mime), buf)
         }
         builder.method(requestLineValues[0], reqBody)
         return builder.build()
+    }
+
+    private fun sendResponseHeaders(res: Response, outClient: OutputStream){
+        outClient.write(res.protocol().toString().toUpperCase().toByteArray())
+        outClient.write(0x20) // space
+        outClient.write(res.code().toString().toByteArray())
+        outClient.write(0x20) // space
+        outClient.write(res.message().toByteArray())
+        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
+        outClient.write(res.headers().toString().replace("\n","\r\n").toByteArray())
+        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
     }
 }

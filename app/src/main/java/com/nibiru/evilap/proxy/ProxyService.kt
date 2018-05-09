@@ -29,13 +29,12 @@ class ProxyService : Service(){
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
             mSocketHTTP = ServerSocket()
-
             //mSocketHTTPS = getSSLSocket(resources.openRawResource(R.raw.evil_ap))
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
         //start the HTTP proxy socket thread
+        Log.d(TAG, "starting http proxy main loop thread")
         val proxyHTTP = Thread(ProxyHTTPMainLoop(mSocketHTTP))
         proxyHTTP.start()
         //start the HTTPS proxy socket thread
