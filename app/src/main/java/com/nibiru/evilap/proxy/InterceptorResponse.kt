@@ -5,9 +5,6 @@ import okhttp3.Response
 import java.io.IOException
 import okhttp3.ResponseBody
 
-
-
-
 class InterceptorResponse : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

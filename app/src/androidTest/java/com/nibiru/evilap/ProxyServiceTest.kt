@@ -138,7 +138,60 @@ class ProxyServiceTest {
             Assert.assertTrue(res.isSuccessful)
             val b = res.body()?.string()
             Assert.assertNotNull(b)
-            Assert.assertThat(b, containsString("\\u0001\\u0000\\u0003\\n\\u0004\\r\\u0005"))
+            Assert.assertThat(b, containsString("\"data\":\"\\u0001\\u0000\\u0003\\n\\u0004\\r\\u0005\""))
+            res.close()
+        }
+    }
+    @Test
+    fun HEAD() {
+        val request = Request.Builder()
+                .url("http://httpbin.org/anything")
+                .head()
+                .build()
+        client.newCall(request).execute().use { res ->
+            Assert.assertTrue(res.isSuccessful)
+            val b = res.body()?.string()
+            Assert.assertNotNull(b)
+            Assert.assertThat(b, containsString(""))
+            val headers = res.headers()
+            Assert.assertTrue( headers.size() > 0 )
+            res.close()
+        }
+    }
+    @Test
+    fun PUT_binary() {
+        val mime = MediaType.parse("application/octet-stream")
+        val testPayload = byteArrayOf( 0x01, 0x00, 0x03, 0x0a, 0x04, 0x0d, 0x05)
+        val body = RequestBody.create(mime, testPayload)
+        val request = Request.Builder()
+                .url("http://httpbin.org/anything")
+                .put(body)
+                .build()
+        client.newCall(request).execute().use { res ->
+            Assert.assertTrue(res.isSuccessful)
+            val b = res.body()?.string()
+            Assert.assertNotNull(b)
+            Assert.assertThat(b, containsString("\"data\":\"\\u0001\\u0000\\u0003\\n\\u0004\\r\\u0005\""))
+            Assert.assertThat(b, containsString("\"method\":\"PUT\""))
+            res.close()
+        }
+    }
+    @Test
+    fun DELETE_binary_and_url_args() {
+        val mime = MediaType.parse("application/octet-stream")
+        val testPayload = byteArrayOf( 0x01, 0x00, 0x03, 0x0a, 0x04, 0x0d, 0x05)
+        val body = RequestBody.create(mime, testPayload)
+        val request = Request.Builder()
+                .url("http://httpbin.org/anything?file=test_file_to_delete")
+                .delete(body)
+                .build()
+        client.newCall(request).execute().use { res ->
+            Assert.assertTrue(res.isSuccessful)
+            val b = res.body()?.string()
+            Assert.assertNotNull(b)
+            Assert.assertThat(b, containsString("\"data\":\"\\u0001\\u0000\\u0003\\n\\u0004\\r\\u0005\""))
+            Assert.assertThat(b, containsString("\"method\":\"DELETE\""))
+            Assert.assertThat(b, containsString("\"args\":{\"file\":\"test_file_to_delete\"}"))
             res.close()
         }
     }

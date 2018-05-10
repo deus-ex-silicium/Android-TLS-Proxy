@@ -40,6 +40,7 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
                 e.printStackTrace()
         } finally {
             try { //clean up
+                Log.e(TAG, "Cleaning client resources")
                 if (res != null) res.body()?.close()
                 if (outStream != null) outStream.close()
                 if (inData != null) inData.close()
@@ -56,14 +57,14 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     // octets in field content (obs-text) as opaque data."
     //  - https://tools.ietf.org/html/rfc7230
     // So using DataInputSteam.readLine() should work well since multibyte
-    // charactersets are not to be expected
+    // character sets are not to be expected
     // see https://stackoverflow.com/questions/21754078/datainputstream-readline-deprecated
     @Throws(IOException::class)
     private fun getOkhttpRequest(inD: DataInputStream): Request? {
         val builder = Request.Builder()
         var offset = 0
-        val requestLine = inD.readLine()
-        if(DEBUG && requestLine != null) Log.d("$TAG[LINE]", requestLine)
+        val requestLine = inD.readLine() ?: return null
+        if(DEBUG) Log.d("$TAG[LINE]", requestLine)
         offset += requestLine.length
         val requestLineValues = requestLine.split("\\s+".toRegex())
 

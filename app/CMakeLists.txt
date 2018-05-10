@@ -16,7 +16,7 @@ add_library(tins SHARED IMPORTED)
 
 set_target_properties( tins PROPERTIES IMPORTED_LOCATION
                        # Provides the path to the library you want to import.
-                       /home/nibiru/repos/Evil-AP/app/src/main/jniLibs/armeabi/libtins.so)
+                       /home/nibiru/repos/Evil-AP/app/src/main/jniLibs/armeabi-v7a/libtins.so)
 
 include_directories( /home/nibiru/repos/Evil-AP/app/src/main/cpp/include/ )
 

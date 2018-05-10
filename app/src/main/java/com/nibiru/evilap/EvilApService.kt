@@ -277,7 +277,7 @@ class EvilApService: Service() {
 
 
     data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
-    class EventExit()
+    class EventExit
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
     data class EventHttpProxy(val state: Boolean)
