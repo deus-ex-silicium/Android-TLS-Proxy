@@ -14,29 +14,22 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
 
     override fun run() {
         //things we will eventually close
-        var inReader: BufferedReader? = null
-        var inStream: InputStream? = null
+        var inData: DataInputStream?= null
         var outStream: OutputStream? = null
         var res: Response? = null
         try {
-            inStream = sClient.getInputStream()
-            inReader = BufferedReader(InputStreamReader(inStream))
+            inData = DataInputStream(sClient.getInputStream())
             outStream = sClient.getOutputStream()
             //outStream = ByteArrayOutputStream()
 
             //HTTP KEEP ALIVE LOOP!
             while (keepAlive) {
                 //get client request string as okhttp request
-                val req = getOkhttpRequest(inReader, inStream) ?: return
-                //make request and get okhttp response
+                val req = getOkhttpRequest(inData) ?: return
                 res = SharedClass.INSTANCE.httpClient.newCall(req).execute()
 
                 sendResponseHeaders(res, outStream)
-                //val b = res.body()?.bytes()
                 res.body()?.apply { outStream.write(this.bytes()) }
-                outStream.write("WTF".toByteArray())
-                //outStream.write(0x0d)
-                outStream.write(0x0a)
                 outStream.flush()
                 Log.d(TAG, "[SEND]")
             }
@@ -46,12 +39,10 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
             else
                 e.printStackTrace()
         } finally {
-            //clean up
-            try {
+            try { //clean up
                 if (res != null) res.body()?.close()
-                if (inStream != null) inStream.close()
-                if (inReader != null) inReader.close()
                 if (outStream != null) outStream.close()
+                if (inData != null) inData.close()
                 sClient.close()
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -59,11 +50,19 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         }
     }
 
+    // "In practice, most HTTP header field values use only a subset of the
+    // US-ASCII charset [USASCII]. Newly defined header fields SHOULD limit
+    // their field values to US-ASCII octets.  A recipient SHOULD treat other
+    // octets in field content (obs-text) as opaque data."
+    //  - https://tools.ietf.org/html/rfc7230
+    // So using DataInputSteam.readLine() should work well since multibyte
+    // charactersets are not to be expected
+    // see https://stackoverflow.com/questions/21754078/datainputstream-readline-deprecated
     @Throws(IOException::class)
-    private fun getOkhttpRequest(inR: BufferedReader, inS: InputStream): Request? {
+    private fun getOkhttpRequest(inD: DataInputStream): Request? {
         val builder = Request.Builder()
         var offset = 0
-        val requestLine = inR.readLine()
+        val requestLine = inD.readLine()
         if(DEBUG && requestLine != null) Log.d("$TAG[LINE]", requestLine)
         offset += requestLine.length
         val requestLineValues = requestLine.split("\\s+".toRegex())
@@ -72,7 +71,9 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         var mime: String? = null
         var len = 0
 
-        loop@ for(line in inR.lineSequence().iterator()){
+        var line: String
+        loop@ while(true){
+            line = inD.readLine()
             if(DEBUG) Log.d("$TAG[LINE]", line)
             offset += line.length + 2 //CRLF
             val header = line.split(": ")
@@ -93,11 +94,12 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         Log.d(TAG, url)
         builder.url(url)
 
-        // if there is Message body, read it
+        // read data, perhaps binary (so BufferedReader will not work)
         var reqBody: RequestBody? = null
         if(len > 0){
             val buf = ByteArray(len)
-            val tmp = inS.read(buf, offset, len)
+            val tmp = inD.read(buf, 0, len)
+            if(tmp != len) Log.wtf(TAG, "Could not read all body bytes (-_-)")
             reqBody = RequestBody.create(MediaType.parse(mime), buf)
         }
         builder.method(requestLineValues[0], reqBody)
@@ -114,4 +116,5 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         outClient.write(res.headers().toString().replace("\n","\r\n").toByteArray())
         outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
     }
+
 }
