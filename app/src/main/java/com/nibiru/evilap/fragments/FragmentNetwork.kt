@@ -11,6 +11,7 @@ import com.nibiru.evilap.R
 import com.nibiru.evilap.RxEventBus
 import com.nibiru.evilap.adapters.HostsAdapter
 import io.reactivex.disposables.Disposable
+import kotlinx.android.synthetic.main.fragment_network.*
 import kotlinx.android.synthetic.main.fragment_network.view.*
 
 
@@ -31,10 +32,16 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
 
     private fun setupEventBus(){
         if (disposable != null && !disposable!!.isDisposed) return
-        disposable = RxEventBus.INSTANCE.busScannedHosts.subscribe({
+        disposable = RxEventBus.INSTANCE.getFrontEndObservable().subscribe({
             Log.d(TAG, "$it")
-            mHostList.add(it)
-            mAdapter.notifyItemChanged(mHostList.size)
+            when(it) {
+                is EvilApService.EventScannedHosts -> {
+                    mHostList.addAll(it.hosts)
+                    mAdapter.notifyItemChanged(mHostList.size)
+                    rvSwipeRef.isRefreshing = false
+                }
+            }
+
         })
     }
 
@@ -82,6 +89,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         mAdapter = HostsAdapter(mHostList)
         view.rvHosts.layoutManager = mLinearLayoutManager
         view.rvHosts.adapter = mAdapter
+        view.rvSwipeRef.setOnRefreshListener { doScan() }
         return view
     }
 
@@ -97,9 +105,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.menu_scan -> {
-            mAdapter.notifyItemRangeChanged(0, mHostList.size)
-            mHostList.clear()
-            RxEventBus.INSTANCE.send(EvilApService.EventActiveScan("ARP"))
+            doScan()
             true
         }
         R.id.menu_settings -> {
@@ -107,6 +113,14 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
             true
         }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun doScan(){
+        Log.d(TAG, "REFRESHING:${rvSwipeRef.isRefreshing}")
+        rvSwipeRef.isRefreshing = true
+        mAdapter.notifyItemRangeChanged(0, mHostList.size)
+        mHostList.clear()
+        RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventActiveScan("ARP"))
     }
 
     interface OnFragmentInteractionListener {

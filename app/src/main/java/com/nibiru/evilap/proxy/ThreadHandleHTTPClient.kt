@@ -10,7 +10,7 @@ import java.net.SocketTimeoutException
 internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     private val TAG = javaClass.simpleName
     private var keepAlive = true
-    private val DEBUG = true
+    private val DEBUG = false
 
     override fun run() {
         //things we will eventually close
@@ -64,7 +64,7 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         val builder = Request.Builder()
         var offset = 0
         val requestLine = inD.readLine() ?: return null
-        if(DEBUG) Log.d("$TAG[LINE]", requestLine)
+        Log.d("$TAG[REQUEST LINE]", requestLine)
         offset += requestLine.length
         val requestLineValues = requestLine.split("\\s+".toRegex())
 

@@ -1,10 +1,6 @@
 package com.nibiru.evilap.fragments
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.support.v4.content.LocalBroadcastManager
-import android.util.Log
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -39,10 +35,10 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v= inflater.inflate(R.layout.fragment_action_center, container, false)
         v.sArpSpoof.setOnClickListener {
-            RxEventBus.INSTANCE.send(EvilApService.EventArpSpoof(v.sArpSpoof.isChecked))
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventArpSpoof(v.sArpSpoof.isChecked))
         }
         v.sHttpProxy.setOnClickListener {
-            RxEventBus.INSTANCE.send(EvilApService.EventHttpProxy(v.sHttpProxy.isChecked))
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventHttpProxy(v.sHttpProxy.isChecked))
         }
         return v
     }

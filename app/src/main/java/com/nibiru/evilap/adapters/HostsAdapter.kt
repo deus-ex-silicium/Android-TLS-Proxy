@@ -37,7 +37,7 @@ class HostsAdapter(private val hosts: ArrayList<EvilApService.Host>) : RecyclerV
             Log.d("HostsAdapter", "CLICK!")
             view.rvCheckBox.isChecked = !view.rvCheckBox.isChecked
             host.present = view.rvCheckBox.isChecked
-            RxEventBus.INSTANCE.busCheckedHosts.onNext(host)
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventHostChecked(host))
         }
 
         fun bindHost(host: EvilApService.Host) {

