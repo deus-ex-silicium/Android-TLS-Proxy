@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 //Runnable class that uses a thread pool to accept and handle client connection
-internal class ProxyHTTPMainLoop(private val serverSocket: ServerSocket) : Runnable {
+internal class MainLoopProxyHTTP(private val serverSocket: ServerSocket) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private val SERVERPORT = 1337

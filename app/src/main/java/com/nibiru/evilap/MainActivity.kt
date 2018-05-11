@@ -18,7 +18,9 @@ import com.nibiru.evilap.fragments.FragmentActionCenter
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentNetwork
 import com.nibiru.evilap.proxy.ProxyService
+import com.nibiru.evilap.proxy.SharedClass
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.BufferedInputStream
 
 
 // https://developer.android.com/training/appbar/
@@ -65,6 +67,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
             }
             true
         }
+        // initialize shared object
+        val idx = resources.openRawResource(R.raw.index)
+        val notFound = resources.openRawResource(R.raw.not_found)
+        SharedClass.INSTANCE.init(idx, notFound)
         // Start the service and make it run regardless of who is bound to it
         val EvilAPServiceIntent = Intent(this, EvilApService::class.java)
         startService(EvilAPServiceIntent)

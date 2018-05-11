@@ -62,10 +62,8 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
     @Throws(IOException::class)
     private fun getOkhttpRequest(inD: DataInputStream): Request? {
         val builder = Request.Builder()
-        var offset = 0
         val requestLine = inD.readLine() ?: return null
         Log.d("$TAG[REQUEST LINE]", requestLine)
-        offset += requestLine.length
         val requestLineValues = requestLine.split("\\s+".toRegex())
 
         var host: String? = null
@@ -76,7 +74,6 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
         loop@ while(true){
             line = inD.readLine()
             if(DEBUG) Log.d("$TAG[LINE]", line)
-            offset += line.length + 2 //CRLF
             val header = line.split(": ")
             when(header[0]) {
                 "" -> break@loop

@@ -40,6 +40,9 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         v.sHttpProxy.setOnClickListener {
             RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventHttpProxy(v.sHttpProxy.isChecked))
         }
+        v.sCaptivePortal.setOnClickListener {
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventCaptivePortal(v.sCaptivePortal.isChecked))
+        }
         return v
     }
 

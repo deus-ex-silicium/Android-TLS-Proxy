@@ -15,6 +15,7 @@ class ProxyService : Service(){
     /**************************************CLASS FIELDS********************************************/
     protected val TAG = javaClass.simpleName
     private lateinit var  mSocketHTTP: ServerSocket
+    private lateinit var  mSocketPortal: ServerSocket
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
         val service = this@ProxyService
@@ -30,16 +31,17 @@ class ProxyService : Service(){
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
             mSocketHTTP = ServerSocket()
+            mSocketPortal = ServerSocket()
             //mSocketHTTPS = getSSLSocket(resources.openRawResource(R.raw.evil_ap))
         } catch (e: Exception) {
             e.printStackTrace()
         }
         //start the HTTP proxy socket thread
-        val proxyHTTP = Thread(ProxyHTTPMainLoop(mSocketHTTP))
+        val proxyHTTP = Thread(MainLoopProxyHTTP(mSocketHTTP))
         proxyHTTP.start()
-        //start the HTTPS proxy socket thread
-        //val proxyHTTPS = Thread(ProxyHTTPSMainLoop(mSocketHTTPS))
-        //proxyHTTPS.start()
+        //start the captive portal thread
+        val portal = Thread(MainLoopCaptivePortal(mSocketPortal))
+        portal.start()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -63,6 +65,7 @@ class ProxyService : Service(){
         try {
             Log.e(TAG,"Closing server socket!")
             mSocketHTTP.close()
+            mSocketPortal.close()
         } catch (e: IOException) {
             e.printStackTrace()
         }

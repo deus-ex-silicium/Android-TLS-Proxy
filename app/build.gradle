@@ -13,7 +13,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                targets "arp-spoof", "dns-sniff", "scanner"
+                targets "arp-spoof", "dns-spoof", "scanner"
                 abiFilters "armeabi-v7a"
                 // https://stackoverflow.com/questions/7016730/compiling-with-clang-using-libc-undefined-references
                 cppFlags "-std=c++11 -frtti -fexceptions"

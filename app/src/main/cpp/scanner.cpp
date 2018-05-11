@@ -102,6 +102,7 @@ void Scanner::arp_sweep(const IPv4Range &v4Range) {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     // Special packet to indicate that we're done. This will be sniffed
     // by our function, which will in turn return false.
     IP ip = IP(info.ip_addr, info.ip_addr) / ICMP(ICMP::PARAM_PROBLEM);
