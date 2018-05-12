@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 
 @RunWith(AndroidJUnit4::class)
-class ProxyServiceTest {
+class ProxyServiceTests {
     @Rule @JvmField
     val mServiceRule = ServiceTestRule()
     private lateinit var client: OkHttpClient
