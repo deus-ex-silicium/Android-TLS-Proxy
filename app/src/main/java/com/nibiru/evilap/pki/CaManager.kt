@@ -1,44 +1,55 @@
 package com.nibiru.evilap.pki
 
-import android.util.Base64
 import android.util.Log
-import org.spongycastle.asn1.ASN1InputStream
-import org.spongycastle.asn1.ASN1Primitive
-import org.spongycastle.asn1.util.ASN1Dump
 import org.spongycastle.asn1.x500.X500Name
+import org.spongycastle.asn1.x509.Certificate
 import org.spongycastle.asn1.x509.SubjectPublicKeyInfo
 import org.spongycastle.cert.X509CertificateHolder
 import org.spongycastle.cert.X509v3CertificateBuilder
+import org.spongycastle.cert.jcajce.JcaX509CertificateConverter
+import org.spongycastle.openssl.jcajce.JcaPEMWriter
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder
-import org.spongycastle.util.io.pem.PemReader
-import java.io.StringReader
+import java.io.StringWriter
 import java.math.BigInteger
-import java.security.KeyPairGenerator
+import java.security.*
 import java.util.*
 
 
 // https://bouncycastle.org/docs/pkixdocs1.3/index.html
-class CaManager(certStr: String?) {
+// http://www.baeldung.com/java-bouncy-castle
+class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private lateinit var cert : X509CertificateHolder
+    private lateinit var ks : KeyStore
+    private lateinit var kp : KeyPair
+    private lateinit var certHolder : X509CertificateHolder
+    private val keystorePassword = "password".toCharArray()
+    private val keyPassword = "password".toCharArray()
     /**************************************CLASS METHODS*******************************************/
-    constructor() : this(null)
+    constructor() : this(null, null)
+    companion object {
+        fun load(alias: String, pass: String) : CaManager {
+            val ks = KeyStore.getInstance("PKCS12")
+            ks.load(null)
+            val cert = ks.getCertificate("$alias-cert")
+            val priv = ks.getKey("$alias-kpriv", pass.toCharArray()) as PrivateKey
+            return CaManager(cert, priv)
+        }
+    }
     init {
-        if(certStr==null) generateCa()
+        if(cert==null || kpriv==null) generateCa()
         else{
-            val pem = PemReader(StringReader(certStr))
-            val c = pem.readPemObject()
-            if(c.type != "CERTIFICATE") throw IllegalArgumentException("Not a valid PEM certificate")
-            cert = X509CertificateHolder(c.content)
-            printB64()
+            ks = KeyStore.getInstance("PKCS12")
+            ks.load(null)
+            kp = KeyPair(cert.publicKey, kpriv)
+            certHolder = X509CertificateHolder(cert.encoded)
         }
     }
 
     private fun generateCa(){
         val rsa = KeyPairGenerator.getInstance("RSA")
         rsa.initialize(4096)
-        val kp = rsa.generateKeyPair()
+        kp = rsa.generateKeyPair()
 
         val cal = Calendar.getInstance()
         cal.add(Calendar.MONTH, 1)
@@ -55,20 +66,41 @@ class CaManager(certStr: String?) {
                 bcPk // the public key to be associated with the certificate.
         )
 
-        val certHolder = certGen
+        certHolder = certGen
                 .build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
 
-        cert = certHolder
-        printB64()
+        //https://www.stackoverflow.com/questions/6370368/bouncycastle-x509certificateholder-to-x509certificate#8960906
+        ks = KeyStore.getInstance("PKCS12")
+        ks.load(null)
     }
 
-    private fun printB64(){
-        Log.d(TAG, "-----BEGIN CERTIFICATE-----\n")
-        Log.d(TAG, Base64.encodeToString(cert.encoded, Base64.DEFAULT))
-        Log.d(TAG, "\n-----END CERTIFICATE-----\n")
+    fun save() {
+        val x509 = JcaX509CertificateConverter().getCertificate(certHolder)
+        ks.setKeyEntry("evil-ap-ca-kpriv", kp.private, keyPassword, arrayOf(x509))
+        ks.setCertificateEntry("evil-ap-ca-cert", x509)
     }
 
-    private fun printANS1() {
+    fun printCert(){
+        Log(print(certHolder))
+    }
+
+    fun printPubKey(){
+        Log(print(kp.public))
+    }
+
+    private fun Log(msg: String){
+        Log.d(TAG, msg)
+    }
+
+    private fun print(o : Any): String{
+        val textWriter = StringWriter()
+        val pemWriter =  JcaPEMWriter(textWriter)
+        pemWriter.writeObject(o)
+        pemWriter.flush()
+        return textWriter.toString()
+    }
+
+    /*private fun printANS1() {
         val input = ASN1InputStream(cert.encoded)
         var p: ASN1Primitive?
         while (true) {
@@ -76,5 +108,5 @@ class CaManager(certStr: String?) {
             if (p == null) break
             Log.d(TAG, ASN1Dump.dumpAsString(p))
         }
-    }
+    }*/
 }
