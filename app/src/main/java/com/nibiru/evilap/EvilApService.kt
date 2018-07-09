@@ -148,6 +148,7 @@ class EvilApService: Service() {
                 .setWatchdogTimeout(0).setMinimalLogging(true).open { commandCode, exitCode, output ->
                     // Callback to report whether the shell was successfully started up
                     if (exitCode != Shell.OnCommandResultListener.SHELL_RUNNING) {
+                        Toast.makeText(applicationContext, "Error opening root shell (-_-)", Toast.LENGTH_LONG)
                         Log.e(TAG,"Error opening root shell: exitCode=$exitCode")
                     }
                     else {
