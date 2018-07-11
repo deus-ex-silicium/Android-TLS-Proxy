@@ -1,6 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import com.nibiru.evilap.EvilApApp
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -24,10 +25,10 @@ internal class ThreadCaptivePortal(private val sClient: Socket) : Runnable {
             val reqFile = readRequestedFile(inData) ?: return
             when(reqFile) {
                 "/" -> {
-                    outStream.write(SharedClass.INSTANCE.indexFile)
+                    outStream.write(EvilApApp.instance.indexFile)
                 }
                 else -> {
-                    outStream.write(SharedClass.INSTANCE.notFoundFile)
+                    outStream.write(EvilApApp.instance.notFoundFile)
                 }
             }
             outStream.flush()

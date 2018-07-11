@@ -1,8 +1,8 @@
 package com.nibiru.evilap
 
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
+import android.graphics.Color
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.app.Fragment
@@ -13,14 +13,13 @@ import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import com.nibiru.evilap.R.id.*
 import com.nibiru.evilap.fragments.FragmentActionCenter
 import com.nibiru.evilap.fragments.FragmentApMode
 import com.nibiru.evilap.fragments.FragmentNetwork
 import com.nibiru.evilap.proxy.ProxyService
-import com.nibiru.evilap.proxy.SharedClass
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.BufferedInputStream
 
 
 // https://developer.android.com/training/appbar/
@@ -37,6 +36,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
     private val TAG = javaClass.simpleName
     private var mService: EvilApService? = null
     private val mCurrentContent: android.support.v4.app.Fragment? = null
+    private val connectivityChangeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "Got intent, action = " + intent?.action)
+            updateUiAlerts()
+        }
+    }
     /**************************************CLASS METHODS*******************************************/
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,23 +72,34 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
             }
             true
         }
-        // initialize shared object
-        val idx = resources.openRawResource(R.raw.index)
-        val notFound = resources.openRawResource(R.raw.not_found)
-        SharedClass.INSTANCE.init(idx, notFound)
-        // Start the service and make it run regardless of who is bound to it
-        val EvilAPServiceIntent = Intent(this, EvilApService::class.java)
-        startService(EvilAPServiceIntent)
-        if (!bindService(EvilAPServiceIntent, this, 0))
-            throw RuntimeException("bindService() failed")
-        val ProxyServiceIntent = Intent(this, ProxyService::class.java)
-        startService(ProxyServiceIntent)
 
+        updateUiAlerts()
+
+        // Start the service and make it run regardless of who is bound to it
+        val evilAPServiceIntent = Intent(this, EvilApService::class.java)
+        startService(evilAPServiceIntent)
+        if (!bindService(evilAPServiceIntent, this, 0))
+            throw RuntimeException("bindService() failed")
+        val proxyServiceIntent = Intent(this, ProxyService::class.java)
+        startService(proxyServiceIntent)
     }
+
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        registerReceiver(connectivityChangeReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        super.onResume()
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "onPause")
+        unregisterReceiver(connectivityChangeReceiver)
+        super.onPause()
+    }
+
     override fun onDestroy() {
-        super.onDestroy()
         Log.d(TAG, "onDestroy")
         unbindService(this)
+        super.onDestroy()
     }
 
     private inner class MyPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
@@ -104,13 +120,30 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
             }
             else -> super.onOptionsItemSelected(item)
     }
+
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-        mService = (service as EvilApService.LocalBinder).service
+        if (service is EvilApService.LocalBinder) {mService = service.service}
+        else {Log.e(TAG, "onServiceConnected, wrong interface")}
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
         // Respect being stopped from notification action.
         finish()
+    }
+
+    private fun updateUiAlerts(){
+        if (!EvilApApp.instance.wifiConnected){
+            tvWifiOff.visibility = View.VISIBLE
+        }
+        else{
+            tvWifiOff.visibility = View.GONE
+        }
+        if (!EvilApApp.instance.internetConnected){
+            tvInternetOff.visibility = View.VISIBLE
+        }
+        else{
+            tvInternetOff.visibility = View.GONE
+        }
     }
 
     /******************************** Fragment Stuff **********************************************/

@@ -35,10 +35,15 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
         disposable = RxEventBus.INSTANCE.getFrontEndObservable().subscribe({
             Log.d(TAG, "$it")
             when(it) {
+                //TODO: scanning widget with X button
                 is EvilApService.EventScannedHosts -> {
-                    mHostList.addAll(it.hosts)
-                    mAdapter.notifyItemChanged(mHostList.size)
-                    rvSwipeRef.isRefreshing = false
+                    if(!it.finnish && it.host != null){
+                        mHostList.add(it.host)
+                        mAdapter.notifyItemChanged(mHostList.size)
+                    }
+                    else {
+                        rvSwipeRef.isRefreshing = false
+                    }
                 }
             }
 

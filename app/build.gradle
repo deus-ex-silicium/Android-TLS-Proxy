@@ -6,7 +6,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.nibiru.evilap"
-        minSdkVersion 21
+        minSdkVersion 22
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -17,6 +17,8 @@ android {
                 abiFilters "armeabi-v7a"
                 // https://stackoverflow.com/questions/7016730/compiling-with-clang-using-libc-undefined-references
                 cppFlags "-std=c++11 -frtti -fexceptions"
+                //cppFlags "-stdlib=libc++ -frtti -fexceptions"
+                //cppFlags "-frtti -fexceptions"
             }
         }
     }
@@ -29,6 +31,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
+            //arguments "-DANDROID_STL=c++_shared"
         }
     }
     productFlavors {

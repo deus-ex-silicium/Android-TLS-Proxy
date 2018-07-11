@@ -20,7 +20,7 @@ bool callback(const PDU& pdu) {
     if (dns.type() == DNS::QUERY) {
         // Let's see if there's any query for an "A" record.
         for (const auto& query : dns.queries()) {
-            if (!query.query_type() == DNS::A) continue;
+            if (!(query.query_type() == DNS::A)) continue;
             // "A" record query, spoof response
             string hostname = query.dname();
             if(hostname == "mitm.me") {

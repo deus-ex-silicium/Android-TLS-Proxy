@@ -1,6 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import com.nibiru.evilap.EvilApApp
 import okhttp3.*
 import java.io.*
 import java.net.Socket
@@ -26,7 +27,7 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
             while (keepAlive) {
                 //get client request string as okhttp request
                 val req = getOkhttpRequest(inData) ?: return
-                res = SharedClass.INSTANCE.httpClient.newCall(req).execute()
+                res = EvilApApp.instance.httpClient.newCall(req).execute()
 
                 sendResponseHeaders(res, outStream)
                 res.body()?.apply { outStream.write(this.bytes()) }

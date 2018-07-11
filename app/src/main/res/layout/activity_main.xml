@@ -24,6 +24,24 @@
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
 
+        <TextView
+            android:id="@+id/tvWifiOff"
+            android:layout_width="match_parent"
+            android:layout_height="40sp"
+            android:gravity="center"
+            android:background="@android:color/holo_red_light"
+            android:text="Not connected to a WiFi network!"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tvInternetOff"
+            android:layout_width="match_parent"
+            android:layout_height="40sp"
+            android:gravity="center"
+            android:background="@android:color/holo_red_light"
+            android:text="No internet connectivity!"
+            android:visibility="gone"/>
+
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
