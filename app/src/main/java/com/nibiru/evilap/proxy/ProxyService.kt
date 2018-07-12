@@ -45,7 +45,7 @@ class ProxyService : Service(){
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Log.d(TAG, "got intent = ${intent.action}")
+        Log.v(TAG, "got intent = ${intent.action}")
         setupEventBus()
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY

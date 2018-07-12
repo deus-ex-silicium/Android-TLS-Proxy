@@ -81,10 +81,14 @@ class EvilApService: Service() {
                 is EventArpSpoof -> { nativeArpSpoof(it.state) }
                 is EventHttpProxy -> { nativeHttpProxy(it.state) }
                 is EventHostChecked -> {
-                    if(it.checked)
-                        mCheckedHosts.add(it.h)
-                    else
-                        mCheckedHosts.removeAt(mCheckedHosts.indexOfFirst { el: Host -> it.h.mac == el.mac })
+                    if(it.checked) {
+                        if(it.h !in mCheckedHosts)
+                            mCheckedHosts.add(it.h)
+                    }
+                    else {
+                        if(it.h in mCheckedHosts)
+                            mCheckedHosts.remove(it.h)
+                    }
                 }
                 is EventCaptivePortal -> { nativeCaptivePortal(it.state) }
             }
