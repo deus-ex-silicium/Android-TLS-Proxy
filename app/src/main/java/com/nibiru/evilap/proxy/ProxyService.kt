@@ -54,7 +54,7 @@ class ProxyService : Service(){
     private fun setupEventBus(){
         if (mDispService != null && !mDispService!!.isDisposed) return
         mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe({
-            Log.d(TAG, "got event = $it")
+            Log.v(TAG, "got event = $it")
             when (it) {
                 is EvilApService.EventExit -> exit()
             }

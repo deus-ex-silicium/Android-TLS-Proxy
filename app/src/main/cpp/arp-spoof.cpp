@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
 
         return 1;
     }
+    cout << "Starting arpspoof..." << endl;
     IPv4Address gw, victim;
     EthernetII::address_type own_hw;
     try {

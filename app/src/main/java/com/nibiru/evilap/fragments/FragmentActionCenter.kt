@@ -37,11 +37,11 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         v.sArpSpoof.setOnClickListener {
             RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventArpSpoof(v.sArpSpoof.isChecked))
         }
-        v.sHttpProxy.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventHttpProxy(v.sHttpProxy.isChecked))
+        v.sTest.setOnClickListener {
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventHttpRedirect(v.sTest.isChecked))
         }
-        v.sCaptivePortal.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventCaptivePortal(v.sCaptivePortal.isChecked))
+        v.sDnsSpoof.setOnClickListener {
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventDnsSpoof(v.sDnsSpoof.isChecked))
         }
         return v
     }
