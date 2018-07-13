@@ -26,7 +26,11 @@ internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
             //HTTP KEEP ALIVE LOOP!
             while (keepAlive) {
                 //get client request string as okhttp request
-                val req = getOkhttpRequest(inData) ?: return
+                val req = getOkhttpRequest(inData)
+                if (req == null) {
+                    Log.e(TAG, "Cannot read request, closing")
+                    return
+                }
                 res = EvilApApp.instance.httpClient.newCall(req).execute()
 
                 sendResponseHeaders(res, outStream)
