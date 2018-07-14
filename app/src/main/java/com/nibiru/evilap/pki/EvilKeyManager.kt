@@ -16,28 +16,38 @@ import javax.net.ssl.X509KeyManager
 // https://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html
 // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SNIExtension
 // http://www.angelfire.com/or/abhilash/site/articles/jsse-km/customKeyManager.html
+// https://tools.ietf.org/html/rfc6066#page-6
 
-class EvilKeyManager : X509KeyManager {
+class EvilKeyManager(ca: CaManager?) : X509KeyManager {
     private val TAG = javaClass.simpleName
-
+    private lateinit var ca: CaManager
+    /**
+     *  Empty constructor. Creates a new CA manager
+     */
+    constructor() : this(null)
+    init{
+        this.ca = ca ?: CaManager()
+    }
     override fun getServerAliases(keyType: String?, issuers: Array<out Principal>?): Array<String> {
         TODO("not implemented")
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?): String {
+        // "Currently, the only server names (types) supported are DNS hostnames" -RFC 6066
         val sock = socket as SSLSocket
         val sni = (sock.handshakeSession as ExtendedSSLSession).requestedServerNames[0] as SNIHostName
-        Log.d(TAG, "SNI=($sni)")
+        Log.d(TAG, "SNI=(${sni.asciiName})")
+        ca.generateAndSignCert(sni.asciiName)
         return sni.asciiName
     }
 
     override fun getCertificateChain(alias: String?): Array<X509Certificate> {
-        TODO("not implemented")
+        return ca.getCertChain(alias!!)
     }
 
     override fun getPrivateKey(alias: String?): PrivateKey {
-        TODO("not implemented")
+        return ca.getPrivKey(alias!!)
     }
 
     override fun chooseClientAlias(keyType: Array<out String>?, issuers: Array<out Principal>?, socket: Socket?): String {
