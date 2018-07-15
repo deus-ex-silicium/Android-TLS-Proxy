@@ -1,19 +1,13 @@
 package com.nibiru.evilap
 
 import android.app.Application
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.ConnectivityManager
-import android.net.Network
 import android.util.Log
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-import android.support.v4.net.ConnectivityManagerCompat.isActiveNetworkMetered
-
 
 
 // https://stackoverflow.com/questions/708012/how-to-declare-global-variables-in-android

@@ -1,33 +1,33 @@
 package com.nibiru.evilap
 
+import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.pki.EvilKeyManager
-import com.nibiru.evilap.proxy.MainLoopProxyHTTP
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.ServerSocket
+import java.io.DataInputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.net.*
+import java.security.KeyStore
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
-import eu.chainfire.libsuperuser.Shell.SU.available
-import java.io.BufferedInputStream
-import java.security.KeyStore
 import javax.net.ssl.TrustManager
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 
 /**
+ * Quickly MITM connection by using below command (needed for this test)
  * echo "127.0.0.1  example.com" >> sudo tee -a /etc/hosts
- *
  */
-// https://jebware.com/blog/?p=340
+
 class TlsSniTests {
     private lateinit var client: OkHttpClient
     private lateinit var ss: ServerSocket
@@ -35,6 +35,8 @@ class TlsSniTests {
 
     @Before
     fun init(){
+        // Create a new CA and make okhttp trust it (^_^)
+        // https://jebware.com/blog/?p=340
         ca = CaManager()
         val sslContext: SSLContext
         val trustManager: TrustManager
@@ -51,7 +53,6 @@ class TlsSniTests {
             e.printStackTrace()
             return
         }
-
         client = OkHttpClient.Builder()
                 .sslSocketFactory(sslContext.socketFactory, trustManager as X509TrustManager)
                 .connectTimeout(0, TimeUnit.SECONDS)
@@ -59,10 +60,10 @@ class TlsSniTests {
                 .readTimeout(0, TimeUnit.SECONDS)
                 .followRedirects(false)
                 .build()
+        // Start mocked proxy server
         try {
             ss = getEvilSSLSocket()
-            //ss = ServerSocket()
-            val proxyHTTP = Thread(MainLoopProxyHTTP(ss))
+            val proxyHTTP = Thread(MainLoopProxyTest(ss))
             proxyHTTP.start()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -70,18 +71,18 @@ class TlsSniTests {
     }
 
     @Test
-    fun oneTest() {
+    fun oneTestToRuleThemAll() {
+        Log.d("Testing", "Making HTTPS request to example.com:1337")
         val request = Request.Builder()
-                .url("https://example.com:1337")
+                .url("https://example.com:1337") // HTTPS !
                 .build()
         client.newCall(request).execute().use { res ->
             Assert.assertTrue(res.isSuccessful)
             val b = res.body()?.string()
             Assert.assertNotNull(b)
-            Assert.assertThat(b, CoreMatchers.containsString("<title>Example Domain</title>"))
+            Assert.assertThat(b, CoreMatchers.containsString("HTTPS Proxy Hello!"))
             res.close()
         }
-        Assert.assertTrue(true)
     }
 
     @Throws(Exception::class)
@@ -92,4 +93,89 @@ class TlsSniTests {
         val ssf = sc.serverSocketFactory
         return ssf.createServerSocket()
     }
+
+    internal class MainLoopProxyTest(private val serverSocket: ServerSocket) : Runnable {
+        private val TAG = javaClass.simpleName
+        private val SERVERPORT = 1337
+        /**************************************CLASS METHODS*******************************************/
+        override fun run() {
+            val executor = ThreadPoolExecutor(140, 140, 60L, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
+            try {
+                // listen for incoming clients
+                Log.d(TAG, "Listening on port: $SERVERPORT")
+                serverSocket.reuseAddress = true
+                serverSocket.bind(InetSocketAddress(SERVERPORT))
+                while (true) {
+                    executor.execute(ThreadHandleHTTPClientTest(serverSocket.accept()))
+                    Log.d(TAG, "Accepted HTTP connection")
+                }
+            } catch (e: IOException) {
+                if (e !is SocketException) {
+                    Log.e(TAG, "Error!")
+                    e.printStackTrace()
+                }
+            } finally {
+                Log.e(TAG, "Stopping!")
+                try {
+                    serverSocket.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        internal class ThreadHandleHTTPClientTest(private val sClient: Socket) : Runnable {
+            private val TAG = javaClass.simpleName
+            private var keepAlive = true
+
+            override fun run() {
+                var inData: DataInputStream?= null
+                var outStream: OutputStream? = null
+                try {
+                    inData = DataInputStream(sClient.getInputStream())
+                    outStream = sClient.getOutputStream()
+                    while (keepAlive) {
+                        readReq(inData)
+                        sendResponseHeaders(outStream)
+                        outStream.write("HTTPS Proxy Hello!".toByteArray())
+                        outStream.flush()
+                        Log.d(TAG, "[SEND]")
+                    }
+                } catch (e: IOException) {
+                    if (e is SocketTimeoutException)
+                        Log.e(TAG, "TIMEOUT!")
+                    else
+                        e.printStackTrace()
+                } finally {
+                    try { //clean up
+                        Log.e(TAG, "Cleaning client resources")
+                        if (outStream != null) outStream.close()
+                        if (inData != null) inData.close()
+                        sClient.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            private fun readReq(inD : DataInputStream) {
+                val requestLine = inD.readLine() ?: return
+                Log.d("$TAG[REQUEST LINE]", requestLine)
+                var line: String
+                loop@ while(true){
+                    line = inD.readLine()
+                    Log.d("$TAG[LINE]", line)
+                    if(line == "") break@loop
+                }
+            }
+
+            private fun sendResponseHeaders(outClient: OutputStream){
+                outClient.write("HTTP/1.1 200 OK\r\n".toByteArray())
+                outClient.write("Content-Length: 18\r\n".toByteArray())
+                outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
+            }
+
+        }
+    }
+
 }

@@ -2,6 +2,7 @@ package com.nibiru.evilap.proxy
 
 import android.util.Log
 import com.nibiru.evilap.EvilApService
+import okhttp3.OkHttpClient
 import java.io.IOException
 import java.net.*
 import java.util.concurrent.LinkedBlockingQueue

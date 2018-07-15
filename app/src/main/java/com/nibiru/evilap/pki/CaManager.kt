@@ -1,7 +1,14 @@
 package com.nibiru.evilap.pki
 
 import android.util.Log
+import org.spongycastle.asn1.ASN1OctetString
+import org.spongycastle.asn1.DERIA5String
 import org.spongycastle.asn1.x500.X500Name
+import org.spongycastle.asn1.x500.style.BCStyle
+import org.spongycastle.asn1.x500.style.IETFUtils
+import org.spongycastle.asn1.x509.Extension
+import org.spongycastle.asn1.x509.GeneralName
+import org.spongycastle.asn1.x509.GeneralNames
 import org.spongycastle.asn1.x509.SubjectPublicKeyInfo
 import org.spongycastle.cert.X509CertificateHolder
 import org.spongycastle.cert.X509v3CertificateBuilder
@@ -9,18 +16,17 @@ import org.spongycastle.cert.jcajce.JcaX509CertificateConverter
 import org.spongycastle.cert.jcajce.JcaX509CertificateHolder
 import org.spongycastle.openssl.jcajce.JcaPEMWriter
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder
-import java.io.StringWriter
-import java.math.BigInteger
-import java.security.*
-import java.util.*
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.StringWriter
+import java.math.BigInteger
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.KeyStore
+import java.security.PrivateKey
 import java.security.cert.Certificate
 import java.security.cert.X509Certificate
-import org.spongycastle.asn1.x500.style.IETFUtils
-import org.spongycastle.asn1.x500.style.BCStyle
-
-
+import java.util.*
 
 
 // https://bouncycastle.org/docs/pkixdocs1.3/index.html
@@ -112,7 +118,9 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
     }
 
     fun generateAndSignCert(cn: String){
-        //TODO: subject alt names
+        // https://security.stackexchange.com/questions/56389/ssl-certificate-framework-101-how-does-the-browser-actually-verify-the-validity
+        // https://stackoverflow.com/questions/5935369/ssl-how-do-common-names-cn-and-subject-alternative-names-san-work-together
+        // https://boredwookie.net/blog/bouncy-castle-add-a-subject-alternative-name-when-creating-a-cer
         val rsa = KeyPairGenerator.getInstance("RSA")
         rsa.initialize(2048)
         val newKp = rsa.generateKeyPair()
@@ -128,6 +136,11 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
                 X500Name("CN=$cn"),         // X500Name representing the subject of this certificate.
                 bcPk                        // the public key to be associated with the certificate.
         )
+        // add Subject Alternative Names to (now wildcard) certificate
+        val altName1 =  GeneralName(GeneralName.dNSName, DERIA5String(cn))
+        val altName2 =  GeneralName(GeneralName.dNSName, DERIA5String("*.$cn"))
+        val altNames = GeneralNames(arrayOf(altName1, altName2))
+        certGen.addExtension(Extension.subjectAlternativeName, false, altNames)
         // sign with CA and store in KeyStore
         val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
         val x509new = JcaX509CertificateConverter().getCertificate(certHolder)
