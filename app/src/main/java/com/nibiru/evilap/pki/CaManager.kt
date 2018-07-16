@@ -6,10 +6,7 @@ import org.spongycastle.asn1.DERIA5String
 import org.spongycastle.asn1.x500.X500Name
 import org.spongycastle.asn1.x500.style.BCStyle
 import org.spongycastle.asn1.x500.style.IETFUtils
-import org.spongycastle.asn1.x509.Extension
-import org.spongycastle.asn1.x509.GeneralName
-import org.spongycastle.asn1.x509.GeneralNames
-import org.spongycastle.asn1.x509.SubjectPublicKeyInfo
+import org.spongycastle.asn1.x509.*
 import org.spongycastle.cert.X509CertificateHolder
 import org.spongycastle.cert.X509v3CertificateBuilder
 import org.spongycastle.cert.jcajce.JcaX509CertificateConverter
@@ -91,6 +88,7 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
     }
 
     private fun generateCa(){
+        // http://blog.differentpla.net/blog/2013/03/24/bouncy-castle-being-a-certificate-authority
         // generate new 4096-bit RSA keypair
         val rsa = KeyPairGenerator.getInstance("RSA")
         rsa.initialize(4096)
@@ -109,6 +107,14 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
                 X500Name("CN=FUNSEC Inc."), // X500Name representing the subject of this certificate.
                 bcPk                        // the public key to be associated with the certificate.
         )
+        // assert that this is a CA certificate
+        certGen.addExtension(Extension.basicConstraints, true,  BasicConstraints(true))
+        // add some Extended Key Usage fields
+        // https://tools.ietf.org/html/rfc5280#section-4.2.1.12
+        val eku = arrayOf(KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth,
+                KeyPurposeId.id_kp_emailProtection, KeyPurposeId.id_kp_timeStamping,
+                KeyPurposeId.id_kp_codeSigning, KeyPurposeId.anyExtendedKeyUsage)
+        certGen.addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(eku))
         // self-sign
         val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
         root = JcaX509CertificateConverter().getCertificate(certHolder)
@@ -172,12 +178,13 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         Log.d(TAG, msg)
     }
 
-    private fun print(o : Any): String{
+    fun print(o : Any): String{
         val textWriter = StringWriter()
         val pemWriter =  JcaPEMWriter(textWriter)
         pemWriter.writeObject(o)
         pemWriter.flush()
         return textWriter.toString()
     }
+
 
 }

@@ -1,8 +1,6 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApService
-import okhttp3.OkHttpClient
 import java.io.IOException
 import java.net.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -10,10 +8,9 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 //Runnable class that uses a thread pool to accept and handle client connection
-internal class MainLoopProxyHTTP(private val serverSocket: ServerSocket) : Runnable {
+internal class MainLoopProxy(private val serverSocket: ServerSocket, private val port: Int) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private val SERVERPORT = 1337
     /**************************************CLASS METHODS*******************************************/
     override fun run() {
         //http://codetheory.in/android-java-executor-framework/
@@ -25,14 +22,13 @@ internal class MainLoopProxyHTTP(private val serverSocket: ServerSocket) : Runna
                 TimeUnit.SECONDS,
                 LinkedBlockingQueue<Runnable>()
         )
-
         try {
             // listen for incoming clients
-            Log.d(TAG, "Listening on port: $SERVERPORT")
+            Log.d(TAG, "Listening on port: $port")
             serverSocket.reuseAddress = true
-            serverSocket.bind(InetSocketAddress(SERVERPORT))
+            serverSocket.bind(InetSocketAddress(port))
             while (true) {
-                executor.execute(ThreadHandleHTTPClient(serverSocket.accept()))
+                executor.execute(ThreadHandleProxyClient(serverSocket.accept()))
                 Log.d(TAG, "Accepted HTTP connection")
             }
         } catch (e: IOException) {

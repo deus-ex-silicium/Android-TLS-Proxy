@@ -1,6 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import com.nibiru.evilap.EvilApApp
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -13,7 +14,8 @@ import java.util.concurrent.TimeUnit
 internal class MainLoopCaptivePortal(private val serverSocket: ServerSocket) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private val SERVERPORT = 8080
+    //private val SERVERPORT = 8080
+    private val SERVERPORT = EvilApApp.instance.PORT_CAPTIVE_PORTAL
     /**************************************CLASS METHODS*******************************************/
     override fun run() {
         //http://codetheory.in/android-java-executor-framework/
@@ -33,7 +35,7 @@ internal class MainLoopCaptivePortal(private val serverSocket: ServerSocket) : R
             serverSocket.bind(InetSocketAddress(SERVERPORT))
             while (true) {
                 executor.execute(ThreadCaptivePortal(serverSocket.accept()))
-                Log.d(TAG, "Accepted HTTP connection")
+                Log.d(TAG, "Accepted HTTP connection on port $SERVERPORT")
             }
         } catch (e: IOException) {
             //SocketException means ProxyService closed socket and we should quit normally

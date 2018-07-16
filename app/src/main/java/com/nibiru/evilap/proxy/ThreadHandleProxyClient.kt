@@ -8,7 +8,7 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 
 
-internal class ThreadHandleHTTPClient(private val sClient: Socket) : Runnable {
+internal class ThreadHandleProxyClient(private val sClient: Socket) : Runnable {
     private val TAG = javaClass.simpleName
     private var keepAlive = true
     private val DEBUG = false

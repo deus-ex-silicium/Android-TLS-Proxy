@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
+import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
@@ -15,20 +16,20 @@ import java.util.concurrent.TimeUnit
 class EvilApApp : Application() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
+    val PORT_CAPTIVE_PORTAL = 8000
+    val PORT_PROXY_HTTP = 8080
+    val PORT_PROXY_HTTPS = 8443
     companion object {
         lateinit var instance: EvilApApp
     }
     var indexFile = ByteArray(2048)
     var notFoundFile = ByteArray(2048)
+    var ca = CaManager()
     private lateinit var _connMan: ConnectivityManager
     var wifiConnected: Boolean = false
-        get() {
-            return checkWiFiConnectivity()
-        }
+        get() { return checkWiFiConnectivity() }
     var internetConnected: Boolean = false
-        get() {
-            return checkInternetConnectivity()
-        }
+        get() { return checkInternetConnectivity() }
     private var _httpClient: OkHttpClient? = null
     val httpClient: OkHttpClient
         get() {
@@ -44,7 +45,6 @@ class EvilApApp : Application() {
             }
             return _httpClient ?: throw AssertionError("Set to null by another thread")
         }
-    //lateinit var config: SharedPreferences
     /**************************************CLASS METHODS*******************************************/
     // future update to https://stackoverflow.com/questions/48080336/how-to-handle-network-change-between-wifi-and-mobile-data?
     override fun onCreate() {

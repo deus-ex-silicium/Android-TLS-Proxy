@@ -27,6 +27,8 @@ class CaManagerTests {
         Log.d("saved cert", cn1)
         Log.d("loaded cert", cn2)
 
+        ca1.printCert()
+
         Assert.assertEquals(cn1, cn2)
     }
 
