@@ -8,12 +8,12 @@ import javax.net.ssl.SNIServerName
 import javax.net.ssl.StandardConstants
 
 @RequiresApi(Build.VERSION_CODES.N)
-class EvilSniMatcher: SNIMatcher(StandardConstants.SNI_HOST_NAME) {
+class EvilSniMatcher: SNIMatcher(StandardConstants.SNI_HOST_NAME){
     private val TAG = javaClass.simpleName
 
     override fun matches(serverName: SNIServerName?): Boolean {
-        Log.d(TAG, "SNI=($serverName)")
-        return true
-    }
+            Log.d(TAG, "SNIIIIIIIIIIIIIIIIIIIII=($serverName)")
+            return true
+        }
 
 }

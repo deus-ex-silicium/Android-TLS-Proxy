@@ -3,6 +3,7 @@ package com.nibiru.evilap
 import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.pki.EvilKeyManager
+import com.nibiru.evilap.pki.EvilSniMatcher
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
@@ -17,10 +18,7 @@ import java.security.KeyStore
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
+import javax.net.ssl.*
 
 
 /**
@@ -91,7 +89,13 @@ class TlsSniTests {
         // key manager[], trust manager[], SecureRandom generator
         sc.init(arrayOf(EvilKeyManager(ca)), null, null)
         val ssf = sc.serverSocketFactory
-        return ssf.createServerSocket()
+        val sock = ssf.createServerSocket() as SSLServerSocket
+        sock.useClientMode = false
+        //val params = sock.sslParameters
+        //params.protocols = arrayOf("TLSv1.2")
+        //params.sniMatchers = listOf(EvilSniMatcher())
+        //sock.sslParameters = params
+        return sock
     }
 
     internal class MainLoopProxyTest(private val serverSocket: ServerSocket) : Runnable {

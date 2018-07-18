@@ -116,7 +116,8 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
                 KeyPurposeId.id_kp_codeSigning, KeyPurposeId.anyExtendedKeyUsage)
         certGen.addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(eku))
         // self-sign
-        val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
+        //val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
+        val certHolder = certGen.build(JcaContentSignerBuilder("SHA256withRSA").build(kp.private))
         root = JcaX509CertificateConverter().getCertificate(certHolder)
         // load KeyStore, null for empty instance
         ks = KeyStore.getInstance(KEYSTORETYPE)
@@ -148,7 +149,8 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         val altNames = GeneralNames(arrayOf(altName1, altName2))
         certGen.addExtension(Extension.subjectAlternativeName, false, altNames)
         // sign with CA and store in KeyStore
-        val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
+        //val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
+        val certHolder = certGen.build(JcaContentSignerBuilder("SHA256withRSA").build(kp.private))
         val x509new = JcaX509CertificateConverter().getCertificate(certHolder)
         ks.setKeyEntry(cn, newKp.private, clientPass, arrayOf(x509new, root))
     }
