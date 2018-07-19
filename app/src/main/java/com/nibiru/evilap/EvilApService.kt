@@ -285,17 +285,10 @@ class EvilApService: Service() {
      */
     private fun nativeTrafficRedirect(state: Boolean, type: String) {
         val sh = getIdleShell() ?: return
-        val dstPort: Int
-        val proxyPort: Int
-        when (type.toUpperCase()){
-            "HTTP" -> {
-                dstPort = 80
-                proxyPort = EvilApApp.instance.PORT_PROXY_HTTP
-            }
-            "HTTPS" -> {
-                dstPort = 443
-                proxyPort = EvilApApp.instance.PORT_PROXY_HTTPS
-            }
+        val proxyPort = EvilApApp.instance.PORT_PROXY
+        val dstPort = when (type.toUpperCase()){
+            "HTTP" -> { 80 }
+            "HTTPS" -> { 443 }
             else -> {
                 Log.e(TAG, "Invalid traffic type!")
                 return

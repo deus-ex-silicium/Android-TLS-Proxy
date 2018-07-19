@@ -11,7 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.Matchers.contains
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -39,7 +38,7 @@ class ProxyServiceTests {
                 .followRedirects(false)
                 .proxy(Proxy(Proxy.Type.HTTP,
                         InetSocketAddress(InetAddress.getByName("127.0.0.1"),
-                        EvilApApp.instance.PORT_PROXY_HTTP)))
+                        EvilApApp.instance.PORT_PROXY)))
                 .build()
     }
 

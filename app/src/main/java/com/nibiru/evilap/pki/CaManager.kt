@@ -109,11 +109,15 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         )
         // assert that this is a CA certificate
         certGen.addExtension(Extension.basicConstraints, true,  BasicConstraints(true))
+        // add KeyUsage fields
+        val ku = KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign)
+        certGen.addExtension(Extension.keyUsage, true, ku)
         // add some Extended Key Usage fields
         // https://tools.ietf.org/html/rfc5280#section-4.2.1.12
-        val eku = arrayOf(KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth,
-                KeyPurposeId.id_kp_emailProtection, KeyPurposeId.id_kp_timeStamping,
-                KeyPurposeId.id_kp_codeSigning, KeyPurposeId.anyExtendedKeyUsage)
+        val eku = arrayOf(KeyPurposeId.anyExtendedKeyUsage,
+                KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth,
+                KeyPurposeId.id_kp_codeSigning, KeyPurposeId.id_kp_emailProtection,
+                 KeyPurposeId.id_kp_timeStamping, KeyPurposeId.id_kp_OCSPSigning)
         certGen.addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(eku))
         // self-sign
         //val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
@@ -128,6 +132,10 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         // https://security.stackexchange.com/questions/56389/ssl-certificate-framework-101-how-does-the-browser-actually-verify-the-validity
         // https://stackoverflow.com/questions/5935369/ssl-how-do-common-names-cn-and-subject-alternative-names-san-work-together
         // https://boredwookie.net/blog/bouncy-castle-add-a-subject-alternative-name-when-creating-a-cer
+
+        // Don't generate if entry already exists
+        if(ks.containsAlias(cn)) return
+
         val rsa = KeyPairGenerator.getInstance("RSA")
         rsa.initialize(2048)
         val newKp = rsa.generateKeyPair()
@@ -143,6 +151,14 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
                 X500Name("CN=$cn"),         // X500Name representing the subject of this certificate.
                 bcPk                        // the public key to be associated with the certificate.
         )
+        // assert that this is not a CA certificate
+        certGen.addExtension(Extension.basicConstraints, true,  BasicConstraints(false))
+        // add KeyUsage fields
+        val ku = KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment)
+        certGen.addExtension(Extension.keyUsage, true, ku)
+        // add some Extended Key Usage fields
+        val eku = arrayOf(KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth)
+        certGen.addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(eku))
         // add Subject Alternative Names to (now wildcard) certificate
         val altName1 =  GeneralName(GeneralName.dNSName, DERIA5String(cn))
         val altName2 =  GeneralName(GeneralName.dNSName, DERIA5String("*.$cn"))
@@ -156,12 +172,14 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
     }
 
     fun getPrivKey(cn:String): PrivateKey{
-        return  ks.getKey(cn, clientPass) as PrivateKey
+        return ks.getKey(cn, clientPass) as PrivateKey
     }
 
     fun getCertChain(cn: String): Array<X509Certificate> {
         val x509 = certToX509(ks.getCertificate(cn))
-        return arrayOf(x509, root)
+        val chain = ks.getCertificateChain(cn)
+        val res = chain.map { certToX509(it) }
+        return res.toTypedArray()
     }
 
     fun printCert(){

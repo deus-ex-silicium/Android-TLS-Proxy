@@ -4,6 +4,7 @@ import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.pki.EvilKeyManager
 import com.nibiru.evilap.pki.EvilSniMatcher
+import com.nibiru.evilap.proxy.ThreadNioProxy
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
@@ -41,6 +42,9 @@ class TlsSniTests {
         try {
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
             keyStore.load(null, null)
+            // check some failing scenarios
+            //ca.generateAndSignCert("fail.com")
+            //keyStore.setCertificateEntry("i-trust-this-ca", ca.getCertChain("fail.com")[0])
             keyStore.setCertificateEntry("i-trust-this-ca", ca.root)
             val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
             trustManagerFactory.init(keyStore)
@@ -58,28 +62,34 @@ class TlsSniTests {
                 .readTimeout(0, TimeUnit.SECONDS)
                 .followRedirects(false)
                 .build()
-        // Start mocked proxy server
-        try {
-            ss = getEvilSSLSocket()
-            val proxyHTTP = Thread(MainLoopProxyTest(ss))
-            proxyHTTP.start()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     @Test
     fun oneTestToRuleThemAll() {
+        // Start mocked proxy server
+        try {
+            //ss = getEvilSSLSocket()
+            val ekm = EvilKeyManager(ca)
+            val proxyHTTP = Thread(ThreadNioProxy("0.0.0.0", 1337, ekm))
+            proxyHTTP.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         Log.d("Testing", "Making HTTPS request to example.com:1337")
         val request = Request.Builder()
                 .url("https://example.com:1337") // HTTPS !
                 .build()
-        client.newCall(request).execute().use { res ->
-            Assert.assertTrue(res.isSuccessful)
-            val b = res.body()?.string()
-            Assert.assertNotNull(b)
-            Assert.assertThat(b, CoreMatchers.containsString("HTTPS Proxy Hello!"))
-            res.close()
+        try {
+            client.newCall(request).execute().use { res ->
+                Assert.assertTrue(res.isSuccessful)
+                val b = res.body()?.string()
+                Assert.assertNotNull(b)
+                Assert.assertThat(b, CoreMatchers.containsString("HTTPS Proxy Hello!"))
+                res.close()
+            }
+        } catch (e: Exception){
+            e.printStackTrace()
         }
     }
 

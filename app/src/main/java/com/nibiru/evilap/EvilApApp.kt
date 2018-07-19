@@ -3,12 +3,16 @@ package com.nibiru.evilap
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.SSLCertificateSocketFactory
 import android.util.Log
 import com.nibiru.evilap.pki.CaManager
+import com.nibiru.evilap.pki.EvilKeyManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
 
 
 // https://stackoverflow.com/questions/708012/how-to-declare-global-variables-in-android
@@ -17,14 +21,16 @@ class EvilApApp : Application() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     val PORT_CAPTIVE_PORTAL = 8000
-    val PORT_PROXY_HTTP = 8080
-    val PORT_PROXY_HTTPS = 8443
+    val PORT_PROXY = 8080
     companion object {
         lateinit var instance: EvilApApp
     }
+    var ca = CaManager()
+    var ekm = EvilKeyManager(ca)
+    lateinit var sslCtx: SSLContext
+    lateinit var sf: SSLSocketFactory
     var indexFile = ByteArray(2048)
     var notFoundFile = ByteArray(2048)
-    var ca = CaManager()
     private lateinit var _connMan: ConnectivityManager
     var wifiConnected: Boolean = false
         get() { return checkWiFiConnectivity() }
@@ -49,14 +55,28 @@ class EvilApApp : Application() {
     // future update to https://stackoverflow.com/questions/48080336/how-to-handle-network-change-between-wifi-and-mobile-data?
     override fun onCreate() {
         instance = this
+        // Initialize ConnectivityManager
         if (!::_connMan.isInitialized)
             _connMan = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        // Read captive portal HTML files
         val idx = resources.openRawResource(R.raw.index)
         val notFound = resources.openRawResource(R.raw.not_found)
         idx.use { stream -> stream.read(indexFile) }
         notFound.use { stream -> stream.read(notFoundFile) }
+
+        //initialize SSLContext
+        if (!::sslCtx.isInitialized) {
+            sslCtx = SSLContext.getInstance("TLS")
+            // key manager[], trust manager[], SecureRandom generator
+            ca.generateAndSignCert("example.com")
+            sslCtx.init(arrayOf(ekm), null, null)
+            sf = sslCtx.socketFactory
+        }
+
         super.onCreate()
     }
+
 
     private fun checkWiFiConnectivity(): Boolean {
         val netInfo = _connMan.activeNetworkInfo
@@ -81,5 +101,6 @@ class EvilApApp : Application() {
             true
         }
     }
+
 
 }

@@ -40,8 +40,11 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         v.sDnsSpoof.setOnClickListener {
             RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventDnsSpoof(v.sDnsSpoof.isChecked))
         }
-        v.sTest.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sTest.isChecked, "HTTPS"))
+        v.sRedirHTTPS.setOnClickListener {
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTPS.isChecked, "HTTPS"))
+        }
+        v.sRedirHTTP.setOnClickListener {
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTPS.isChecked, "HTTP"))
         }
         return v
     }
