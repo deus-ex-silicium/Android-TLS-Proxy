@@ -50,7 +50,7 @@ class ProxyService : Service(){
         //start the proxy socket thread
         //val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY))
         //proxy.start()
-        mProxy = ThreadNioProxy("localhost", EvilApApp.instance.PORT_PROXY, EvilApApp.instance.ekm)
+        mProxy = ThreadNioProxy("0.0.0.0", EvilApApp.instance.PORT_PROXY, EvilApApp.instance.ekm)
         val proxyThread = Thread(mProxy)
         proxyThread.start()
         //start the captive portal thread

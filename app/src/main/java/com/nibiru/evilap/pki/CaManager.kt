@@ -1,7 +1,8 @@
 package com.nibiru.evilap.pki
 
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
-import org.spongycastle.asn1.ASN1OctetString
+import com.nibiru.evilap.EvilApApp
 import org.spongycastle.asn1.DERIA5String
 import org.spongycastle.asn1.x500.X500Name
 import org.spongycastle.asn1.x500.style.BCStyle
@@ -13,8 +14,7 @@ import org.spongycastle.cert.jcajce.JcaX509CertificateConverter
 import org.spongycastle.cert.jcajce.JcaX509CertificateHolder
 import org.spongycastle.openssl.jcajce.JcaPEMWriter
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.StringWriter
 import java.math.BigInteger
 import java.security.KeyPair
@@ -29,7 +29,7 @@ import java.util.*
 // https://bouncycastle.org/docs/pkixdocs1.3/index.html
 // http://www.baeldung.com/java-bouncy-castle
 
-class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
+class CaManager(inputStream: InputStream?, pass: String?) {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private lateinit var ks : KeyStore
@@ -41,35 +41,30 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
      */
     constructor() : this(null, null)
     /**
-     * Generates a new CA or loads an existing one from existing certificate and private key
+     * Generates a new CA or loads an existing one from a KeyStore file InputStream
      */
     init {
-        if (cert==null || kpriv==null) generateCa()
+        if (inputStream==null || pass==null) generateCa()
         else {
-            ks = KeyStore.getInstance(KEYSTORETYPE)
-            //ks.load(null)
+            ks = KeyStore.getInstance(KEY_STORE_TYPE)
+            val pwd = pass.toCharArray()
+            ks.load(inputStream, pwd)
+            inputStream.close()
+            val kpriv = ks.getKey("evil-ca", pwd) as PrivateKey
+            val cert = ks.getCertificate("evil-ca")
             kp = KeyPair(cert.publicKey, kpriv)
             root = certToX509(cert)
         }
     }
     /**
      * Static companion object.
-     * KEYSTORETYPE contains the string used to identify the Keystore type
+     * KEY_STORE_TYPE contains the string used to identify the Keystore type
      * clientPass is the password for entries generated for clients by CA
      * load method loads an existing CA from the keystore, based on it's alias and password
      */
     companion object {
-        private val KEYSTORETYPE : String = KeyStore.getDefaultType()
+        private val KEY_STORE_TYPE : String = KeyStore.getDefaultType()
         private val clientPass : CharArray = "password".toCharArray()
-
-        fun load(alias: String, pass: String) : CaManager {
-            val ks = KeyStore.getInstance(KEYSTORETYPE)
-            val pwd = pass.toCharArray()
-            FileInputStream("ks").use{ fis -> ks.load(fis, pwd)}
-            val cert = ks.getCertificate(alias)
-            val kpriv = ks.getKey(alias, pwd) as PrivateKey
-            return CaManager(cert, kpriv)
-        }
 
         fun getCommonName(x509: X509Certificate): String {
             // https://stackoverflow.com/questions/2914521/how-to-extract-cn-from-x509certificate-in-java#7634755
@@ -80,18 +75,11 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         }
     }
 
-    fun save(alias: String, pass: String) {
-        // https://www.stackoverflow.com/questions/6370368/bouncycastle-x509certificateholder-to-x509certificate#8960906
-        val pwd = pass.toCharArray()
-        ks.setKeyEntry(alias, kp.private, pwd, arrayOf(root))
-        FileOutputStream("ks").use{ fos -> ks.store(fos, pwd) }
-    }
-
     private fun generateCa(){
         // http://blog.differentpla.net/blog/2013/03/24/bouncy-castle-being-a-certificate-authority
-        // generate new 4096-bit RSA keypair
+        // generate new RSA keypair
         val rsa = KeyPairGenerator.getInstance("RSA")
-        rsa.initialize(4096)
+        rsa.initialize(2048)
         kp = rsa.generateKeyPair()
         // validity date of CA certificate
         val cal = Calendar.getInstance()
@@ -124,7 +112,7 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         val certHolder = certGen.build(JcaContentSignerBuilder("SHA256withRSA").build(kp.private))
         root = JcaX509CertificateConverter().getCertificate(certHolder)
         // load KeyStore, null for empty instance
-        ks = KeyStore.getInstance(KEYSTORETYPE)
+        ks = KeyStore.getInstance(KEY_STORE_TYPE)
         ks.load(null)
     }
 
@@ -143,9 +131,10 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
         cal.add(Calendar.MONTH, 1)
         val pk = newKp.public.encoded
         val bcPk = SubjectPublicKeyInfo.getInstance(pk)
+        val serial = BigInteger.valueOf((ks.size()+2).toLong())
         val certGen = X509v3CertificateBuilder(
                 X500Name("CN=FUNSEC Inc."), // X500Name representing the issuer of this certificate.
-                BigInteger.ONE,             // the serial number for the certificate
+                serial,                     // the serial number for the certificate
                 Date(),                     // date before which the certificate is not valid.
                 cal.time,                   // date after which the certificate is not valid.
                 X500Name("CN=$cn"),         // X500Name representing the subject of this certificate.
@@ -176,18 +165,40 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
     }
 
     fun getCertChain(cn: String): Array<X509Certificate> {
-        val x509 = certToX509(ks.getCertificate(cn))
         val chain = ks.getCertificateChain(cn)
         val res = chain.map { certToX509(it) }
         return res.toTypedArray()
     }
 
+    fun saveKeyStore(path: String, pass: String) {
+        // https://www.stackoverflow.com/questions/6370368/bouncycastle-x509certificateholder-to-x509certificate#8960906
+        val pwd = pass.toCharArray()
+        ks.setKeyEntry("evil-ca", kp.private, pwd, arrayOf(root))
+        EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
+        //FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
+    }
+
+    fun saveRootCert(name: String){
+        EvilApApp.instance.applicationContext.openFileOutput(name, MODE_PRIVATE).use {
+            fos -> fos.write(toPemString(root).toByteArray())
+        }
+        //PrintWriter(name).use { pw -> pw.print(toPemString(root)) }
+    }
+
     fun printCert(){
-        Log(print(root))
+        Log(toPemString(root))
     }
 
     fun printPubKey(){
-        Log(print(kp.public))
+        Log(toPemString(kp.public))
+    }
+
+    fun toPemString(o : Any): String{
+        val textWriter = StringWriter()
+        val pemWriter =  JcaPEMWriter(textWriter)
+        pemWriter.writeObject(o)
+        pemWriter.flush()
+        return textWriter.toString()
     }
 
     private fun certToX509(cert: Certificate): X509Certificate{
@@ -196,14 +207,6 @@ class CaManager(cert:java.security.cert.Certificate?, kpriv: PrivateKey?) {
 
     private fun Log(msg: String){
         Log.d(TAG, msg)
-    }
-
-    fun print(o : Any): String{
-        val textWriter = StringWriter()
-        val pemWriter =  JcaPEMWriter(textWriter)
-        pemWriter.writeObject(o)
-        pemWriter.flush()
-        return textWriter.toString()
     }
 
 

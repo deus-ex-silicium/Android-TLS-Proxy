@@ -82,10 +82,15 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
                 if (!key.isValid) {
                     continue
                 }
-                if (key.isAcceptable) {
-                    accept(key)
-                } else if (key.isReadable) {
-                    read(key.channel() as SocketChannel, key.attachment() as SSLEngine)
+                try {
+                    if (key.isAcceptable) {
+                        accept(key)
+                    } else if (key.isReadable) {
+                        read(key.channel() as SocketChannel, key.attachment() as SSLEngine)
+                    }
+                } catch (e: IOException){
+                    key.cancel()
+                    Log.e(TAG, "(${e.message}) IO Exception while communicating with peer...")
                 }
             }
         }
@@ -132,7 +137,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
         // COULD HAVE USED createSocket(Socket s, InputStream consumed, boolean autoClose)
         // FUNCTION FROM SSLSocketFactory BUT IT'S NOT PRESENT IN ANDROID EVEN IN JDK 1.8
         // AGRR !!!
-        engine.beginHandshake()
+        //engine.beginHandshake()
         // PATCHED doHandshake TO ACCOUNT FOR CONSUMED ClientHello
         if (clientHello != null && doHandshake(socketChannel, engine, clientHello)) {
             socketChannel.register(selector, SelectionKey.OP_READ, engine)
@@ -154,7 +159,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
     @Throws(IOException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine) {
 
-        Log.e(TAG,"About to read from a client...")
+        Log.d(TAG,"About to read from a client...")
 
         peerNetData.clear()
         val bytesRead = socketChannel.read(peerNetData)
@@ -166,7 +171,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
                 when (result.status) {
                     SSLEngineResult.Status.OK -> {
                         peerAppData.flip()
-                        Log.e(TAG,"Incoming message: " + String(peerAppData.array()))
+                        Log.d(TAG,"Incoming message: " + String(peerAppData.array()))
                     }
                     SSLEngineResult.Status.BUFFER_OVERFLOW -> {
                         peerAppData = enlargeApplicationBuffer(engine, peerAppData)

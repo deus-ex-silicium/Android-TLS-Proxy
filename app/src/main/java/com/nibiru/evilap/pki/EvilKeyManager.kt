@@ -28,8 +28,13 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
         TODO("not implemented")
     }
 
-    override fun chooseEngineServerAlias(keyType: String?, issuers: Array<out Principal>?, engine: SSLEngine?): String {
+    override fun chooseEngineServerAlias(keyType: String?, issuers: Array<out Principal>?, engine: SSLEngine?): String? {
+        // ANOTHER WORKAROUND FOR JSSE SSL ENGINE CALLING ChooseServerAlias TWICE!!!
+        // IN A SINGLE HANDSHAKE! RETURNING THE SAME STUFF AGAIN CAUSES SERVER
+        // TO SEND DUPLICATE CERTIFICATES IN Server Hello
+        if(!engine2Alias.containsKey(engine)) return null
         val server_name = engine2Alias[engine]
+        engine2Alias.remove(engine)
         Log.d(TAG, "SNI=($server_name)")
         ca.generateAndSignCert(server_name!!)
         return server_name
@@ -61,12 +66,14 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
         return server_name*/
     }
 
-    override fun getCertificateChain(alias: String?): Array<X509Certificate> {
-        return ca.getCertChain(alias!!)
+    override fun getCertificateChain(alias: String?): Array<X509Certificate>? {
+        if(alias==null) return null
+        return ca.getCertChain(alias)
     }
 
-    override fun getPrivateKey(alias: String?): PrivateKey {
-        return ca.getPrivKey(alias!!)
+    override fun getPrivateKey(alias: String?): PrivateKey? {
+        if(alias==null) return null
+        return ca.getPrivKey(alias)
     }
 
     override fun chooseClientAlias(keyType: Array<out String>?, issuers: Array<out Principal>?, socket: Socket?): String {

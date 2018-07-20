@@ -3,7 +3,6 @@ package com.nibiru.evilap
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.SSLCertificateSocketFactory
 import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.pki.EvilKeyManager
@@ -25,8 +24,8 @@ class EvilApApp : Application() {
     companion object {
         lateinit var instance: EvilApApp
     }
-    var ca = CaManager()
-    var ekm = EvilKeyManager(ca)
+    lateinit var ca: CaManager
+    lateinit var ekm: EvilKeyManager
     lateinit var sslCtx: SSLContext
     lateinit var sf: SSLSocketFactory
     var indexFile = ByteArray(2048)
@@ -51,6 +50,7 @@ class EvilApApp : Application() {
             }
             return _httpClient ?: throw AssertionError("Set to null by another thread")
         }
+
     /**************************************CLASS METHODS*******************************************/
     // future update to https://stackoverflow.com/questions/48080336/how-to-handle-network-change-between-wifi-and-mobile-data?
     override fun onCreate() {
@@ -58,7 +58,8 @@ class EvilApApp : Application() {
         // Initialize ConnectivityManager
         if (!::_connMan.isInitialized)
             _connMan = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
+        ca = CaManager(resources.openRawResource(R.raw.evil_ap),"password")
+        ekm = EvilKeyManager(ca)
         // Read captive portal HTML files
         val idx = resources.openRawResource(R.raw.index)
         val notFound = resources.openRawResource(R.raw.not_found)

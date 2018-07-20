@@ -4,22 +4,25 @@ import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import org.junit.Assert
 import org.junit.Test
-import org.spongycastle.cert.jcajce.JcaX509CertificateHolder
-import java.security.cert.X509Certificate
+import org.spongycastle.jce.provider.BouncyCastleProvider
+import java.io.FileInputStream
+import java.security.Security
 
 
 class CaManagerTests {
 
     @Test
     fun caSaveLoadTest() {
-        Log.d("Testing", "load/save functionality")
+        Log.d("Testing", "load/saveKeyStore functionality")
         //Security.addProvider(BouncyCastleProvider())
 
         val ca1 = CaManager()
+        ca1.saveRootCert("root.crt")
+        ca1.saveKeyStore("evil_ap.ks", "password")
         val ca1Cert = ca1.root
-        ca1.save("evil-ca", "password")
 
-        val ca2 = CaManager.load("evil-ca", "password")
+        val inS = FileInputStream("evil_ap.ks")
+        val ca2 = CaManager(inS, "password")
         val ca2Cert = ca2.root
         val cn1 = CaManager.getCommonName(ca1Cert)
         val cn2 = CaManager.getCommonName(ca2Cert)

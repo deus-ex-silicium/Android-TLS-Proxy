@@ -10,7 +10,7 @@ import java.util.concurrent.Executors
 import javax.net.ssl.*
 import javax.net.ssl.TrustManagerFactory.*
 
-
+// https://github.com/alkarn/sslengine.example
 /**
  * A class that represents an SSL/TLS peer, and can be extended to create a client or a server.
  *
@@ -121,7 +121,7 @@ abstract class NioSslPeer {
         myNetData.clear()
         peerNetData.clear()
 
-        handshakeStatus = engine.handshakeStatus
+        handshakeStatus = SSLEngineResult.HandshakeStatus.NEED_UNWRAP
         loop@ while (handshakeStatus !== SSLEngineResult.HandshakeStatus.FINISHED && handshakeStatus !== SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
             when (handshakeStatus) {
                 SSLEngineResult.HandshakeStatus.NEED_UNWRAP -> {
@@ -233,7 +233,6 @@ abstract class NioSslPeer {
         }
         return true
     }
-
 
     protected fun enlargePacketBuffer(engine: SSLEngine, buffer: ByteBuffer): ByteBuffer {
         return enlargeBuffer(buffer, engine.session.packetBufferSize)

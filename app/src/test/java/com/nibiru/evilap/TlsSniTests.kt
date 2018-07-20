@@ -37,6 +37,8 @@ class TlsSniTests {
         // Create a new CA and make okhttp trust it (^_^)
         // https://jebware.com/blog/?p=340
         ca = CaManager()
+        ca.saveKeyStore("evil-ap", "password")
+        ca.saveRootCert("root.crt")
         val sslContext: SSLContext
         val trustManager: TrustManager
         try {
