@@ -44,7 +44,7 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
             RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTPS.isChecked, "HTTPS"))
         }
         v.sRedirHTTP.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTPS.isChecked, "HTTP"))
+            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTP.isChecked, "HTTP"))
         }
         return v
     }

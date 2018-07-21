@@ -3,12 +3,15 @@ package com.nibiru.evilap
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.wifi.WifiManager
+import android.text.format.Formatter
 import android.util.Log
 import com.nibiru.evilap.pki.CaManager
 import com.nibiru.evilap.pki.EvilKeyManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
+import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory

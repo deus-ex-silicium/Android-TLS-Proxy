@@ -29,9 +29,9 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
     }
 
     override fun chooseEngineServerAlias(keyType: String?, issuers: Array<out Principal>?, engine: SSLEngine?): String? {
-        // ANOTHER WORKAROUND FOR JSSE SSL ENGINE CALLING ChooseServerAlias TWICE!!!
-        // IN A SINGLE HANDSHAKE! RETURNING THE SAME STUFF AGAIN CAUSES SERVER
-        // TO SEND DUPLICATE CERTIFICATES IN Server Hello
+        // JSSE SSL ENGINE CALLS ChooseServerAlias TWICE! IN A SINGLE HANDSHAKE!
+        // IF THE SAME STUFF IS RETURNED THEN ROOT CERTIFICATE IS SENT TWICE IN Server Hello
+        // BUT CONNECTION PROCEEDS NORMALLY EITHER WAY...
         if(!engine2Alias.containsKey(engine)) return null
         val server_name = engine2Alias[engine]
         engine2Alias.remove(engine)
@@ -42,7 +42,6 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
 
     override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?): String? {
         TODO("not implemented")
-        // "Currently, the only server names (types) supported are DNS hostnames" -RFC 6066
         //val sock = socket as SSLSocket
         //TODO: why sometimes null ?
         // https://bitbucket.org/zmarcos/sniserversocket/wiki/Home
@@ -55,12 +54,10 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
         /*if (handshake==null){
             sock.startHandshake()
             handshake = sock.handshakeSession
-        }*/
-        //val sni = (handshake as ExtendedSSLSession).requestedServerNames[0] as SNIHostName
-        //val server_name = sni.asciiName
+        }
+        val sni = (handshake as ExtendedSSLSession).requestedServerNames[0] as SNIHostName
+        val server_name = sni.asciiName
 
-        //val server_name = engine2Alias[socket]
-/*
         Log.d(TAG, "SNI=($server_name)")
         ca.generateAndSignCert(server_name!!)
         return server_name*/
