@@ -1,11 +1,10 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
-import com.nibiru.evilap.pki.EvilKeyManager
-import com.nibiru.evilap.pki.NioSslPeer
-import com.nibiru.evilap.pki.SSLCapabilities
-import com.nibiru.evilap.pki.SSLExplorer
+import com.nibiru.evilap.crypto.EvilKeyManager
+import com.nibiru.evilap.crypto.NioSslPeer
+import com.nibiru.evilap.crypto.SSLCapabilities
+import com.nibiru.evilap.crypto.SSLExplorer
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -18,7 +17,7 @@ import java.nio.channels.spi.SelectorProvider
 import javax.net.ssl.*
 
 
-class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyManager) : Runnable, NioSslPeer(){
+class ThreadNioProxyHTTPS(val hostAddress: String, val port: Int, val ekm: EvilKeyManager) : Runnable, NioSslPeer(){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     /**
@@ -58,8 +57,8 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
     }
     /**
      * Should be called in order the server to start listening to new connections.
-     * This method will run in a loop as long as the server is active. In order to stop the server
-     * you should use [NioSslServer.stop] which will set it to inactive state
+     * This method will run in a loop as long as the server is active. In order to exit the server
+     * you should use [NioSslServer.exit] which will set it to inactive state
      * and also wake up the listener, which may be in blocking select() state.
      *
      * @throws Exception
@@ -71,7 +70,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
         serverSocketChannel.socket().bind(InetSocketAddress(hostAddress, port))
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT)
 
-        Log.e(TAG,"Initialized and waiting for new connections...")
+        Log.e(TAG, "Listening on port: $port")
 
         while (isActive()) {
             selector.select()
@@ -159,8 +158,6 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
     @Throws(IOException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine) {
 
-        Log.d(TAG,"About to read from a client...")
-
         peerNetData.clear()
         val bytesRead = socketChannel.read(peerNetData)
         if (bytesRead > 0) {
@@ -171,7 +168,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
                 when (result.status) {
                     SSLEngineResult.Status.OK -> {
                         peerAppData.flip()
-                        Log.d(TAG,"Incoming message: " + String(peerAppData.array()))
+                        Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
                     }
                     SSLEngineResult.Status.BUFFER_OVERFLOW -> {
                         peerAppData = enlargeApplicationBuffer(engine, peerAppData)
@@ -190,10 +187,8 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
                     }
                 }
             }
-            write(socketChannel, engine, "HTTP/1.1 200 OK\r\n")
-            write(socketChannel, engine, "Content-Length: 18\r\n")
-            write(socketChannel, engine, "\r\n") //CRLF
-            write(socketChannel, engine, "HTTPS Proxy Hello!")
+            val out = "HTTP/1.1 200 OK\r\nContent-Length: 18\r\n\r\nHTTPS Proxy Hello!"
+            write(socketChannel, engine, out)
 
         } else if (bytesRead < 0) {
             Log.e(TAG,"Received end of stream. Will try to close connection with client...")
@@ -212,7 +207,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
     @Throws(IOException::class)
     override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: String) {
 
-        Log.e(TAG,"About to write to a client...")
+        //Log.e(TAG,"About to write to a client...")
 
         myAppData.clear()
         myAppData.put(message.toByteArray())
@@ -228,7 +223,7 @@ class ThreadNioProxy(val hostAddress: String, val port: Int, val ekm: EvilKeyMan
                     while (myNetData.hasRemaining()) {
                         socketChannel.write(myNetData)
                     }
-                    Log.e(TAG,"Message sent to the client: $message")
+                    Log.e(TAG,"[OUT]:\n $message")
                 }
                 SSLEngineResult.Status.BUFFER_OVERFLOW -> myNetData = enlargePacketBuffer(engine, myNetData)
                 SSLEngineResult.Status.BUFFER_UNDERFLOW -> throw SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.")

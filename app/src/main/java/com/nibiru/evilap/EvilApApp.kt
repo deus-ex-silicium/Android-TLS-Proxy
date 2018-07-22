@@ -3,15 +3,12 @@ package com.nibiru.evilap
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.wifi.WifiManager
-import android.text.format.Formatter
 import android.util.Log
-import com.nibiru.evilap.pki.CaManager
-import com.nibiru.evilap.pki.EvilKeyManager
+import com.nibiru.evilap.crypto.CaManager
+import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
-import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -23,7 +20,8 @@ class EvilApApp : Application() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     val PORT_CAPTIVE_PORTAL = 8000
-    val PORT_PROXY = 8080
+    val PORT_PROXY_HTTP = 8080
+    val PORT_PROXY_HTTPS = 8443
     companion object {
         lateinit var instance: EvilApApp
     }

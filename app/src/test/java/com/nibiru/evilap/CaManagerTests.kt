@@ -1,12 +1,10 @@
 package com.nibiru.evilap
 
 import android.util.Log
-import com.nibiru.evilap.pki.CaManager
+import com.nibiru.evilap.crypto.CaManager
 import org.junit.Assert
 import org.junit.Test
-import org.spongycastle.jce.provider.BouncyCastleProvider
 import java.io.FileInputStream
-import java.security.Security
 
 
 class CaManagerTests {
@@ -17,7 +15,6 @@ class CaManagerTests {
         //Security.addProvider(BouncyCastleProvider())
 
         val ca1 = CaManager()
-        ca1.saveRootCert("root.crt")
         ca1.saveKeyStore("evil_ap.ks", "password")
         val ca1Cert = ca1.root
 

@@ -1,10 +1,9 @@
 package com.nibiru.evilap
 
 import android.util.Log
-import com.nibiru.evilap.pki.CaManager
-import com.nibiru.evilap.pki.EvilKeyManager
-import com.nibiru.evilap.pki.EvilSniMatcher
-import com.nibiru.evilap.proxy.ThreadNioProxy
+import com.nibiru.evilap.crypto.CaManager
+import com.nibiru.evilap.crypto.EvilKeyManager
+import com.nibiru.evilap.proxy.ThreadNioProxyHTTPS
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
@@ -24,7 +23,7 @@ import javax.net.ssl.*
 
 /**
  * Quickly MITM connection by using below command (needed for this test)
- * echo "127.0.0.1  example.com" >> sudo tee -a /etc/hosts
+ * echo "127.0.0.1  example.com" | sudo tee -a /etc/hosts
  */
 
 class TlsSniTests {
@@ -37,8 +36,6 @@ class TlsSniTests {
         // Create a new CA and make okhttp trust it (^_^)
         // https://jebware.com/blog/?p=340
         ca = CaManager()
-        ca.saveKeyStore("evil-ap", "password")
-        ca.saveRootCert("root.crt")
         val sslContext: SSLContext
         val trustManager: TrustManager
         try {
@@ -72,7 +69,7 @@ class TlsSniTests {
         try {
             //ss = getEvilSSLSocket()
             val ekm = EvilKeyManager(ca)
-            val proxyHTTP = Thread(ThreadNioProxy("0.0.0.0", 1337, ekm))
+            val proxyHTTP = Thread(ThreadNioProxyHTTPS("0.0.0.0", 1337, ekm))
             proxyHTTP.start()
         } catch (e: Exception) {
             e.printStackTrace()

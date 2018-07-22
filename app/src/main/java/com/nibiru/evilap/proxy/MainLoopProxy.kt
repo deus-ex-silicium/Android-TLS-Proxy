@@ -37,6 +37,7 @@ internal class MainLoopProxy(private val serverSocket: ServerSocket, private val
                 Log.e(TAG, "Error!")
                 e.printStackTrace()
             }
+
         } finally {
             Log.e(TAG, "Stopping!")
             try {

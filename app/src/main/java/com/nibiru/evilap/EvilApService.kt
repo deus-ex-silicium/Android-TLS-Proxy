@@ -27,7 +27,7 @@ class EvilApService: Service() {
     private val DNSSPOOF = "/lib/libdnsspoof.so"
     enum class service(val action: String) {
         // button from notification has to use intent
-        // this is the intent action enum to stop service
+        // this is the intent action enum to exit service
         // works same as sending exit event through event bus
         ACTION_STOP_SERVICE("com.nibiru.evilap.service_stop")
     }
@@ -231,7 +231,7 @@ class EvilApService: Service() {
      * Starts or stops the native arpspoof binary along with any necessary setup.
      * Sets up firewall rules and kernel parameters so that the OS networking stack will take care
      * of forwarding any traffic without causing a Denial of Service.
-     * @param spoofing  start or stop spoofing activity
+     * @param spoofing  start or exit spoofing activity
      */
     private fun nativeArpSpoof(spoofing: Boolean){
         val path = applicationInfo.dataDir
@@ -292,12 +292,12 @@ class EvilApService: Service() {
             "HTTP" -> {
                 dstIp = ""
                 dstPort = "--dport 80"
-                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY}"
+                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY_HTTP}"
             }
             "HTTPS" -> {
                 dstIp = ""
                 dstPort = "--dport 443"
-                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY}"
+                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY_HTTPS}"
             }
             "CAPTIVE_PORTAL" -> {
                 dstIp = "-d $myIp"

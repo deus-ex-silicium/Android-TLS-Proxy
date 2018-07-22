@@ -30,9 +30,10 @@ internal class MainLoopCaptivePortal(private val serverSocket: ServerSocket) : R
 
         try {
             // listen for incoming clients
-            Log.d(TAG, "Listening on port: $SERVERPORT")
             serverSocket.reuseAddress = true
             serverSocket.bind(InetSocketAddress(SERVERPORT))
+            Log.e(TAG, "Listening on port: $SERVERPORT")
+
             while (true) {
                 executor.execute(ThreadCaptivePortal(serverSocket.accept()))
                 Log.d(TAG, "Accepted HTTP connection on port $SERVERPORT")

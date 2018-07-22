@@ -10,13 +10,10 @@ import android.util.Log
 import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.RxEventBus
-import com.nibiru.evilap.pki.EvilKeyManager
-import com.nibiru.evilap.pki.EvilSniMatcher
+import com.nibiru.evilap.crypto.EvilKeyManager
 import io.reactivex.disposables.Disposable
-import java.io.BufferedInputStream
 import java.io.IOException
 import java.net.ServerSocket
-import java.net.Socket
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLServerSocket
 
@@ -25,7 +22,8 @@ class ProxyService : Service(){
     protected val TAG = javaClass.simpleName
     private lateinit var  mSocketProxy: ServerSocket
     private lateinit var  mSocketPortal: ServerSocket
-    private lateinit var  mProxy: ThreadNioProxy
+    private lateinit var  mProxyHTTPS: ThreadNioProxyHTTPS
+    private lateinit var  mProxyHTTP: ThreadNioProxyHTTP
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
         val service = this@ProxyService
@@ -41,21 +39,24 @@ class ProxyService : Service(){
         // Spin up the threads running the servers.  Note that we create a separate thread because
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
-            //mSocketProxy = ServerSocket()
+            mSocketProxy = ServerSocket()
             //mSocketProxy = getEvilSSLSocket()
             mSocketPortal = ServerSocket()
         } catch (e: Exception) {
             e.printStackTrace()
         }
         //start the proxy socket thread
-        //val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY))
+        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTP))
         //proxy.start()
-        mProxy = ThreadNioProxy("0.0.0.0", EvilApApp.instance.PORT_PROXY, EvilApApp.instance.ekm)
-        val proxyThread = Thread(mProxy)
-        proxyThread.start()
+
+        mProxyHTTP = ThreadNioProxyHTTP("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTP)
+        Thread(mProxyHTTP).start()
+
+        mProxyHTTPS = ThreadNioProxyHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS, EvilApApp.instance.ekm)
+        //Thread(mProxyHTTPS).start()
+
         //start the captive portal thread
-        val portal = Thread(MainLoopCaptivePortal(mSocketPortal))
-        portal.start()
+        Thread(MainLoopCaptivePortal(mSocketPortal)).start()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -78,8 +79,9 @@ class ProxyService : Service(){
     private fun exit(){
         try {
             Log.e(TAG,"Closing server sockets!")
-            //mSocketProxy.close()
-            mProxy.stop()
+            mSocketProxy.close()
+            mProxyHTTP.exit()
+            mProxyHTTPS.stop()
             mSocketPortal.close()
 
         } catch (e: IOException) {
