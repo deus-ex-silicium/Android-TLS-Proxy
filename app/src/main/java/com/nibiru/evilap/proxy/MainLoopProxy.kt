@@ -1,14 +1,19 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.crypto.EvilKeyManager
 import java.io.IOException
 import java.net.*
+import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
 
 //Runnable class that uses a thread pool to accept and handle client connection
-internal class MainLoopProxy(private val serverSocket: ServerSocket, private val port: Int) : Runnable {
+internal class MainLoopProxy(private val serverSocket: ServerSocket, private val port: Int,
+                             private val sslCtx: SSLContext, private val ekm: EvilKeyManager) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     /**************************************CLASS METHODS*******************************************/
@@ -24,12 +29,14 @@ internal class MainLoopProxy(private val serverSocket: ServerSocket, private val
         )
         try {
             // listen for incoming clients
-            Log.d(TAG, "Listening on port: $port")
+            Log.e(TAG, "Listening on port: $port")
             serverSocket.reuseAddress = true
             serverSocket.bind(InetSocketAddress(port))
+            val executorService = Executors.newSingleThreadExecutor()
             while (true) {
-                executor.execute(ThreadHandleProxyClient(serverSocket.accept()))
-                Log.d(TAG, "Accepted HTTP connection")
+                executor.execute(ThreadBlockingHTTPS(serverSocket.accept(),
+                        sslCtx.createSSLEngine(), ekm, executorService))
+                Log.d(TAG, "Accepted HTTPS connection")
             }
         } catch (e: IOException) {
             //SocketException means ProxyService closed socket and we should quit normally

@@ -2,10 +2,12 @@ package com.nibiru.evilap.proxy
 
 import android.util.Log
 import com.nibiru.evilap.crypto.EvilKeyManager
-import com.nibiru.evilap.crypto.NioSslPeer
+import com.nibiru.evilap.crypto.SslPeer
 import com.nibiru.evilap.crypto.SSLCapabilities
 import com.nibiru.evilap.crypto.SSLExplorer
+import java.io.DataInputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
@@ -14,10 +16,14 @@ import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.nio.channels.spi.SelectorProvider
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.net.ssl.*
 
 
-class ThreadNioProxyHTTPS(val hostAddress: String, val port: Int, val ekm: EvilKeyManager) : Runnable, NioSslPeer(){
+class ThreadNioHTTPS(val hostAddress: String, val port: Int,
+                     val ekm: EvilKeyManager, val executor: ExecutorService) : Runnable, SslPeer(executor){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     /**
@@ -207,8 +213,6 @@ class ThreadNioProxyHTTPS(val hostAddress: String, val port: Int, val ekm: EvilK
     @Throws(IOException::class)
     override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: String) {
 
-        //Log.e(TAG,"About to write to a client...")
-
         myAppData.clear()
         myAppData.put(message.toByteArray())
         myAppData.flip()
@@ -313,8 +317,6 @@ class ThreadNioProxyHTTPS(val hostAddress: String, val port: Int, val ekm: EvilK
         }
     }
 
-
-
     /**
      * Determines if the the server is active or not.
      *
@@ -323,4 +325,13 @@ class ThreadNioProxyHTTPS(val hostAddress: String, val port: Int, val ekm: EvilK
     private fun isActive(): Boolean {
         return active
     }
+
+    override fun read(inData: DataInputStream, outSteam: OutputStream, engine: SSLEngine): DataInputStream? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun write(inData: DataInputStream, outSteam: OutputStream, engine: SSLEngine, message: ByteArray) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 }

@@ -351,9 +351,12 @@ class EvilApService: Service() {
     }
 
     private fun updateIPs(){
-        val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        myIp = int2ip(wifiMan.dhcpInfo.ipAddress)
-        gateway = int2ip(wifiMan.dhcpInfo.gateway)
+        if(EvilApApp.instance.wifiConnected) {
+            val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val dhcp = wifiMan.dhcpInfo
+            myIp = int2ip(dhcp.ipAddress)
+            gateway = int2ip(dhcp.gateway)
+        }
     }
 
     private fun int2ip(int: Int): String{

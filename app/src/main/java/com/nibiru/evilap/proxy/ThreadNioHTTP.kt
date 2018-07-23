@@ -14,7 +14,7 @@ import java.io.*
 import java.net.StandardSocketOptions
 
 
-class ThreadNioProxyHTTP(val hostAddress: String, val port: Int) : Runnable{
+class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable{
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     /**
@@ -96,7 +96,6 @@ class ThreadNioProxyHTTP(val hostAddress: String, val port: Int) : Runnable{
         Log.e(TAG,"Will now close server...")
         active = false
         selector.wakeup()
-        selector.close()
     }
 
     /**
@@ -136,13 +135,13 @@ class ThreadNioProxyHTTP(val hostAddress: String, val port: Int) : Runnable{
             return
         }
 
-
+        //TODO: async call, what if socketChannel changes in the meantime?
         EvilApApp.instance.httpClient.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
                 sendResponseHeaders(response, socketChannel)
-                response.body()?.apply { write(socketChannel, this.bytes()) }
+                response.body()?.apply { write(socketChannel, this.bytes())}
             }
         })
 

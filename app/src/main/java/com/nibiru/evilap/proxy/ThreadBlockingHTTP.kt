@@ -2,20 +2,13 @@ package com.nibiru.evilap.proxy
 
 import android.util.Log
 import com.nibiru.evilap.EvilApApp
-import com.nibiru.evilap.crypto.SSLCapabilities
-import com.nibiru.evilap.crypto.SSLExplorer
-import com.nibiru.evilap.crypto.NioSslPeer
 import okhttp3.*
 import java.io.*
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.nio.ByteBuffer
-import java.nio.channels.SocketChannel
-import javax.net.ssl.*
 
 
-
-internal class ThreadHandleProxyClient(private var sClient: Socket) : Runnable {
+internal class ThreadBlockingHTTP(private val sClient: Socket) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var keepAlive = true

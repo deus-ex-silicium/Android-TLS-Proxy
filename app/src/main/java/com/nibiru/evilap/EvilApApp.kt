@@ -9,6 +9,8 @@ import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -29,6 +31,7 @@ class EvilApApp : Application() {
     lateinit var ekm: EvilKeyManager
     lateinit var sslCtx: SSLContext
     lateinit var sf: SSLSocketFactory
+    lateinit var exec: ExecutorService
     var indexFile = ByteArray(2048)
     var notFoundFile = ByteArray(2048)
     private lateinit var _connMan: ConnectivityManager
@@ -61,6 +64,7 @@ class EvilApApp : Application() {
             _connMan = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         ca = CaManager(resources.openRawResource(R.raw.evil_ap),"password")
         ekm = EvilKeyManager(ca)
+        exec = Executors.newSingleThreadExecutor()
         // Read captive portal HTML files
         val idx = resources.openRawResource(R.raw.index)
         val notFound = resources.openRawResource(R.raw.not_found)

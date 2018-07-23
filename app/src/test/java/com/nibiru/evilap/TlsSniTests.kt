@@ -3,7 +3,7 @@ package com.nibiru.evilap
 import android.util.Log
 import com.nibiru.evilap.crypto.CaManager
 import com.nibiru.evilap.crypto.EvilKeyManager
-import com.nibiru.evilap.proxy.ThreadNioProxyHTTPS
+import com.nibiru.evilap.proxy.MainLoopProxy
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
@@ -67,10 +67,16 @@ class TlsSniTests {
     fun oneTestToRuleThemAll() {
         // Start mocked proxy server
         try {
-            //ss = getEvilSSLSocket()
             val ekm = EvilKeyManager(ca)
-            val proxyHTTP = Thread(ThreadNioProxyHTTPS("0.0.0.0", 1337, ekm))
-            proxyHTTP.start()
+            val sc = SSLContext.getInstance("TLS")
+            sc.init(arrayOf(ekm), null, null)
+            //ss = getEvilSSLSocket(ekm)
+            ss = ServerSocket()
+            val proxy = Thread(MainLoopProxy(ss, 1337, sc, ekm))
+            proxy.start()
+
+            //val proxyHTTP = Thread(ThreadNioHTTPS("0.0.0.0", 1337, ekm))
+            //proxyHTTP.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -93,10 +99,10 @@ class TlsSniTests {
     }
 
     @Throws(Exception::class)
-    private fun getEvilSSLSocket(): ServerSocket {
+    private fun getEvilSSLSocket(ekm: EvilKeyManager): ServerSocket {
         val sc = SSLContext.getInstance("TLS")
         // key manager[], trust manager[], SecureRandom generator
-        sc.init(arrayOf(EvilKeyManager(ca)), null, null)
+        sc.init(arrayOf(ekm), null, null)
         val ssf = sc.serverSocketFactory
         val sock = ssf.createServerSocket() as SSLServerSocket
         sock.useClientMode = false
