@@ -29,7 +29,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var keepAlive = true
-    private val DEBUG = true
+    private val DEBUG = false
     /**************************************CLASS METHODS*******************************************/
 
     @Throws(Exception::class)
@@ -82,9 +82,9 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
         var bytesRead = 0
         if (peerNetData.position() == 0) {
             bytesRead = inData.read(peerNetData.array())
-            peerNetData.position(bytesRead)
         }
         if (bytesRead > 0) {
+            peerNetData.position(bytesRead)
             peerNetData.flip()
             while (peerNetData.hasRemaining()) {
                 peerAppData.clear()
@@ -111,7 +111,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
                     }
                 }
             }
-            val out = DataInputStream(ByteArrayInputStream(peerAppData.array(), 0, peerAppData.position()))
+            val out = DataInputStream(ByteArrayInputStream(peerAppData.array(), 0, peerAppData.limit()))
             return out
 
         } else if (bytesRead < 0) {
@@ -200,8 +200,12 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
                 else -> builder.addHeader(header[0], header[1])
             }
         }
+        if(host == null) {
+            Log.e(TAG, "Creepy stuff, no host header !?")
+            return null
+        }
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
-        val url =  if(host!! in requestLineValues[1])
+        val url =  if(host in requestLineValues[1])
             requestLineValues[1]
         else
             "http://$host${requestLineValues[1]}"

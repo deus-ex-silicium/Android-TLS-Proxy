@@ -270,7 +270,6 @@ abstract class SslPeer(private val executor: ExecutorService) {
                         var read = 0
                         if (peerNetData.position() == 0) {
                             read = inData.read(peerNetData.array())
-                            peerNetData.position(read)
                         }
                         if (read < 0) {
                             if (engine.isInboundDone && engine.isOutboundDone) return false
@@ -282,6 +281,9 @@ abstract class SslPeer(private val executor: ExecutorService) {
                             // After closeOutbound the engine will be set to WRAP state, in order to try to send a close message to the client.
                             handshakeStatus = engine.handshakeStatus
                             continue@loop
+                        }
+                        else {
+                            peerNetData.position(read)
                         }
                     }
                     peerNetData.flip()
