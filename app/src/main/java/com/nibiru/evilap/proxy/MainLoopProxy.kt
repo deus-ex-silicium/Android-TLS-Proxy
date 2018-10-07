@@ -34,8 +34,10 @@ internal class MainLoopProxy(private val serverSocket: ServerSocket, private val
             serverSocket.bind(InetSocketAddress(port))
             val executorService = Executors.newSingleThreadExecutor()
             while (true) {
-                executor.execute(ThreadBlockingHTTPS(serverSocket.accept(),
-                        sslCtx.createSSLEngine(), ekm, executorService))
+                val sslEngine = sslCtx.createSSLEngine();
+                executor.execute(ThreadBlockingHTTPS(serverSocket.accept(), sslEngine,
+                        ekm, executorService))
+
                 Log.d(TAG, "Accepted HTTPS connection")
             }
         } catch (e: IOException) {

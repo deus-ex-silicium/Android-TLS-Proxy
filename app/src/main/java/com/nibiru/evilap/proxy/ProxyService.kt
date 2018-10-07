@@ -54,11 +54,11 @@ class ProxyService : Service(){
         //Thread(mProxyHTTP).start()
 
         mNioHTTPS = ThreadNioHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS,
-                EvilApApp.instance.ekm, EvilApApp.instance.exec)
+               EvilApApp.instance.ekm, EvilApApp.instance.exec)
         //Thread(mNioHTTPS).start()
 
         //start the captive portal thread
-        Thread(MainLoopCaptivePortal(mSocketPortal)).start()
+        //Thread(MainLoopCaptivePortal(mSocketPortal)).start()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -70,12 +70,12 @@ class ProxyService : Service(){
 
     private fun setupEventBus(){
         if (mDispService != null && !mDispService!!.isDisposed) return
-        mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe({
+        mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe {
             Log.v(TAG, "got event = $it")
             when (it) {
                 is EvilApService.EventExit -> exit()
             }
-        })
+        }
     }
 
     private fun exit(){

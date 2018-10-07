@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit
 internal class MainLoopCaptivePortal(private val serverSocket: ServerSocket) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    //private val SERVERPORT = 8080
     private val SERVERPORT = EvilApApp.instance.PORT_CAPTIVE_PORTAL
     /**************************************CLASS METHODS*******************************************/
     override fun run() {

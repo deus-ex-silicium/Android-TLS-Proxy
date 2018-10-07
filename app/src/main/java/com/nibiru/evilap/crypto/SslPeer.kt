@@ -258,7 +258,8 @@ abstract class SslPeer(private val executor: ExecutorService) {
         peerNetData.clear()
 
         handshakeStatus = SSLEngineResult.HandshakeStatus.NEED_UNWRAP
-        loop@ while (handshakeStatus !== SSLEngineResult.HandshakeStatus.FINISHED && handshakeStatus !== SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
+        loop@ while (handshakeStatus !== SSLEngineResult.HandshakeStatus.FINISHED
+                && handshakeStatus !== SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
             when (handshakeStatus) {
                 SSLEngineResult.HandshakeStatus.NEED_UNWRAP -> {
                     //WARNING: PATCH FOR CONSUMED CLIENT HELLO

@@ -59,7 +59,9 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
             }
         } catch (e: IOException) {
             if (e is SocketTimeoutException)
-                Log.e(TAG, "TIMEOUT!")
+                Log.e(TAG, "Timeout!")
+            if (e is SSLHandshakeException)
+                Log.e(TAG, "SSL Handshake Exception!")
             else
                 e.printStackTrace()
         } finally {

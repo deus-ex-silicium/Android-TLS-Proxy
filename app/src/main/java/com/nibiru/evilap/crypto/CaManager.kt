@@ -1,6 +1,8 @@
 package com.nibiru.evilap.crypto
 
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import com.nibiru.evilap.EvilApApp
 import org.spongycastle.asn1.DERIA5String
 import org.spongycastle.asn1.x500.X500Name
 import org.spongycastle.asn1.x500.style.BCStyle
@@ -83,7 +85,7 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         kp = rsa.generateKeyPair()
         // validity date of CA certificate
         val cal = Calendar.getInstance()
-        cal.add(Calendar.MONTH, 1)
+        cal.add(Calendar.MONTH, 12)
         // format public key for certificate
         val pk = kp.public.encoded
         val bcPk = SubjectPublicKeyInfo.getInstance(pk)
@@ -176,8 +178,8 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         ks.setKeyEntry("evil-ca", kp.private, pwd, arrayOf(root))
 
         //for unit test compatibility
-        //EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
-        FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
+        EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
+        //FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
     }
 
     fun saveRootCert(name: String){

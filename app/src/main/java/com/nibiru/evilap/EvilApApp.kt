@@ -59,10 +59,10 @@ class EvilApApp : Application() {
     // future update to https://stackoverflow.com/questions/48080336/how-to-handle-network-change-between-wifi-and-mobile-data?
     override fun onCreate() {
         instance = this
-        // Initialize ConnectivityManager
+        // Initialize fields
         if (!::_connMan.isInitialized)
             _connMan = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        ca = CaManager(resources.openRawResource(R.raw.evil_ap),"password")
+        ca = CaManager(resources.openRawResource(R.raw.attacker), "password")
         ekm = EvilKeyManager(ca)
         exec = Executors.newSingleThreadExecutor()
         // Read captive portal HTML files
@@ -82,7 +82,6 @@ class EvilApApp : Application() {
 
         super.onCreate()
     }
-
 
     private fun checkWiFiConnectivity(): Boolean {
         val netInfo = _connMan.activeNetworkInfo

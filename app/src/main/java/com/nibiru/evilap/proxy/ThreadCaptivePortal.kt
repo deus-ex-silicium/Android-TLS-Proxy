@@ -67,9 +67,9 @@ internal class ThreadCaptivePortal(private val sClient: Socket) : Runnable {
         }
         out.write("Connection: close\r\n".toByteArray())
         out.write("Content-Type: $mime\r\n".toByteArray())
-        if("cert" in mime){
-            out.write("Content-Disposition: inline; filename=ca-cert.pem\r\n".toByteArray())
-        }
+//        if("cert" in mime){
+//            out.write("Content-Disposition: inline; filename=ca-cert.pem\r\n".toByteArray())
+//        }
         out.write("Content-Length: ${body.size}\r\n\r\n".toByteArray())
         out.write(body)
     }
