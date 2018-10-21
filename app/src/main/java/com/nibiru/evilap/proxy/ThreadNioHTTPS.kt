@@ -1,10 +1,16 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
+import android.util.Xml
+import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.crypto.SslPeer
 import com.nibiru.evilap.crypto.SSLCapabilities
 import com.nibiru.evilap.crypto.SSLExplorer
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.IOException
 import java.io.OutputStream
@@ -16,6 +22,7 @@ import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.nio.channels.spi.SelectorProvider
+import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -39,6 +46,7 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
      * A part of Java NIO that will be used to serve all connections to the server in one thread.
      */
     private var selector: Selector
+    private val DEBUG = false
     /**************************************CLASS METHODS*******************************************/
     /**
      * Server is designed to apply an SSL/TLS protocol and listen to an IP address and port.
@@ -99,9 +107,7 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
                 }
             }
         }
-
         Log.e(TAG,"Goodbye!")
-
     }
 
     /**
@@ -162,8 +168,7 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
      * @throws IOException if an I/O error occurs to the socket channel.
      */
     @Throws(IOException::class)
-    override fun read(socketChannel: SocketChannel, engine: SSLEngine) {
-
+    override fun read(socketChannel: SocketChannel, engine: SSLEngine){
         peerNetData.clear()
         val bytesRead = socketChannel.read(peerNetData)
         if (bytesRead > 0) {
@@ -174,7 +179,7 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
                 when (result.status) {
                     SSLEngineResult.Status.OK -> {
                         peerAppData.flip()
-                        Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
+                        if (DEBUG) Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
                     }
                     SSLEngineResult.Status.BUFFER_OVERFLOW -> {
                         peerAppData = enlargeApplicationBuffer(engine, peerAppData)
@@ -193,9 +198,8 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
                     }
                 }
             }
-            val out = "HTTP/1.1 200 OK\r\nContent-Length: 18\r\n\r\nHTTPS Proxy Hello!"
-            write(socketChannel, engine, out)
-
+            val decryptedStream = DataInputStream(ByteArrayInputStream(peerAppData.array(), 0, peerAppData.limit()))
+            //serveResponse(socketChannel, engine, decryptedStream)
         } else if (bytesRead < 0) {
             Log.e(TAG,"Received end of stream. Will try to close connection with client...")
             handleEndOfStream(socketChannel, engine)
@@ -211,10 +215,10 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
      * @throws IOException if an I/O error occurs to the socket channel.
      */
     @Throws(IOException::class)
-    override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: String) {
-
+    override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: ByteArray) {
+        Log.e(TAG, "msg:${message.size}, myAppData:${myAppData.capacity()}")
         myAppData.clear()
-        myAppData.put(message.toByteArray())
+        myAppData.put(message)
         myAppData.flip()
         while (myAppData.hasRemaining()) {
             // The loop has a meaning for (outgoing) messages larger than 16KB.
@@ -227,7 +231,7 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
                     while (myNetData.hasRemaining()) {
                         socketChannel.write(myNetData)
                     }
-                    Log.e(TAG,"[OUT]:\n $message")
+                    //Log.e(TAG,"[OUT]:\n $message")
                 }
                 SSLEngineResult.Status.BUFFER_OVERFLOW -> myNetData = enlargePacketBuffer(engine, myNetData)
                 SSLEngineResult.Status.BUFFER_UNDERFLOW -> throw SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.")
@@ -237,47 +241,6 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
                 }
                 else -> throw IllegalStateException("Invalid SSL status: " + result.status)
             }
-        }
-    }
-
-    @Throws(SSLHandshakeException::class)
-    private fun parseSslClientHello(socket: Socket, engine: SSLEngine): ByteBuffer? {
-        val ins = socket.getInputStream()
-
-        var buffer = ByteArray(0xFF)
-        var position = 0
-        val capabilities: SSLCapabilities?
-
-        try {
-            // Read the header of TLS record
-            while (position < SSLExplorer.RECORD_HEADER_SIZE) {
-                val count = SSLExplorer.RECORD_HEADER_SIZE - position
-                val n = ins.read(buffer, position, count)
-                if (n < 0) { return null }
-                position += n
-            }
-            // Get the required size to explore the SSL capabilities
-            val recordLength = SSLExplorer.getRequiredSize(buffer, 0, position)
-            if (buffer.size < recordLength) {
-                buffer = buffer.copyOf(recordLength)
-            }
-            // Read the entire Client Hello
-            while (position < recordLength) {
-                val count = recordLength - position
-                val n = ins.read(buffer, position, count)
-                if (n < 0) { return null }
-                position += n
-            }
-            capabilities = SSLExplorer.explore(buffer, 0, recordLength) ?: return null
-            Log.d(TAG, "PARSED CLIENT_HELLO: Server names: ${capabilities.serverNames}")
-            val sni = (capabilities.serverNames[0] as SNIHostName).asciiName
-            ekm.engine2Alias[engine] = sni
-            val buffer = ByteBuffer.wrap(buffer, 0, recordLength)
-            return buffer
-        }
-        catch (e: Exception){
-            e.printStackTrace()
-            return null
         }
     }
 
@@ -315,6 +278,19 @@ class ThreadNioHTTPS(val hostAddress: String, val port: Int,
             e.printStackTrace()
             return null
         }
+    }
+
+
+
+    private fun serveStaticResponse(socketChannel: SocketChannel, engine: SSLEngine){
+        var out = "HTTP/1.1 200 OK\r\nContent-Length: 191\r\n\r\n"
+        out += "=== HTTPS PROXY ===\n"
+        out += "Connection was accepted...\n"
+        out += "TLS Handshake was parsed for SNI...\n"
+        out += "TLS Handshake was completed...\n"
+        out += "X509 Certificate was generated and signed...\n"
+        out += "And static response was served!\n"
+        write(socketChannel, engine, out.toByteArray())
     }
 
     /**

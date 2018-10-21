@@ -45,20 +45,20 @@ class ProxyService : Service(){
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        //start the proxy socket thread
-        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTPS,
-                EvilApApp.instance.sslCtx, EvilApApp.instance.ekm))
-        proxy.start()
+        // Start the proxy socket thread
+//        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTPS,
+//                EvilApApp.instance.sslCtx, EvilApApp.instance.ekm))
+//        proxy.start()
 
         mProxyHTTP = ThreadNioHTTP("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTP)
-        //Thread(mProxyHTTP).start()
+        Thread(mProxyHTTP).start()
 
         mNioHTTPS = ThreadNioHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS,
                EvilApApp.instance.ekm, EvilApApp.instance.exec)
-        //Thread(mNioHTTPS).start()
+        Thread(mNioHTTPS).start()
 
-        //start the captive portal thread
-        //Thread(MainLoopCaptivePortal(mSocketPortal)).start()
+        // Start the captive portal thread
+        Thread(MainLoopCaptivePortal(mSocketPortal)).start()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {

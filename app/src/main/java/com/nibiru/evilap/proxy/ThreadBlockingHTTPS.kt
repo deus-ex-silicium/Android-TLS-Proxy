@@ -94,7 +94,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
                 when (result.status) {
                     SSLEngineResult.Status.OK -> {
                         peerAppData.flip()
-                        //Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
+                        if (DEBUG) Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
                     }
                     SSLEngineResult.Status.BUFFER_OVERFLOW -> {
                         peerAppData = enlargeApplicationBuffer(engine, peerAppData)
@@ -160,7 +160,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
         //HTTP KEEP ALIVE LOOP!
         while (keepAlive) {
             //get client request string as okhttp request
-            val req = getOkhttpRequest(inDecrypted)
+            val req = getOkhttpRequest(inDecrypted, "https")
             if (req == null) {
                 Log.e(TAG, "Cannot read request, closing")
                 return
@@ -175,66 +175,6 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
             outStream.flush()
             Log.d(TAG, "[SEND]")
         }
-    }
-
-    @Throws(IOException::class)
-    private fun getOkhttpRequest(inD: DataInputStream): Request? {
-        val builder = Request.Builder()
-        val requestLine = inD.readLine() ?: return null
-        Log.d("$TAG[REQUEST LINE]", requestLine)
-        val requestLineValues = requestLine.split("\\s+".toRegex())
-
-        var host: String? = null
-        var mime: String? = null
-        var len = 0
-
-        var line: String
-        loop@ while(true){
-            line = inD.readLine()
-            if(DEBUG) Log.d("$TAG[LINE]", line)
-            val header = line.split(": ")
-            when(header[0]) {
-                "" -> break@loop
-                "Host" -> host = header[1]
-                "Content-Type" -> mime = header[1]
-                "Content-Length" -> len = header[1].toInt()
-                "Connection" -> keepAlive = header[1] != "close"
-                else -> builder.addHeader(header[0], header[1])
-            }
-        }
-        if(host == null) {
-            Log.e(TAG, "Creepy stuff, no host header !?")
-            return null
-        }
-        // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
-        val url =  if(host in requestLineValues[1])
-            requestLineValues[1]
-        else
-            "http://$host${requestLineValues[1]}"
-        Log.d(TAG, url)
-        builder.url(url)
-
-        // read data, perhaps binary (so BufferedReader will not work)
-        var reqBody: RequestBody? = null
-        if(len > 0){
-            val buf = ByteArray(len)
-            val tmp = inD.read(buf, 0, len)
-            if(tmp != len) Log.wtf(TAG, "Could not read all body bytes (-_-)")
-            reqBody = RequestBody.create(MediaType.parse(mime), buf)
-        }
-        builder.method(requestLineValues[0], reqBody)
-        return builder.build()
-    }
-
-    private fun sendResponseHeaders(res: Response, outClient: OutputStream){
-        outClient.write(res.protocol().toString().toUpperCase().toByteArray())
-        outClient.write(0x20) // space
-        outClient.write(res.code().toString().toByteArray())
-        outClient.write(0x20) // space
-        outClient.write(res.message().toByteArray())
-        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
-        outClient.write(res.headers().toString().replace("\n","\r\n").toByteArray())
-        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
     }
 
     @Throws(SSLHandshakeException::class)
@@ -282,7 +222,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
         TODO("not implemented")
     }
 
-    override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: String) {
+    override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: ByteArray) {
         TODO("not implemented")
     }
 

@@ -14,9 +14,10 @@ import java.io.*
 import java.net.StandardSocketOptions
 
 
-class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable{
+class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable, ClientHandlerBase() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
+    private val DEBUG = false
     /**
      * Declares if the server is active to serve and create new connections.
      */
@@ -26,10 +27,9 @@ class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable{
      */
     private var selector: Selector
 
-    protected lateinit var peerData: ByteBuffer
-    protected lateinit var myData: ByteBuffer
+    protected var peerData: ByteBuffer
+    protected var myData: ByteBuffer
 
-    private val DEBUG = false
     /**************************************CLASS METHODS*******************************************/
     /**
      *
@@ -39,8 +39,8 @@ class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable{
     init{
         selector = SelectorProvider.provider().openSelector()
         active = true
-        myData = ByteBuffer.allocate(256)
-        peerData = ByteBuffer.allocate(256)
+        myData = ByteBuffer.allocate(0x1000)
+        peerData = ByteBuffer.allocate(0x10000)
     }
     /**
      * Should be called in order the server to start listening to new connections.
@@ -124,109 +124,65 @@ class ThreadNioHTTP(val hostAddress: String, val port: Int) : Runnable{
             Log.e(TAG,"Received end of stream. Will try to close connection with client...")
             socketChannel.close()
             Log.e(TAG,"Goodbye client!")
-        }
-        peerData.flip()
-        //Log.d(TAG,"[IN]:\n${String(peerData.array())}")
-
-        val inData = DataInputStream(ByteArrayInputStream(peerData.array()))
-        val req = getOkhttpRequest(inData)
-        if (req == null) {
-            Log.e(TAG, "Cannot read request, closing")
             return
         }
-
-        //TODO: async call, what if socketChannel changes in the meantime?
-        EvilApApp.instance.httpClient.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
-            @Throws(IOException::class)
-            override fun onResponse(call: Call, response: Response) {
-                sendResponseHeaders(response, socketChannel)
-                response.body()?.apply { write(socketChannel, this.bytes())}
-            }
-        })
-
-        /*val out = "HTTP/1.1 200 OK\r\nContent-Length: 18\r\n\r\nHTTP  Proxy Hello!"
-        write(socketChannel, out.toByteArray())*/
-
+        // WARNING: the request could be segmented
+        // in multiple read calls if it's greater then peerData.capacity()
+        peerData.flip()
+        if (DEBUG) Log.d(TAG,"[IN]:\n${String(peerData.array())}")
+        val inData = DataInputStream(ByteArrayInputStream(peerData.array()))
+        serveResponse(socketChannel, inData)
     }
 
     @Throws(IOException::class)
     fun write(socketChannel: SocketChannel, message: ByteArray) {
-
-        if(message.size > myData.capacity()){
-            myData = ByteBuffer.allocate(message.size)
-        }
         myData.clear()
-        myData.put(message)
-        myData.flip()
-        socketChannel.write(myData)
-        Log.d(TAG,"[SENT]")
-        //Log.d(TAG,"[OUT]:\n${message.toString()}")
+        var current = 0
+        val end = message.size - 1
+        val step = myData.limit() - 1
 
+        while (current < end){
+            val next = if(end-current > step) current + step else end
+            Log.i(TAG, "current:$current, next:$next, end:$end")
+            val slice = message.sliceArray(IntRange(current, next))
+            if (current != 0) myData.flip()
+            myData.put(slice)
+            myData.flip()
+            socketChannel.write(myData)
+            current = next + 1
+            if (DEBUG) Log.d(TAG,"[SENT] ${String(slice)}")
+        }
     }
 
-    @Throws(IOException::class)
-    private fun getOkhttpRequest(inD: DataInputStream): Request? {
-        val builder = Request.Builder()
-        val requestLine = inD.readLine() ?: return null
-        Log.d("$TAG[REQUEST LINE]", requestLine)
-        val requestLineValues = requestLine.split("\\s+".toRegex())
-
-        var host: String? = null
-        var mime: String? = null
-        var len = 0
-
-        var line: String
-        loop@ while(true){
-            line = inD.readLine()
-            if(DEBUG) Log.d("$TAG[LINE]", line)
-            val header = line.split(": ")
-            when(header[0]) {
-                "" -> break@loop
-                "Host" -> host = header[1]
-                "Content-Type" -> mime = header[1]
-                "Content-Length" -> len = header[1].toInt()
-                "Connection" -> { val keepAlive = header[1] != "close" }
-                else -> builder.addHeader(header[0], header[1])
+    private fun serveResponse(socketChannel: SocketChannel, inData: DataInputStream){
+        val req = getOkhttpRequest(inData, "http")
+        if (req == null) {
+            Log.e(TAG, "Cannot read request, closing")
+            return
+        }
+        EvilApApp.instance.httpClient.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val resHeaders = getResponseHeaders(response)
+                    write(socketChannel, resHeaders)
+                    response.body()?.apply { write(socketChannel, this.bytes()) }
+                }
+                catch (e: IOException){
+                    Log.e(TAG, "Whops!")
+                    e.printStackTrace()
+                }
             }
-        }
-        // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
-        val url =  if(host!! in requestLineValues[1])
-            requestLineValues[1]
-        else
-            "http://$host${requestLineValues[1]}"
-        Log.d(TAG, url)
-        builder.url(url)
-
-        // read data, perhaps binary (so BufferedReader will not work)
-        var reqBody: RequestBody? = null
-        if(len > 0){
-            val buf = ByteArray(len)
-            val tmp = inD.read(buf, 0, len)
-            if(tmp != len) Log.wtf(TAG, "Could not read all body bytes (-_-)")
-            reqBody = RequestBody.create(MediaType.parse(mime), buf)
-        }
-        builder.method(requestLineValues[0], reqBody)
-        return builder.build()
+        })
     }
 
-    private fun sendResponseHeaders(res: Response, socketChannel: SocketChannel){
-        val version = res.protocol().toString().toUpperCase().toByteArray()
-        val code = res.code().toString().toByteArray()
-        val msg = res.message().toByteArray()
-        val headers = res.headers().toString().replace("\n","\r\n").toByteArray()
 
-        val outClient = ByteArrayOutputStream(version.size + 1 + code.size + 1 + msg.size + 2 + headers.size + 2)
-        outClient.write(version)
-        outClient.write(0x20) // space
-        outClient.write(code)
-        outClient.write(0x20) // space
-        outClient.write(msg)
-        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
-        outClient.write(headers)
-        outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
-
-        write(socketChannel, outClient.toByteArray())
+    private fun serveStaticResponse(socketChannel: SocketChannel){
+        var out = "HTTP/1.1 200 OK\r\nContent-Length: 78\r\n\r\n"
+        out += "=== HTTP PROXY ===\n"
+        out += "Connection was accepted...\n"
+        out += "And static response was served!\n"
+        write(socketChannel, out.toByteArray())
     }
 
     /**

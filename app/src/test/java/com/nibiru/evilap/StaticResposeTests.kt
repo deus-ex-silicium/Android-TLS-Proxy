@@ -4,6 +4,8 @@ import android.util.Log
 import com.nibiru.evilap.crypto.CaManager
 import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.proxy.MainLoopProxy
+import com.nibiru.evilap.proxy.ThreadNioHTTP
+import com.nibiru.evilap.proxy.ThreadNioHTTPS
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.hamcrest.CoreMatchers
@@ -15,9 +17,7 @@ import java.io.IOException
 import java.io.OutputStream
 import java.net.*
 import java.security.KeyStore
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import javax.net.ssl.*
 
 
@@ -26,16 +26,22 @@ import javax.net.ssl.*
  * echo "127.0.0.1  example.com" | sudo tee -a /etc/hosts
  */
 
-class TlsSniTests {
+class StaticResposeTests {
     private lateinit var client: OkHttpClient
     private lateinit var ss: ServerSocket
-    private lateinit var ca: CaManager
+    private lateinit var ekm: EvilKeyManager
+    private lateinit var exec: ExecutorService
 
     @Before
     fun init(){
         // Create a new CA and make okhttp trust it (^_^)
         // https://jebware.com/blog/?p=340
-        ca = CaManager()
+        val ca = CaManager()
+        ekm = EvilKeyManager(ca)
+        val sc = SSLContext.getInstance("TLS")
+        sc.init(arrayOf(ekm), null, null)
+        exec = Executors.newSingleThreadExecutor()
+
         val sslContext: SSLContext
         val trustManager: TrustManager
         try {
@@ -52,6 +58,7 @@ class TlsSniTests {
             sslContext.init(null, trustManagerFactory.trustManagers, null)
         } catch (e: Exception) {
             e.printStackTrace()
+            Assert.fail()
             return
         }
         client = OkHttpClient.Builder()
@@ -64,37 +71,71 @@ class TlsSniTests {
     }
 
     @Test
-    fun oneTestToRuleThemAll() {
+    fun HTTPS() {
         // Start mocked proxy server
         try {
-            val ekm = EvilKeyManager(ca)
-            val sc = SSLContext.getInstance("TLS")
-            sc.init(arrayOf(ekm), null, null)
             //ss = getEvilSSLSocket(ekm)
-            ss = ServerSocket()
-            val proxy = Thread(MainLoopProxy(ss, 1337, sc, ekm))
+            //ss = ServerSocket()
+            //val proxy = Thread(MainLoopProxy(ss, 8443, sc, ekm))
+            //proxy.start()
+            val proxy = Thread(ThreadNioHTTPS("0.0.0.0", 8443, ekm, exec))
             proxy.start()
-
-            //val proxyHTTP = Thread(ThreadNioHTTPS("0.0.0.0", 1337, ekm))
-            //proxyHTTP.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-        Log.d("Testing", "Making HTTPS request to example.com:1337")
+        Log.d("Testing", "Making HTTPS request to example.com:8443")
         val request = Request.Builder()
-                .url("https://example.com:1337") // HTTPS !
+                .url("https://example.com:8443") // HTTPS !
                 .build()
         try {
             client.newCall(request).execute().use { res ->
                 Assert.assertTrue(res.isSuccessful)
                 val b = res.body()?.string()
                 Assert.assertNotNull(b)
-                Assert.assertThat(b, CoreMatchers.containsString("HTTPS Proxy Hello!"))
+                var properRes = "=== HTTPS PROXY ===\n"
+                properRes += "Connection was accepted...\n"
+                properRes += "TLS Handshake was parsed for SNI...\n"
+                properRes += "TLS Handshake was completed...\n"
+                properRes += "X509 Certificate was generated and signed...\n"
+                properRes += "And static response was served!\n"
+                Assert.assertThat(b, CoreMatchers.containsString(properRes))
                 res.close()
             }
         } catch (e: Exception){
             e.printStackTrace()
+            Assert.fail()
+        }
+    }
+
+    @Test
+    fun HTTP() {
+        // Start mocked proxy server
+        try {
+            val mProxyHTTP = ThreadNioHTTP("0.0.0.0", 8080)
+            Thread(mProxyHTTP).start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        Log.d("Testing", "Making HTTP request to example.com:8080")
+        val request = Request.Builder()
+                .url("http://example.com:8080") // HTTP !
+                .build()
+        try {
+            client.newCall(request).execute().use { res ->
+                Assert.assertTrue(res.isSuccessful)
+                val b = res.body()?.string()
+                Assert.assertNotNull(b)
+                var properRes = "=== HTTP PROXY ===\n"
+                properRes += "Connection was accepted...\n"
+                properRes += "And static response was served!\n"
+                Assert.assertThat(b, CoreMatchers.containsString(properRes))
+                res.close()
+            }
+        } catch (e: Exception){
+            e.printStackTrace()
+            Assert.fail()
         }
     }
 
@@ -126,7 +167,7 @@ class TlsSniTests {
                 serverSocket.bind(InetSocketAddress(SERVERPORT))
                 while (true) {
                     executor.execute(ThreadHandleHTTPClientTest(serverSocket.accept()))
-                    Log.d(TAG, "Accepted HTTP connection")
+                    Log.d(TAG, "Accepted HTTPS connection")
                 }
             } catch (e: IOException) {
                 if (e !is SocketException) {
@@ -189,7 +230,7 @@ class TlsSniTests {
             }
 
             private fun sendResponseHeaders(outClient: OutputStream){
-                outClient.write("HTTP/1.1 200 OK\r\n".toByteArray())
+                outClient.write("HTTPS/1.1 200 OK\r\n".toByteArray())
                 outClient.write("Content-Length: 18\r\n".toByteArray())
                 outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
             }

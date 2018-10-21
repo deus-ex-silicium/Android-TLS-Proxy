@@ -1,6 +1,7 @@
 package com.nibiru.evilap.crypto
 
 import android.util.Log
+import com.nibiru.evilap.proxy.ClientHandlerBase
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
@@ -29,7 +30,7 @@ import javax.net.ssl.TrustManagerFactory.*
  *
  * @author [Alex Karnezis](mailto:alex.a.karnezis@gmail.com)
  */
-abstract class SslPeer(private val executor: ExecutorService) {
+abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase() {
     private val TAG = javaClass.simpleName
     /**
      * Will contain this peer's application data in plaintext, that will be later encrypted
@@ -67,7 +68,7 @@ abstract class SslPeer(private val executor: ExecutorService) {
     protected abstract fun read(socketChannel: SocketChannel, engine: SSLEngine)
 
     @Throws(Exception::class)
-    protected abstract fun write(socketChannel: SocketChannel, engine: SSLEngine, message: String)
+    protected abstract fun write(socketChannel: SocketChannel, engine: SSLEngine, message: ByteArray)
 
     @Throws(Exception::class)
     protected abstract fun read(inData: DataInputStream, outSteam: OutputStream,

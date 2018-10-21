@@ -129,16 +129,19 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         val rsa = KeyPairGenerator.getInstance("RSA")
         rsa.initialize(2048)
         val newKp = rsa.generateKeyPair()
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.MONTH, 1)
+        val from = Calendar.getInstance()
+        from.add(Calendar.HOUR, -1)
+        val to = Calendar.getInstance()
+        to.add(Calendar.MONTH, 1)
         val pk = newKp.public.encoded
         val bcPk = SubjectPublicKeyInfo.getInstance(pk)
-        val serial = BigInteger.valueOf((ks.size()+2).toLong())
+        //val serial = BigInteger.valueOf((ks.size()+2).toLong())
+        val serial = BigInteger(64, Random())
         val certGen = X509v3CertificateBuilder(
                 X500Name("CN=FUNSEC Inc."), // X500Name representing the issuer of this certificate.
                 serial,                     // the serial number for the certificate
-                Date(),                     // date before which the certificate is not valid.
-                cal.time,                   // date after which the certificate is not valid.
+                from.time,                  // date before which the certificate is not valid.
+                to.time,                    // date after which the certificate is not valid.
                 X500Name("CN=$cn"),         // X500Name representing the subject of this certificate.
                 bcPk                        // the public key to be associated with the certificate.
         )
@@ -178,8 +181,8 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         ks.setKeyEntry("evil-ca", kp.private, pwd, arrayOf(root))
 
         //for unit test compatibility
-        EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
-        //FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
+        //EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
+        FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
     }
 
     fun saveRootCert(name: String){
