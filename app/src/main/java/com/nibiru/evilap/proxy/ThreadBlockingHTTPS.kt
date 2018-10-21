@@ -17,6 +17,7 @@ import java.io.OutputStream
 import java.net.Socket
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
+import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.*
@@ -25,7 +26,8 @@ import javax.net.ssl.*
 class ThreadBlockingHTTPS(private val sClient: Socket,
                           private val engine: SSLEngine,
                           private val ekm: EvilKeyManager,
-                          executor: ExecutorService) : Runnable, SslPeer(executor) {
+                          executor: ExecutorService) : SslPeer("", 6666, executor) {
+
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     private var keepAlive = true
@@ -37,7 +39,6 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
         engine.useClientMode = false
         val sess = engine.session
         val clientHello = parseSslClientHello(sClient, engine)
-
 
         myAppData = ByteBuffer.allocate(sess.applicationBufferSize)
         myNetData = ByteBuffer.allocate(sess.packetBufferSize)
@@ -218,11 +219,13 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
         }
     }
 
-    override fun read(socketChannel: SocketChannel, engine: SSLEngine) {
+    override fun accept(key: SelectionKey) {
         TODO("not implemented")
     }
-
-    override fun write(socketChannel: SocketChannel, engine: SSLEngine, message: ByteArray) {
+    override fun read(socketChannel: SocketChannel, engine: SSLEngine?) {
+        TODO("not implemented")
+    }
+    override fun write(socketChannel: SocketChannel, message: ByteArray, engine: SSLEngine?) {
         TODO("not implemented")
     }
 

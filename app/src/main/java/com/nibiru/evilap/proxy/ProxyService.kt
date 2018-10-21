@@ -83,7 +83,7 @@ class ProxyService : Service(){
             Log.e(TAG,"Closing server sockets!")
             mSocketProxy.close()
             mProxyHTTP.exit()
-            mNioHTTPS.stop()
+            mNioHTTPS.exit()
             mSocketPortal.close()
 
         } catch (e: IOException) {

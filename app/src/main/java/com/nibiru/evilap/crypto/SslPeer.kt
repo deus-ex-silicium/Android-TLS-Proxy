@@ -1,14 +1,12 @@
 package com.nibiru.evilap.crypto
 
 import android.util.Log
-import com.nibiru.evilap.proxy.ClientHandlerBase
+import com.nibiru.evilap.proxy.ThreadNioBase
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.security.KeyStore
-import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import javax.net.ssl.*
 import javax.net.ssl.TrustManagerFactory.*
 
@@ -30,7 +28,9 @@ import javax.net.ssl.TrustManagerFactory.*
  *
  * @author [Alex Karnezis](mailto:alex.a.karnezis@gmail.com)
  */
-abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase() {
+abstract class SslPeer(hostAddress: String, port: Int, private val executor: ExecutorService)
+    : ThreadNioBase(hostAddress, port) {
+
     private val TAG = javaClass.simpleName
     /**
      * Will contain this peer's application data in plaintext, that will be later encrypted
@@ -39,7 +39,7 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
      * If this peer tries to send a message bigger than buffer's capacity a [BufferOverflowException]
      * will be thrown.
      */
-    protected lateinit var myAppData: ByteBuffer
+    override lateinit var myAppData: ByteBuffer
 
     /**
      * Will contain this peer's encrypted data, that will be generated after [SSLEngine.wrap]
@@ -54,7 +54,7 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
      * from any peer. Can be initialized with [SSLSession.getApplicationBufferSize] for an estimation
      * of the other peer's application data and should be enlarged if this size is not enough.
      */
-    protected lateinit var peerAppData: ByteBuffer
+    override lateinit var peerAppData: ByteBuffer
 
     /**
      * Will contain the other peer's encrypted data. The SSL/TLS protocols specify that implementations should produce packets containing at most 16 KB of plaintext,
@@ -65,17 +65,13 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
     protected lateinit var peerNetData: ByteBuffer
 
     @Throws(Exception::class)
-    protected abstract fun read(socketChannel: SocketChannel, engine: SSLEngine)
-
-    @Throws(Exception::class)
-    protected abstract fun write(socketChannel: SocketChannel, engine: SSLEngine, message: ByteArray)
-
+    abstract override fun read(socketChannel: SocketChannel, engine: SSLEngine?)
     @Throws(Exception::class)
     protected abstract fun read(inData: DataInputStream, outSteam: OutputStream,
                                 engine: SSLEngine): DataInputStream?
-
     @Throws(Exception::class)
-    protected abstract fun write(inData: DataInputStream, outSteam: OutputStream, engine: SSLEngine, message: ByteArray)
+    protected abstract fun write(inData: DataInputStream, outSteam: OutputStream,
+                                 engine: SSLEngine, message: ByteArray)
 
 
     /**
@@ -116,7 +112,7 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
         var result: SSLEngineResult
         var handshakeStatus: SSLEngineResult.HandshakeStatus
 
-        // SslPeer's fields myData and peerAppData are supposed to be large enough to hold all message data the peer
+        // SslPeer's fields myAppData and peerAppData are supposed to be large enough to hold all message data the peer
         // will send and expects to receive from the other peer respectively. Since the messages to be exchanged will usually be less
         // than 16KB long the capacity of these fields should also be smaller. Here we initialize these two local buffers
         // to be used for the handshake, while keeping client's buffers at the same size.
@@ -238,7 +234,6 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
         }
         return true
     }
-
     @Throws(IOException::class)
     protected fun doHandshake(inData: DataInputStream, outSteam: OutputStream,
                               engine: SSLEngine, clientHello: ByteBuffer?): Boolean {
@@ -248,7 +243,7 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
         var result: SSLEngineResult
         var handshakeStatus: SSLEngineResult.HandshakeStatus
 
-        // SslPeer's fields myData and peerAppData are supposed to be large enough to hold all message data the peer
+        // SslPeer's fields myAppData and peerAppData are supposed to be large enough to hold all message data the peer
         // will send and expects to receive from the other peer respectively. Since the messages to be exchanged will usually be less
         // than 16KB long the capacity of these fields should also be smaller. Here we initialize these two local buffers
         // to be used for the handshake, while keeping client's buffers at the same size.
@@ -381,7 +376,6 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
         return true
     }
 
-
     protected fun enlargePacketBuffer(engine: SSLEngine, buffer: ByteBuffer): ByteBuffer {
         return enlargeBuffer(buffer, engine.session.packetBufferSize)
     }
@@ -448,7 +442,6 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
         doHandshake(socketChannel, engine, null)
         socketChannel.close()
     }
-
     @Throws(IOException::class)
     protected fun closeConnection(inData: DataInputStream, outSteam: OutputStream, engine: SSLEngine) {
         engine.closeOutbound()
@@ -477,7 +470,6 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
 
         closeConnection(socketChannel, engine)
     }
-
     @Throws(IOException::class)
     protected fun handleEndOfStream(inData: DataInputStream, outSteam: OutputStream, engine: SSLEngine) {
         try {
@@ -488,50 +480,12 @@ abstract class SslPeer(private val executor: ExecutorService): ClientHandlerBase
 
         closeConnection(inData, outSteam, engine)
     }
-
     /**
-     * Creates the key managers required to initiate the [SSLContext], using a JKS keystore as an input.
-     *
-     * @param filepath - the path to the JKS keystore.
-     * @param keystorePassword - the keystore's password.
-     * @param keyPassword - the key's passsword.
-     * @return [KeyManager] array that will be used to initiate the [SSLContext].
-     * @throws Exception
+     * Additionally shut down [this.executor]
      */
-    @Throws(Exception::class)
-    protected fun createKeyManagers(filepath: String, keystorePassword: String, keyPassword: String): Array<KeyManager> {
-        val keyStore = KeyStore.getInstance("JKS")
-        val keyStoreIS = FileInputStream(filepath)
-        try {
-            keyStore.load(keyStoreIS, keystorePassword.toCharArray())
-        } finally {
-            keyStoreIS.close()
-        }
-        val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
-        kmf.init(keyStore, keyPassword.toCharArray())
-        return kmf.keyManagers
-    }
-
-    /**
-     * Creates the trust managers required to initiate the [SSLContext], using a JKS keystore as an input.
-     *
-     * @param filepath - the path to the JKS keystore.
-     * @param keystorePassword - the keystore's password.
-     * @return [TrustManager] array, that will be used to initiate the [SSLContext].
-     * @throws Exception
-     */
-    @Throws(Exception::class)
-    protected fun createTrustManagers(filepath: String, keystorePassword: String): Array<TrustManager> {
-        val trustStore = KeyStore.getInstance("JKS")
-        val trustStoreIS = FileInputStream(filepath)
-        try {
-            trustStore.load(trustStoreIS, keystorePassword.toCharArray())
-        } finally {
-            trustStoreIS.close()
-        }
-        val trustFactory = getInstance(getDefaultAlgorithm())
-        trustFactory.init(trustStore)
-        return trustFactory.trustManagers
+    override fun exit() {
+        super.exit()
+        executor.shutdown()
     }
 
 }

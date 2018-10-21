@@ -313,6 +313,7 @@ class EvilApService: Service() {
             listOf( // always delete b4 inserting to avoid duplicates
                     "iptables -t nat -D PREROUTING -p tcp $dstIp $dstPort -j REDIRECT $proxyPort",
                     "iptables -t nat -I PREROUTING -p tcp $dstIp $dstPort -j REDIRECT $proxyPort"
+
             )
         }
         else {

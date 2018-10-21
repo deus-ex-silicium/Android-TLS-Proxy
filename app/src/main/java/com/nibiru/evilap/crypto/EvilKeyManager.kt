@@ -16,7 +16,8 @@ import javax.net.ssl.*
 
 class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
     private val TAG = javaClass.simpleName
-    private var ca: CaManager = ca ?: CaManager()
+    private var ca: CaManager = ca?: CaManager()
+    val caAlias = this.ca.caAlias
     var engine2Alias = HashMap<SSLEngine, String>()
 
     /**

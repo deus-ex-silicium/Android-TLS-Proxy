@@ -9,11 +9,11 @@ import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.proxy.InterceptorRequest
 import com.nibiru.evilap.proxy.InterceptorResponse
 import okhttp3.OkHttpClient
+import java.security.KeyStore
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.*
 
 
 // https://stackoverflow.com/questions/708012/how-to-declare-global-variables-in-android
@@ -29,6 +29,7 @@ class EvilApApp : Application() {
     }
     lateinit var ca: CaManager
     lateinit var ekm: EvilKeyManager
+    lateinit var trustManager: TrustManager
     lateinit var sslCtx: SSLContext
     lateinit var sf: SSLSocketFactory
     lateinit var exec: ExecutorService
@@ -45,6 +46,7 @@ class EvilApApp : Application() {
             if(_httpClient==null){
                 //make client not follow redirects!
                 _httpClient = OkHttpClient().newBuilder().followRedirects(false)
+                        //.sslSocketFactory(sf, trustManager as X509TrustManager)
                         .connectTimeout(10, TimeUnit.SECONDS)
                         .writeTimeout(10, TimeUnit.SECONDS)
                         .readTimeout(30, TimeUnit.SECONDS)
@@ -74,8 +76,18 @@ class EvilApApp : Application() {
         //initialize SSLContext
         if (!::sslCtx.isInitialized) {
             sslCtx = SSLContext.getInstance("TLS")
+            //ca.generateAndSignCert("example.com")
+
+            // trust our CA
+            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+            keyStore.load(null, null)
+            keyStore.setCertificateEntry("i-trust-this-ca", ca.root)
+            val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            trustManagerFactory.init(keyStore)
+            trustManager = trustManagerFactory.trustManagers[0]
+
             // key manager[], trust manager[], SecureRandom generator
-            ca.generateAndSignCert("example.com")
+            //sslCtx.init(arrayOf(ekm), trustManagerFactory.trustManagers, null)
             sslCtx.init(arrayOf(ekm), null, null)
             sf = sslCtx.socketFactory
         }

@@ -1,8 +1,6 @@
 package com.nibiru.evilap.crypto
 
-import android.content.Context.MODE_PRIVATE
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
 import org.spongycastle.asn1.DERIA5String
 import org.spongycastle.asn1.x500.X500Name
 import org.spongycastle.asn1.x500.style.BCStyle
@@ -37,6 +35,7 @@ class CaManager(inputStream: InputStream?, pass: String?) {
     private lateinit var ks : KeyStore
     private lateinit var kp : KeyPair
     lateinit var root : X509Certificate
+    var caAlias : String =  "evil-ca"
     /**************************************CLASS METHODS*******************************************/
     /**
      *  Empty constructor. Creates a new RSA key pair and self-signed CA X509 certificate
@@ -52,8 +51,8 @@ class CaManager(inputStream: InputStream?, pass: String?) {
             val pwd = pass.toCharArray()
             ks.load(inputStream, pwd)
             inputStream.close()
-            val kpriv = ks.getKey("evil-ca", pwd) as PrivateKey
-            val cert = ks.getCertificate("evil-ca")
+            val kpriv = ks.getKey(caAlias, pwd) as PrivateKey
+            val cert = ks.getCertificate(caAlias)
             kp = KeyPair(cert.publicKey, kpriv)
             root = certToX509(cert)
         }
@@ -67,7 +66,6 @@ class CaManager(inputStream: InputStream?, pass: String?) {
     companion object {
         private val KEY_STORE_TYPE : String = KeyStore.getDefaultType()
         private val clientPass : CharArray = "password".toCharArray()
-
         fun getCommonName(x509: X509Certificate): String {
             // https://stackoverflow.com/questions/2914521/how-to-extract-cn-from-x509certificate-in-java#7634755
             val x = JcaX509CertificateHolder(x509)
@@ -109,8 +107,11 @@ class CaManager(inputStream: InputStream?, pass: String?) {
                 KeyPurposeId.id_kp_codeSigning, KeyPurposeId.id_kp_emailProtection,
                  KeyPurposeId.id_kp_timeStamping, KeyPurposeId.id_kp_OCSPSigning)
         certGen.addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(eku))
+        // add Subject Alternative Names to (now wildcard) certificate
+        val altName1 =  GeneralName(GeneralName.dNSName, DERIA5String("*.funsec"))
+        val altNames = GeneralNames(arrayOf(altName1))
+        certGen.addExtension(Extension.subjectAlternativeName, false, altNames)
         // self-sign
-        //val certHolder = certGen.build(JcaContentSignerBuilder("SHA512withRSA").build(kp.private))
         val certHolder = certGen.build(JcaContentSignerBuilder("SHA256withRSA").build(kp.private))
         root = JcaX509CertificateConverter().getCertificate(certHolder)
         // load KeyStore, null for empty instance
@@ -127,7 +128,7 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         if(ks.containsAlias(cn)) return
 
         val rsa = KeyPairGenerator.getInstance("RSA")
-        rsa.initialize(2048)
+        rsa.initialize(1024)
         val newKp = rsa.generateKeyPair()
         val from = Calendar.getInstance()
         from.add(Calendar.HOUR, -1)
@@ -178,7 +179,7 @@ class CaManager(inputStream: InputStream?, pass: String?) {
     fun saveKeyStore(path: String, pass: String) {
         // https://www.stackoverflow.com/questions/6370368/bouncycastle-x509certificateholder-to-x509certificate#8960906
         val pwd = pass.toCharArray()
-        ks.setKeyEntry("evil-ca", kp.private, pwd, arrayOf(root))
+        ks.setKeyEntry(caAlias, kp.private, pwd, arrayOf(root))
 
         //for unit test compatibility
         //EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
