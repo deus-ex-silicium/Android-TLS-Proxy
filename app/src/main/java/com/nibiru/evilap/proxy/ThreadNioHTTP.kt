@@ -26,7 +26,7 @@ class ThreadNioHTTP(hostAddress: String, port: Int) : ThreadNioBase(hostAddress,
     @Throws(Exception::class)
     override fun accept(key: SelectionKey) {
 
-        Log.e(TAG,"New connection request!")
+        if (DEBUG) Log.e(TAG,"New connection request!")
 
         val socketChannel = (key.channel() as ServerSocketChannel).accept()
         socketChannel.configureBlocking(false)
@@ -35,39 +35,43 @@ class ThreadNioHTTP(hostAddress: String, port: Int) : ThreadNioBase(hostAddress,
 
     @Throws(IOException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine?) {
-        peerAppData.clear()
-        val bytesRead = socketChannel.read(peerAppData)
-        if (bytesRead < 0 ) {
-            Log.e(TAG,"Received end of stream. Will try to close connection with client...")
-            socketChannel.close()
-            Log.e(TAG,"Goodbye client!")
-            return
-        }
-        // WARNING: the request could be segmented
-        // in multiple read calls if it's greater then peerAppData.capacity()
-        peerAppData.flip()
-        if (DEBUG) Log.d(TAG,"[IN]:\n${String(peerAppData.array())}")
-        val inData = DataInputStream(ByteArrayInputStream(peerAppData.array()))
-        serveResponse(socketChannel, inData)
+        //synchronized(this) {
+            peerAppData.clear()
+            val bytesRead = socketChannel.read(peerAppData)
+            if (bytesRead < 0) {
+                //Log.e(TAG,"EOF. Will try to close connection with client...")
+                socketChannel.close()
+                //Log.e(TAG,"Goodbye client!")
+                return
+            }
+            // WARNING: the request could be segmented
+            // in multiple read calls if it's greater then peerAppData.capacity()
+            peerAppData.flip()
+            //if (DEBUG) Log.d(TAG,"[IN]:\n${String(peerAppData.array())}")
+            val inData = DataInputStream(ByteArrayInputStream(peerAppData.array()))
+            serveResponse(socketChannel, inData)
+        //}
     }
 
     @Throws(IOException::class)
     override fun write(socketChannel: SocketChannel, message: ByteArray, engine: SSLEngine?) {
-        myAppData.clear()
-        var current = 0
-        val end = message.size - 1
-        val step = myAppData.limit() - 1
+        synchronized(this) {
+            myAppData.clear()
+            var current = 0
+            val end = message.size - 1
+            val step = myAppData.limit() - 1
 
-        while (current < end){
-            val next = if(end-current > step) current + step else end
-            Log.i(TAG, "current:$current, next:$next, end:$end")
-            val slice = message.sliceArray(IntRange(current, next))
-            if (current != 0) myAppData.flip()
-            myAppData.put(slice)
-            myAppData.flip()
-            socketChannel.write(myAppData)
-            current = next + 1
-            if (DEBUG) Log.d(TAG,"[SENT] ${String(slice)}")
+            while (current < end) {
+                val next = if (end - current > step) current + step else end
+                if (DEBUG) Log.i(TAG, "current:$current, next:$next, end:$end")
+                val slice = message.sliceArray(IntRange(current, next))
+                if (current != 0) myAppData.flip()
+                myAppData.put(slice)
+                myAppData.flip()
+                socketChannel.write(myAppData)
+                current = next + 1
+                //if (DEBUG) Log.d(TAG,"[SENT] ${String(slice)}")
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.TLSProxyApp
 import okhttp3.*
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
@@ -19,7 +19,8 @@ import javax.net.ssl.SSLEngine
 abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private val DEBUG = true
+    private val DEBUG = false
+    private val TIMEOUT = 5000L
     /**
      * Declares if the server is active to serve and create new connections.
      */
@@ -60,7 +61,8 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
         Log.e(TAG, "Listening on port: $port")
 
         while (isActive()) {
-            selector.select()
+            val ret = selector.select(TIMEOUT)
+
             val selectedKeys = selector.selectedKeys().iterator()
             while (selectedKeys.hasNext()) {
                 val key = selectedKeys.next()
@@ -69,14 +71,18 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
                     continue
                 }
                 try {
-                    if (key.isAcceptable) {
-                        accept(key)
-                    } else if (key.isReadable) {
-                        read(key.channel() as SocketChannel, key.attachment() as SSLEngine?)
+                    when {
+                        ret == 0 -> {
+                            Log.e(TAG, "TIMEOUT GTFO!")
+                            key.cancel()
+                        }
+                        key.isAcceptable -> accept(key)
+                        key.isReadable -> read(key.channel() as SocketChannel, key.attachment() as SSLEngine?)
                     }
                 } catch (e: IOException){
                     key.cancel()
-                    Log.e(TAG, "(${e.message}) IO Exception while communicating with peer...")
+                    //e.printStackTrace()
+                    Log.e(TAG, "(${e.cause}) IO Exception while communicating with peer...")
                 }
             }
         }
@@ -85,7 +91,7 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
 
     abstract fun accept(key: SelectionKey)
     abstract fun read(socketChannel: SocketChannel, engine: SSLEngine?=null)
-    abstract fun write(socketChannel: SocketChannel, message: ByteArray, engine: SSLEngine?=null)
+    abstract  fun write(socketChannel: SocketChannel, message: ByteArray, engine: SSLEngine?=null)
 
     /**
      * Sets the server to an inactive state, in order to exit the reading loop in [this.run]
@@ -103,7 +109,7 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
         val requestLine = inD.readLine() ?: return null
         if (DEBUG) Log.d("$TAG[REQUEST LINE]", requestLine)
         val requestLineValues = requestLine.split("\\s+".toRegex())
-
+        if (requestLineValues.size != 3) return null
         var host: String? = null
         var mime: String? = null
         var len = 0
@@ -119,15 +125,18 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
                 "Content-Type" -> mime = header[1]
                 "Content-Length" -> len = header[1].toInt()
                 //"Connection" -> { val keepAlive = header[1] != "close" }
-                else -> builder.addHeader(header[0], header[1])
+                else -> if (header.size == 2) builder.addHeader(header[0], header[1]) else return null
             }
         }
-        Log.i(TAG, "===== host: $host, $requestLineValues =====")
+        if (DEBUG) Log.i(TAG, "===== host: $host, $requestLineValues =====")
+        val path = requestLineValues[1]
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
-        val url =  if(host!! in requestLineValues[1])
-            requestLineValues[1]
-        else
-            "$protocol://$host${requestLineValues[1]}"
+        val url =  if(host!! in path) {
+            if (path.startsWith("http")) path else "$protocol://$path"
+        }
+        else {
+            "$protocol://$host$path"
+        }
         if (DEBUG) Log.d(TAG, url)
         builder.url(url)
 
@@ -160,32 +169,38 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
         outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
         outClient.write(headers)
         outClient.write(byteArrayOf(0x0d, 0x0a)) //CRLF
-
+        if(DEBUG) Log.d(TAG, outClient.toString())
         return outClient.toByteArray()
     }
 
-    protected fun serveResponse(socketChannel: SocketChannel, inData: DataInputStream, engine: SSLEngine?=null){
+    protected fun serveResponse(socketChannel: SocketChannel, inData: DataInputStream, engine: SSLEngine?=null) {
         val req = if (engine != null)
             getOkhttpRequest(inData, "https")
         else
             getOkhttpRequest(inData, "http")
 
         if (req == null) {
-            Log.e(TAG, "Cannot read request, closing")
+            if (DEBUG) Log.e(TAG, "Cannot read request, closing socket")
+            socketChannel.close()
             return
         }
 
-        EvilApApp.instance.httpClient.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
+        TLSProxyApp.instance.httpClient.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e(TAG, "onFailure: ${e.message}, closing socket")
+                //e.printStackTrace()
+                socketChannel.close()
+            }
             override fun onResponse(call: Call, response: Response) {
                 try {
                     val resHeaders = getResponseHeaders(response)
+                    if(DEBUG) Log.d(TAG, String(resHeaders))
                     write(socketChannel, resHeaders, engine)
                     response.body()?.apply { write(socketChannel, this.bytes(), engine) }
-                }
-                catch (e: IOException){
-                    Log.e(TAG, "Whops!!!")
+                } catch (e: java.lang.Exception){
+                    Log.e(TAG, "Cannot serve response cause: ${e.message}, closing socket")
                     e.printStackTrace()
+                    socketChannel.close()
                 }
             }
         })

@@ -3,6 +3,7 @@ package com.nibiru.evilap.crypto
 import android.util.Log
 import com.nibiru.evilap.proxy.ThreadNioBase
 import java.io.*
+import java.nio.BufferOverflowException
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.security.KeyStore
@@ -104,10 +105,10 @@ abstract class SslPeer(hostAddress: String, port: Int, private val executor: Exe
      * @return True if the connection handshake was successful or false if an error occurred.
      * @throws IOException - if an error occurs during read/write to the socket channel.
      */
-    @Throws(IOException::class)
+    @Throws(IOException::class, BufferOverflowException::class)
     protected fun doHandshake(socketChannel: SocketChannel, engine: SSLEngine, clientHello: ByteBuffer?): Boolean {
 
-        Log.d(TAG,"About to do handshake...")
+        //Log.d(TAG,"About to do handshake...")
         var engineReadClientHello = false
         var result: SSLEngineResult
         var handshakeStatus: SSLEngineResult.HandshakeStatus
@@ -123,7 +124,9 @@ abstract class SslPeer(hostAddress: String, port: Int, private val executor: Exe
         peerNetData.clear()
 
         handshakeStatus = SSLEngineResult.HandshakeStatus.NEED_UNWRAP
-        loop@ while (handshakeStatus !== SSLEngineResult.HandshakeStatus.FINISHED && handshakeStatus !== SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
+        loop@ while (handshakeStatus !== SSLEngineResult.HandshakeStatus.FINISHED
+                && handshakeStatus !== SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
+            //Log.d(TAG, "hs status:$handshakeStatus")
             when (handshakeStatus) {
                 SSLEngineResult.HandshakeStatus.NEED_UNWRAP -> {
                     //WARNING: PATCH FOR CONSUMED CLIENT HELLO

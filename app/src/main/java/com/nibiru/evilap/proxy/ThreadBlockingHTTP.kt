@@ -1,7 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.TLSProxyApp
 import okhttp3.*
 import java.io.*
 import java.net.Socket
@@ -33,7 +33,7 @@ internal class ThreadBlockingHTTP(private val sClient: Socket) : Runnable {
                     Log.e(TAG, "Cannot read request, closing")
                     return
                 }
-                res = EvilApApp.instance.httpClient.newCall(req).execute()
+                res = TLSProxyApp.instance.httpClient.newCall(req).execute()
 
                 sendResponseHeaders(res, outStream)
                 res.body()?.apply { outStream.write(this.bytes()) }

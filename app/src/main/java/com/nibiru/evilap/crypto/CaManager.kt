@@ -128,7 +128,7 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         if(ks.containsAlias(cn)) return
 
         val rsa = KeyPairGenerator.getInstance("RSA")
-        rsa.initialize(1024)
+        rsa.initialize(2048)
         val newKp = rsa.generateKeyPair()
         val from = Calendar.getInstance()
         from.add(Calendar.HOUR, -1)
@@ -182,13 +182,13 @@ class CaManager(inputStream: InputStream?, pass: String?) {
         ks.setKeyEntry(caAlias, kp.private, pwd, arrayOf(root))
 
         //for unit test compatibility
-        //EvilApApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
+        //TLSProxyApp.instance.applicationContext.openFileOutput(path, MODE_PRIVATE).use { fos -> ks.store(fos, pwd) }
         FileOutputStream(path).use{ fos -> ks.store(fos, pwd) }
     }
 
     fun saveRootCert(name: String){
         //for unit test compatibility
-        /*EvilApApp.instance.applicationContext.openFileOutput(name, MODE_PRIVATE).use {
+        /*TLSProxyApp.instance.applicationContext.openFileOutput(name, MODE_PRIVATE).use {
             fos -> fos.write(toPemString(root).toByteArray())
         }*/
         PrintWriter(name).use { pw -> pw.print(toPemString(root)) }

@@ -1,31 +1,21 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import android.util.Xml
-import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.crypto.SslPeer
 import com.nibiru.evilap.crypto.SSLCapabilities
 import com.nibiru.evilap.crypto.SSLExplorer
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Response
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.IOException
 import java.io.OutputStream
-import java.net.InetSocketAddress
-import java.net.Socket
+import java.lang.IllegalArgumentException
+import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
-import java.nio.channels.spi.SelectorProvider
-import java.util.*
-import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import javax.net.ssl.*
 
 
@@ -68,7 +58,7 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
     @Throws(Exception::class)
     override fun accept(key: SelectionKey) {
 
-        Log.e(TAG,"New connection request!")
+        if (DEBUG) Log.d(TAG,"New connection request!")
 
         val socketChannel = (key.channel() as ServerSocketChannel).accept()
         socketChannel.configureBlocking(false)
@@ -86,11 +76,16 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
         // AGRR !!!
         //engine.beginHandshake()
         // PATCHED doHandshake TO ACCOUNT FOR CONSUMED ClientHello
-        if (clientHello != null && doHandshake(socketChannel, engine, clientHello)) {
-            socketChannel.register(selector, SelectionKey.OP_READ, engine)
-        } else {
+        try{
+            if (clientHello != null && doHandshake(socketChannel, engine, clientHello)) {
+                socketChannel.register(selector, SelectionKey.OP_READ, engine)
+            } else {
+                socketChannel.close()
+                Log.e(TAG,"Connection closed due to handshake failure.")
+            }
+        } catch (e: Exception){
             socketChannel.close()
-            Log.e(TAG,"Connection closed due to handshake failure.")
+            Log.e(TAG,"EXCEPTION (${e.cause})Connection closed due to handshake failure.")
         }
     }
 
@@ -105,99 +100,100 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
      */
     @Throws(IOException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine?) {
-        if(engine == null) throw IOException("HTTPS NEEDS SSL ENGINE!")
+        //synchronized(this) {
+            if (engine == null) throw IOException("HTTPS NEEDS SSL ENGINE!")
 
-        peerNetData.clear()
-        val bytesRead = socketChannel.read(peerNetData)
-        if (bytesRead > 0) {
-            peerNetData.flip()
-            while (peerNetData.hasRemaining()) {
-                peerAppData.clear()
-                val result = engine.unwrap(peerNetData, peerAppData)
-                when (result.status) {
-                    SSLEngineResult.Status.OK -> {
-                        peerAppData.flip()
-                        if (DEBUG) Log.d(TAG,"[IN]:\n" + String(peerAppData.array()))
-                    }
-                    SSLEngineResult.Status.BUFFER_OVERFLOW -> {
-                        peerAppData = enlargeApplicationBuffer(engine, peerAppData)
-                    }
-                    SSLEngineResult.Status.BUFFER_UNDERFLOW -> {
-                        peerNetData = handleBufferUnderflow(engine, peerNetData)
-                    }
-                    SSLEngineResult.Status.CLOSED -> {
-                        Log.e(TAG,"Client wants to close connection...")
-                        closeConnection(socketChannel, engine)
-                        Log.e(TAG,"Goodbye client!")
-                        return
-                    }
-                    else -> {
-                        throw IllegalStateException("Invalid SSL status: " + result.status)
+            peerNetData.clear()
+            val bytesRead = socketChannel.read(peerNetData)
+            if (bytesRead > 0) {
+                peerNetData.flip()
+                while (peerNetData.hasRemaining()) {
+                    peerAppData.clear()
+                    val result = engine.unwrap(peerNetData, peerAppData)
+                    when (result.status) {
+                        SSLEngineResult.Status.OK -> {
+                            peerAppData.flip()
+                            if (DEBUG) Log.d(TAG, "[IN]:\n" + String(peerAppData.array()))
+                        }
+                        SSLEngineResult.Status.BUFFER_OVERFLOW -> {
+                            peerAppData = enlargeApplicationBuffer(engine, peerAppData)
+                        }
+                        SSLEngineResult.Status.BUFFER_UNDERFLOW -> {
+                            peerNetData = handleBufferUnderflow(engine, peerNetData)
+                        }
+                        SSLEngineResult.Status.CLOSED -> {
+                            Log.e(TAG, "Client wants to close connection...")
+                            closeConnection(socketChannel, engine)
+                            Log.e(TAG, "Goodbye client!")
+                            return
+                        }
+                        else -> {
+                            throw IllegalStateException("Invalid SSL status: " + result.status)
+                        }
                     }
                 }
+                val decryptedStream = DataInputStream(ByteArrayInputStream(peerAppData.array(), 0, peerAppData.limit()))
+                //serveStaticResponse(socketChannel, engine)
+                serveResponse(socketChannel, decryptedStream, engine)
+            } else if (bytesRead < 0) {
+                if (DEBUG) Log.e(TAG, "EOF. Will try to close connection with client...")
+                handleEndOfStream(socketChannel, engine)
+                //Log.e(TAG,"Goodbye client!")
             }
-            val decryptedStream = DataInputStream(ByteArrayInputStream(peerAppData.array(), 0, peerAppData.limit()))
-            serveResponse(socketChannel, decryptedStream, engine)
-        } else if (bytesRead < 0) {
-            Log.e(TAG,"Received end of stream. Will try to close connection with client...")
-            handleEndOfStream(socketChannel, engine)
-            Log.e(TAG,"Goodbye client!")
-        }
+        //}
     }
 
     /**
-     * Will send a message back to a client.
+     * Will send a message back to client                                                                                                                                                                                                                                                               o a client.
      *
      * @param key - the key dedicated to the socket channel that will be used to write to the client.
      * @param message - the message to be sent.
      * @throws IOException if an I/O error occurs to the socket channel.
      */
-    @Throws(IOException::class)
+    @Throws(IOException::class, IllegalArgumentException::class, BufferUnderflowException::class)
     override fun write(socketChannel: SocketChannel, message: ByteArray, engine: SSLEngine?) {
-        if(engine == null) throw IOException("HTTPS NEEDS SSL ENGINE!")
+        synchronized(this) {
+            if (engine == null) throw IllegalArgumentException("HTTPS NEEDS SSL ENGINE!")
+            myAppData.clear()
+            var current = 0
+            val end = message.size - 1
+            val step = myAppData.limit() - 1
 
-        myAppData.clear()
-        var current = 0
-        val end = message.size - 1
-        val step = myAppData.limit() - 1
+            while (current < end) {
+                val next = if (end - current > step) current + step else end
+                if (DEBUG) Log.i(TAG, "current:$current, next:$next, end:$end")
+                val slice = message.sliceArray(IntRange(current, next))
+                if (current != 0) myAppData.flip()
+                myAppData.put(slice)
+                myAppData.flip()
 
-        while (current < end){
-            val next = if(end-current > step) current + step else end
-            Log.i(TAG, "current:$current, next:$next, end:$end")
-            val slice = message.sliceArray(IntRange(current, next))
-            if (current != 0) myAppData.flip()
-            myAppData.put(slice)
-            myAppData.flip()
-
-            while (myAppData.hasRemaining()) {
-                // The loop has a meaning for (outgoing) messages larger than 16KB.
-                // Every wrap call will remove 16KB from the original message and send it to the remote peer.
-                myNetData.clear()
-                val result = engine.wrap(myAppData, myNetData)
-                when (result.status) {
-                    SSLEngineResult.Status.OK -> {
-                        myNetData.flip()
-                        while (myNetData.hasRemaining()) {
+                while (myAppData.hasRemaining()) {
+                    // The loop has a meaning for (outgoing) messages larger than 16KB.
+                    // Every wrap call will remove 16KB from the original message and send it to the remote peer.
+                    myNetData.clear()
+                    val result = engine.wrap(myAppData, myNetData)
+                    when (result.status) {
+                        SSLEngineResult.Status.OK -> {
+                            myNetData.flip()
+                            //while (myNetData.hasRemaining()) {
                             socketChannel.write(myNetData)
+                            //}
+                            //Log.e(TAG,"[OUT]:\n $message")
                         }
-                        //Log.e(TAG,"[OUT]:\n $message")
+                        SSLEngineResult.Status.BUFFER_OVERFLOW -> myNetData = enlargePacketBuffer(engine, myNetData)
+                        SSLEngineResult.Status.BUFFER_UNDERFLOW -> throw SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.")
+                        SSLEngineResult.Status.CLOSED -> {
+                            closeConnection(socketChannel, engine)
+                            return
+                        }
+                        else -> throw IllegalStateException("Invalid SSL status: " + result.status)
                     }
-                    SSLEngineResult.Status.BUFFER_OVERFLOW -> myNetData = enlargePacketBuffer(engine, myNetData)
-                    SSLEngineResult.Status.BUFFER_UNDERFLOW -> throw SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.")
-                    SSLEngineResult.Status.CLOSED -> {
-                        closeConnection(socketChannel, engine)
-                        return
-                    }
-                    else -> throw IllegalStateException("Invalid SSL status: " + result.status)
                 }
+
+                current = next + 1
+                if (DEBUG) Log.d(TAG, "[SENT] ${String(slice)}")
             }
-
-            current = next + 1
-            if (DEBUG) Log.d(TAG,"[SENT] ${String(slice)}")
         }
-
-
-
     }
 
     @Throws(SSLHandshakeException::class)
@@ -225,9 +221,9 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
             }
             buffer.flip()
             capabilities = SSLExplorer.explore(buffer.asReadOnlyBuffer()) ?: return null
-            Log.d(TAG, "PARSED CLIENT_HELLO: Server names: ${capabilities.serverNames}")
+            if (DEBUG) Log.d(TAG, "PARSED CLIENT_HELLO: Server names: ${capabilities.serverNames}")
             if (capabilities.serverNames.size == 0){
-                Log.e(TAG, "Could not find SNI, will server CA certificate...")
+                Log.e(TAG, "Could not find SNI, will serve CA certificate...")
                 ekm.engine2Alias[engine] = ekm.caAlias
             }
             else {

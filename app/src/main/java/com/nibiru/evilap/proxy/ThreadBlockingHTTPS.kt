@@ -1,14 +1,10 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.crypto.EvilKeyManager
 import com.nibiru.evilap.crypto.SslPeer
 import com.nibiru.evilap.crypto.SSLCapabilities
 import com.nibiru.evilap.crypto.SSLExplorer
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.Response
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
@@ -169,7 +165,7 @@ class ThreadBlockingHTTPS(private val sClient: Socket,
 
             val res = "HTTP/1.1 200 OK\r\nContent-Length: 18\r\n\r\nHTTPS Proxy Hello!"
             write(inRaw, outStream, engine, res.toByteArray())
-            //res = EvilApApp.instance.httpClient.newCall(req).execute()
+            //res = TLSProxyApp.instance.httpClient.newCall(req).execute()
 
             //sendResponseHeaders(res, outStream)
             //res.body()?.apply { write(inRaw, outStream, engine, this.bytes()) }

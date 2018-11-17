@@ -38,7 +38,7 @@ class ProxyServiceTests {
                 .followRedirects(false)
                 .proxy(Proxy(Proxy.Type.HTTP,
                         InetSocketAddress(InetAddress.getByName("127.0.0.1"),
-                        EvilApApp.instance.PORT_PROXY_HTTPS)))
+                        TLSProxyApp.instance.PORT_PROXY_HTTPS)))
                 .build()
     }
 

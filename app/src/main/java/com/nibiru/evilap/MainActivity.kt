@@ -1,7 +1,6 @@
 package com.nibiru.evilap
 
 import android.content.*
-import android.graphics.Color
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.IBinder
@@ -15,9 +14,9 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.nibiru.evilap.R.id.*
-import com.nibiru.evilap.fragments.FragmentActionCenter
-import com.nibiru.evilap.fragments.FragmentApMode
-import com.nibiru.evilap.fragments.FragmentNetwork
+import com.nibiru.evilap.ui.FragmentActionCenter
+import com.nibiru.evilap.ui.FragmentApMode
+import com.nibiru.evilap.ui.FragmentNetwork
 import com.nibiru.evilap.proxy.ProxyService
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -132,13 +131,13 @@ class MainActivity : AppCompatActivity(), ServiceConnection,
     }
 
     private fun updateUiAlerts(){
-        if (!EvilApApp.instance.wifiConnected){
+        if (!TLSProxyApp.instance.wifiConnected){
             tvWifiOff.visibility = View.VISIBLE
         }
         else{
             tvWifiOff.visibility = View.GONE
         }
-        if (!EvilApApp.instance.internetConnected){
+        if (!TLSProxyApp.instance.internetConnected){
             tvInternetOff.visibility = View.VISIBLE
         }
         else{

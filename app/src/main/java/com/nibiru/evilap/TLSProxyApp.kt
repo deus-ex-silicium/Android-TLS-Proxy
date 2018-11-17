@@ -18,14 +18,14 @@ import javax.net.ssl.*
 
 // https://stackoverflow.com/questions/708012/how-to-declare-global-variables-in-android
 // https://stackoverflow.com/questions/9445661/how-to-get-the-context-from-anywhere
-class EvilApApp : Application() {
+class TLSProxyApp : Application() {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
     val PORT_CAPTIVE_PORTAL = 8000
     val PORT_PROXY_HTTP = 8080
     val PORT_PROXY_HTTPS = 8443
     companion object {
-        lateinit var instance: EvilApApp
+        lateinit var instance: TLSProxyApp
     }
     lateinit var ca: CaManager
     lateinit var ekm: EvilKeyManager
@@ -46,7 +46,7 @@ class EvilApApp : Application() {
             if(_httpClient==null){
                 //make client not follow redirects!
                 _httpClient = OkHttpClient().newBuilder().followRedirects(false)
-                        //.sslSocketFactory(sf, trustManager as X509TrustManager)
+                        .sslSocketFactory(sf, trustManager as X509TrustManager) // trust fake CA
                         .connectTimeout(10, TimeUnit.SECONDS)
                         .writeTimeout(10, TimeUnit.SECONDS)
                         .readTimeout(30, TimeUnit.SECONDS)
@@ -75,7 +75,7 @@ class EvilApApp : Application() {
 
         //initialize SSLContext
         if (!::sslCtx.isInitialized) {
-            sslCtx = SSLContext.getInstance("TLS")
+            sslCtx = SSLContext.getInstance("TLSv1.2")
             //ca.generateAndSignCert("example.com")
 
             // trust our CA
@@ -87,8 +87,10 @@ class EvilApApp : Application() {
             trustManager = trustManagerFactory.trustManagers[0]
 
             // key manager[], trust manager[], SecureRandom generator
-            //sslCtx.init(arrayOf(ekm), trustManagerFactory.trustManagers, null)
-            sslCtx.init(arrayOf(ekm), null, null)
+            // trust fake CA
+            sslCtx.init(arrayOf(ekm), trustManagerFactory.trustManagers, null)
+            // dont trust fake CA
+            //sslCtx.init(arrayOf(ekm), null, null)
             sf = sslCtx.socketFactory
         }
 

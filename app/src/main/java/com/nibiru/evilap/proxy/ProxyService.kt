@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import android.support.annotation.RequiresApi
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.TLSProxyApp
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.RxEventBus
 import com.nibiru.evilap.crypto.EvilKeyManager
@@ -40,21 +40,21 @@ class ProxyService : Service(){
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
             mSocketProxy = ServerSocket()
-            //mSocketProxy = getEvilSSLSocket(EvilApApp.instance.ekm)
+            //mSocketProxy = getEvilSSLSocket(TLSProxyApp.instance.ekm)
             mSocketPortal = ServerSocket()
         } catch (e: Exception) {
             e.printStackTrace()
         }
         // Start the proxy socket thread
-//        val proxy = Thread(MainLoopProxy(mSocketProxy, EvilApApp.instance.PORT_PROXY_HTTPS,
-//                EvilApApp.instance.sslCtx, EvilApApp.instance.ekm))
+//        val proxy = Thread(MainLoopProxy(mSocketProxy, TLSProxyApp.instance.PORT_PROXY_HTTPS,
+//                TLSProxyApp.instance.sslCtx, TLSProxyApp.instance.ekm))
 //        proxy.start()
 
-        mProxyHTTP = ThreadNioHTTP("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTP)
+        mProxyHTTP = ThreadNioHTTP("0.0.0.0", TLSProxyApp.instance.PORT_PROXY_HTTP)
         Thread(mProxyHTTP).start()
 
-        mNioHTTPS = ThreadNioHTTPS("0.0.0.0", EvilApApp.instance.PORT_PROXY_HTTPS,
-               EvilApApp.instance.ekm, EvilApApp.instance.exec)
+        mNioHTTPS = ThreadNioHTTPS("0.0.0.0", TLSProxyApp.instance.PORT_PROXY_HTTPS,
+               TLSProxyApp.instance.ekm, TLSProxyApp.instance.exec)
         Thread(mNioHTTPS).start()
 
         // Start the captive portal thread

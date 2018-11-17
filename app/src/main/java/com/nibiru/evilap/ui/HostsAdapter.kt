@@ -1,4 +1,4 @@
-package com.nibiru.evilap.adapters
+package com.nibiru.evilap.ui
 
 import android.support.v7.widget.RecyclerView
 import android.util.Log

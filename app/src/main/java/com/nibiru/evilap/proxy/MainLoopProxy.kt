@@ -1,7 +1,6 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
 import com.nibiru.evilap.crypto.EvilKeyManager
 import java.io.IOException
 import java.net.*

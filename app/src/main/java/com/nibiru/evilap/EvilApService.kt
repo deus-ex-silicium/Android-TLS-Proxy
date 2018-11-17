@@ -61,12 +61,12 @@ class EvilApService: Service() {
 
     private fun setupEventBus(){
         if (mDispService != null && !mDispService!!.isDisposed) return
-        mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe({
+        mDispService = RxEventBus.INSTANCE.getBackEndObservable().subscribe {
             Log.d(TAG, "got event = $it")
             when (it) {
                 service.ACTION_STOP_SERVICE -> exit()
                 is EventActiveScan -> {
-                    if (EvilApApp.instance.wifiConnected){
+                    if (TLSProxyApp.instance.wifiConnected){
                         updateIPs()
                         nativeActiveScan("wlan0")
                     }
@@ -89,7 +89,7 @@ class EvilApService: Service() {
                 }
                 is EventDnsSpoof -> { nativeDnsSpoof(it.state) }
             }
-        })
+        }
     }
 
     private fun buildNotification(): Notification {
@@ -292,17 +292,17 @@ class EvilApService: Service() {
             "HTTP" -> {
                 dstIp = ""
                 dstPort = "--dport 80"
-                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY_HTTP}"
+                proxyPort = "--to-port ${TLSProxyApp.instance.PORT_PROXY_HTTP}"
             }
             "HTTPS" -> {
                 dstIp = ""
                 dstPort = "--dport 443"
-                proxyPort = "--to-port ${EvilApApp.instance.PORT_PROXY_HTTPS}"
+                proxyPort = "--to-port ${TLSProxyApp.instance.PORT_PROXY_HTTPS}"
             }
             "CAPTIVE_PORTAL" -> {
                 dstIp = "-d $myIp"
                 dstPort = "--dport 80"
-                proxyPort = "--to-port ${EvilApApp.instance.PORT_CAPTIVE_PORTAL}"
+                proxyPort = "--to-port ${TLSProxyApp.instance.PORT_CAPTIVE_PORTAL}"
             }
             else -> {
                 Log.e(TAG, "Invalid traffic type!")
@@ -352,7 +352,7 @@ class EvilApService: Service() {
     }
 
     private fun updateIPs(){
-        if(EvilApApp.instance.wifiConnected) {
+        if(TLSProxyApp.instance.wifiConnected) {
             val wifiMan = super.getSystemService(Context.WIFI_SERVICE) as WifiManager
             val dhcp = wifiMan.dhcpInfo
             myIp = int2ip(dhcp.ipAddress)

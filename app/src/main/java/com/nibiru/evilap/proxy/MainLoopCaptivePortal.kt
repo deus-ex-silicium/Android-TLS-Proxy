@@ -1,7 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.TLSProxyApp
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 internal class MainLoopCaptivePortal(private val serverSocket: ServerSocket) : Runnable {
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
-    private val SERVERPORT = EvilApApp.instance.PORT_CAPTIVE_PORTAL
+    private val SERVERPORT = TLSProxyApp.instance.PORT_CAPTIVE_PORTAL
     /**************************************CLASS METHODS*******************************************/
     override fun run() {
         //http://codetheory.in/android-java-executor-framework/

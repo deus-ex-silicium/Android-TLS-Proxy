@@ -1,4 +1,4 @@
-package com.nibiru.evilap.fragments
+package com.nibiru.evilap.ui
 
 import android.content.Context
 import android.os.Bundle
@@ -9,7 +9,6 @@ import android.view.*
 import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
 import com.nibiru.evilap.RxEventBus
-import com.nibiru.evilap.adapters.HostsAdapter
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_network.*
 import kotlinx.android.synthetic.main.fragment_network.view.*
@@ -32,7 +31,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
 
     private fun setupEventBus(){
         if (disposable != null && !disposable!!.isDisposed) return
-        disposable = RxEventBus.INSTANCE.getFrontEndObservable().subscribe({
+        disposable = RxEventBus.INSTANCE.getFrontEndObservable().subscribe {
             Log.d(TAG, "$it")
             when(it) {
                 //TODO: scanning widget with X button
@@ -47,7 +46,7 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
                 }
             }
 
-        })
+        }
     }
 
     private fun onSettingsDialog(){
@@ -104,19 +103,19 @@ class FragmentNetwork: android.support.v4.app.Fragment(){
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.network_fragment, menu)
+        //inflater.inflate(R.menu.network_fragment, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.menu_scan -> {
-            doScan()
-            true
-        }
-        R.id.menu_settings -> {
-            onSettingsDialog()
-            true
-        }
+//        R.id.menu_scan -> {
+//            doScan()
+//            true
+//        }
+//        R.id.menu_settings -> {
+//            onSettingsDialog()
+//            true
+//        }
         else -> super.onOptionsItemSelected(item)
     }
 

@@ -1,7 +1,7 @@
 package com.nibiru.evilap.proxy
 
 import android.util.Log
-import com.nibiru.evilap.EvilApApp
+import com.nibiru.evilap.TLSProxyApp
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -30,15 +30,15 @@ internal class ThreadCaptivePortal(private val sClient: Socket) : Runnable {
             when(reqFile) {
                 "/" -> {
                     sendResponse(outStream, "text/html; charset=utf-8", 200,
-                            EvilApApp.instance.indexFile)
+                            TLSProxyApp.instance.indexFile)
                 }
                 "/agree" -> {
                     sendResponse(outStream, "application/x-x509-ca-cert", 200,
-                            EvilApApp.instance.ca.toPemString(EvilApApp.instance.ca.root).toByteArray())
+                            TLSProxyApp.instance.ca.toPemString(TLSProxyApp.instance.ca.root).toByteArray())
                 }
                 else -> {
                     sendResponse(outStream, "text/html; charset=utf-8", 404,
-                            EvilApApp.instance.notFoundFile)
+                            TLSProxyApp.instance.notFoundFile)
                 }
             }
             outStream.flush()

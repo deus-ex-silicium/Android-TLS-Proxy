@@ -36,7 +36,7 @@ class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
         if(!engine2Alias.containsKey(engine)) return null
         val server_name = engine2Alias[engine]
         engine2Alias.remove(engine)
-        Log.d(TAG, "SNI=($server_name)")
+        //Log.d(TAG, "SNI=($server_name)")
         ca.generateAndSignCert(server_name!!)
         return server_name
     }

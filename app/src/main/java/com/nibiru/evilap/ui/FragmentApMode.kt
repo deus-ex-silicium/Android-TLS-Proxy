@@ -1,23 +1,30 @@
-package com.nibiru.evilap.fragments
+package com.nibiru.evilap.ui
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.support.v4.content.LocalBroadcastManager
+import android.util.Log
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
-import com.nibiru.evilap.EvilApService
 import com.nibiru.evilap.R
-import com.nibiru.evilap.RxEventBus
-import kotlinx.android.synthetic.main.fragment_action_center.view.*
 
 
-class FragmentActionCenter: android.support.v4.app.Fragment(){
+class FragmentApMode: android.support.v4.app.Fragment(){
     /**************************************CLASS FIELDS********************************************/
     private val TAG = javaClass.simpleName
+    private var lbm: LocalBroadcastManager? = null
     private var mListener: OnFragmentInteractionListener? = null
+    private val ClientModeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i(TAG, "Got intent, action = " + intent?.action)
+        }
+    }
     /**************************************CLASS METHODS*******************************************/
     companion object { // never use fragment constructors with args, AOS will not use them
-        fun newInstance(): FragmentActionCenter = FragmentActionCenter()
+        fun newInstance(): FragmentApMode = FragmentApMode()
     }
 
     override fun onAttach(context: Context?) {
@@ -25,6 +32,7 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         if(context == null) return
         if(context is OnFragmentInteractionListener)
             mListener = context
+        lbm = LocalBroadcastManager.getInstance(context)
     }
 
     override fun onDetach() {
@@ -32,22 +40,12 @@ class FragmentActionCenter: android.support.v4.app.Fragment(){
         mListener = null
     }
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v= inflater.inflate(R.layout.fragment_action_center, container, false)
-        v.sArpSpoof.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventArpSpoof(v.sArpSpoof.isChecked))
-        }
-        v.sDnsSpoof.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventDnsSpoof(v.sDnsSpoof.isChecked))
-        }
-        v.sRedirHTTPS.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTPS.isChecked, "HTTPS"))
-        }
-        v.sRedirHTTP.setOnClickListener {
-            RxEventBus.INSTANCE.send2BackEnd(EvilApService.EventTrafficRedirect(v.sRedirHTTP.isChecked, "HTTP"))
-        }
-        return v
+        val view = inflater.inflate(R.layout.fragment_ap_mode, container, false)
+        return view
     }
+
 
     interface OnFragmentInteractionListener {
 
