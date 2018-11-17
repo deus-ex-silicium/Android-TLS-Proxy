@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Evil-AP-Kotlin</string>
+    <string name="app_name">TLS-Proxy</string>
     <string name="notification_action_exit">Exit</string>
 
     <string-array name="array_scantype">

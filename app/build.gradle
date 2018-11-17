@@ -13,7 +13,7 @@ android {
     }
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.nibiru.evilap"
+        applicationId "com.nibiru.tlsproxy"
         minSdkVersion 25
         targetSdkVersion 27
         versionCode 1

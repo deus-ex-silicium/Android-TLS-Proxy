@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Evil-AP.iml" filepath="$PROJECT_DIR$/Evil-AP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Android-TLS-Proxy.iml" filepath="$PROJECT_DIR$/Android-TLS-Proxy.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/libsuperuser/libsuperuser/libsuperuser.iml" filepath="$PROJECT_DIR$/libs/libsuperuser/libsuperuser/libsuperuser.iml" />
     </modules>

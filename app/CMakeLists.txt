@@ -16,9 +16,9 @@ add_library(tins SHARED IMPORTED)
 
 set_target_properties( tins PROPERTIES IMPORTED_LOCATION
                        # Provides the path to the library you want to import.
-                       /home/nibiru/repos/Evil-AP/app/src/main/jniLibs/armeabi-v7a/libtins.so)
+                       /home/nibiru/repos/Android-TLS-Proxy/app/src/main/jniLibs/armeabi-v7a/libtins.so)
 
-include_directories( /home/nibiru/repos/Evil-AP/app/src/main/cpp/include/ )
+include_directories( /home/nibiru/repos/Android-TLS-Proxy/app/src/main/cpp/include/ )
 
 ###################### NATIVE-LIB ######################
 # Include libraries needed for native component
