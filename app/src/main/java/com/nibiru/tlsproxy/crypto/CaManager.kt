@@ -34,8 +34,11 @@ class CaManager(inputStream: InputStream?, pass: String?) {
     private val TAG = javaClass.simpleName
     private lateinit var ks : KeyStore
     private lateinit var kp : KeyPair
-    lateinit var root : X509Certificate
     var caAlias : String =  "evil-ca"
+    lateinit var root : X509Certificate
+    private var keyStack = Stack<KeyPair>()
+    private var rsaGen : KeyPairGenerator
+
     /**************************************CLASS METHODS*******************************************/
     /**
      *  Empty constructor. Creates a new RSA key pair and self-signed CA X509 certificate
@@ -45,6 +48,13 @@ class CaManager(inputStream: InputStream?, pass: String?) {
      * Generates a new CA or loads an existing one from a KeyStore file InputStream
      */
     init {
+        // OPTIMIZATION: pre-compute a couple of RSA keys since this process is slow
+        rsaGen = KeyPairGenerator.getInstance("RSA")
+        rsaGen.initialize(2048)
+        for(i in 1..5) {
+            kp = rsaGen.generateKeyPair()
+            keyStack.push(kp)
+        }
         if (inputStream==null || pass==null) generateCa()
         else {
             ks = KeyStore.getInstance(KEY_STORE_TYPE)
@@ -77,10 +87,8 @@ class CaManager(inputStream: InputStream?, pass: String?) {
 
     private fun generateCa(){
         // http://blog.differentpla.net/blog/2013/03/24/bouncy-castle-being-a-certificate-authority
-        // generate new RSA keypair
-        val rsa = KeyPairGenerator.getInstance("RSA")
-        rsa.initialize(2048)
-        kp = rsa.generateKeyPair()
+        // generate or retrieve new RSA keypair
+        kp = rsaGen.genKeyPair()
         // validity date of CA certificate
         val cal = Calendar.getInstance()
         cal.add(Calendar.MONTH, 12)
@@ -126,10 +134,8 @@ class CaManager(inputStream: InputStream?, pass: String?) {
 
         // Don't generate if entry already exists
         if(ks.containsAlias(cn)) return
-
-        val rsa = KeyPairGenerator.getInstance("RSA")
-        rsa.initialize(2048)
-        val newKp = rsa.generateKeyPair()
+        // generate or retrieve new RSA keypair
+        val newKp = if (keyStack.empty()) rsaGen.genKeyPair() else keyStack.pop()
         val from = Calendar.getInstance()
         from.add(Calendar.HOUR, -1)
         val to = Calendar.getInstance()
