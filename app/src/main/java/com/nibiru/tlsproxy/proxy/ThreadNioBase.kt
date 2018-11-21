@@ -79,7 +79,7 @@ abstract class ThreadNioBase(val hostAddress: String, val port: Int) : Runnable{
                         key.isAcceptable -> accept(key)
                         key.isReadable -> read(key.channel() as SocketChannel, key.attachment() as SSLEngine?)
                     }
-                } catch (e: IOException){
+                } catch (e: Exception){
                     key.cancel()
                     //e.printStackTrace()
                     Log.e(TAG, "(${e.cause}) IO Exception while communicating with peer...")

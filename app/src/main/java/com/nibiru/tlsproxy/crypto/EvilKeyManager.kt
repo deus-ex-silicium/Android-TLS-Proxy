@@ -14,21 +14,20 @@ import javax.net.ssl.*
 // https://tools.ietf.org/html/rfc6066#page-6
 
 class EvilKeyManager(ca: CaManager?) : X509ExtendedKeyManager() {
+    /**************************************CLASS FIELDS********************************************/
+
     private val TAG = javaClass.simpleName
     private var ca: CaManager = ca?: CaManager()
     val caAlias = this.ca.caAlias
     var engine2Alias = HashMap<SSLEngine, String>()
-
-    /**
-     *  Empty constructor. Creates a new CA manager
-     */
-    constructor() : this(null)
+    /**************************************CLASS METHODS*******************************************/
 
     override fun getServerAliases(keyType: String?, issuers: Array<out Principal>?): Array<String> {
         TODO("not implemented")
     }
 
     override fun chooseEngineServerAlias(keyType: String?, issuers: Array<out Principal>?, engine: SSLEngine?): String? {
+        // WARNING: SHIT CODE AHEAD!
         // JSSE SSL ENGINE CALLS ChooseServerAlias TWICE! IN A SINGLE HANDSHAKE!
         // IF THE SAME STUFF IS RETURNED THEN ROOT CERTIFICATE IS SENT TWICE IN Server Hello
         // BUT CONNECTION PROCEEDS NORMALLY EITHER WAY...

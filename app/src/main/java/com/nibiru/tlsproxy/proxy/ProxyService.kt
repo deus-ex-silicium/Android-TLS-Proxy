@@ -23,7 +23,7 @@ class ProxyService : Service(){
     private lateinit var  mSocketProxy: ServerSocket
     private lateinit var  mSocketPortal: ServerSocket
     private lateinit var  mNioHTTPS: ThreadNioHTTPS
-    private lateinit var  mProxyHTTP: ThreadNioHTTP
+    private lateinit var  mNioHTTP: ThreadNioHTTP
     // This service is only bound from inside the same process and never uses IPC.
     internal inner class LocalBinder : Binder() {
         val service = this@ProxyService
@@ -39,8 +39,8 @@ class ProxyService : Service(){
         // Spin up the threads running the servers.  Note that we create a separate thread because
         // the services normally runs in the process's main thread, which we don't want to block.
         try {
-            mSocketProxy = ServerSocket()
-            //mSocketProxy = getEvilSSLSocket(TLSProxyApp.instance.ekm)
+//            mSocketProxy = ServerSocket()
+//            mSocketProxy = getEvilSSLSocket(TLSProxyApp.instance.ekm)
             mSocketPortal = ServerSocket()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -50,8 +50,8 @@ class ProxyService : Service(){
 //                TLSProxyApp.instance.sslCtx, TLSProxyApp.instance.ekm))
 //        proxy.start()
 
-        mProxyHTTP = ThreadNioHTTP("0.0.0.0", TLSProxyApp.instance.PORT_PROXY_HTTP)
-        Thread(mProxyHTTP).start()
+        mNioHTTP = ThreadNioHTTP("0.0.0.0", TLSProxyApp.instance.PORT_PROXY_HTTP)
+        Thread(mNioHTTP).start()
 
         mNioHTTPS = ThreadNioHTTPS("0.0.0.0", TLSProxyApp.instance.PORT_PROXY_HTTPS,
                TLSProxyApp.instance.ekm, TLSProxyApp.instance.exec)
@@ -81,8 +81,8 @@ class ProxyService : Service(){
     private fun exit(){
         try {
             Log.e(TAG,"Closing server sockets!")
-            mSocketProxy.close()
-            mProxyHTTP.exit()
+//            mSocketProxy.close()
+            mNioHTTP.exit()
             mNioHTTPS.exit()
             mSocketPortal.close()
 

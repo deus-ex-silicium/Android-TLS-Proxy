@@ -10,6 +10,7 @@ import java.io.DataInputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.lang.IllegalArgumentException
+import java.lang.NullPointerException
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
@@ -80,11 +81,14 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
             if (clientHello != null && doHandshake(socketChannel, engine, clientHello)) {
                 socketChannel.register(selector, SelectionKey.OP_READ, engine)
             } else {
-                socketChannel.close()
+                //socketChannel.close()
+                handleEndOfStream(socketChannel, engine)
+
                 Log.e(TAG,"Connection closed due to handshake failure.")
             }
         } catch (e: Exception){
-            socketChannel.close()
+            //socketChannel.close()
+            handleEndOfStream(socketChannel, engine)
             Log.e(TAG,"EXCEPTION (${e.cause})Connection closed due to handshake failure.")
         }
     }
@@ -98,9 +102,9 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
      * @param engine - the engine used for encryption/decryption of the data exchanged between the two peers.
      * @throws IOException if an I/O error occurs to the socket channel.
      */
-    @Throws(IOException::class)
+    @Throws(IOException::class, NullPointerException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine?) {
-        //synchronized(this) {
+        synchronized(this) {
             if (engine == null) throw IOException("HTTPS NEEDS SSL ENGINE!")
 
             peerNetData.clear()
@@ -109,6 +113,7 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
                 peerNetData.flip()
                 while (peerNetData.hasRemaining()) {
                     peerAppData.clear()
+                    // sporadically throws java.lang.NullPointerException
                     val result = engine.unwrap(peerNetData, peerAppData)
                     when (result.status) {
                         SSLEngineResult.Status.OK -> {
@@ -140,7 +145,7 @@ class ThreadNioHTTPS(hostAddress: String, port: Int, val ekm: EvilKeyManager, ex
                 handleEndOfStream(socketChannel, engine)
                 //Log.e(TAG,"Goodbye client!")
             }
-        //}
+        }
     }
 
     /**

@@ -35,7 +35,7 @@ class ThreadNioHTTP(hostAddress: String, port: Int) : ThreadNioBase(hostAddress,
 
     @Throws(IOException::class)
     override fun read(socketChannel: SocketChannel, engine: SSLEngine?) {
-        //synchronized(this) {
+        synchronized(this) {
             peerAppData.clear()
             val bytesRead = socketChannel.read(peerAppData)
             if (bytesRead < 0) {
@@ -50,7 +50,7 @@ class ThreadNioHTTP(hostAddress: String, port: Int) : ThreadNioBase(hostAddress,
             //if (DEBUG) Log.d(TAG,"[IN]:\n${String(peerAppData.array())}")
             val inData = DataInputStream(ByteArrayInputStream(peerAppData.array()))
             serveResponse(socketChannel, inData)
-        //}
+        }
     }
 
     @Throws(IOException::class)
